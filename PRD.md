@@ -44,14 +44,14 @@ A.D.A.M. is the brain and workflow engine. E.V.A. (Efficient Virtual Assistant) 
 
 ### What We're Building
 
-A complete rebuild of the existing `adameva.app` application. The current app runs on Frappe v15 + Next.js + MariaDB with Docker orchestration (MariaDB, Redis/Dragonfly, Traefik, background workers). The rebuild targets a modern serverless stack that eliminates backend devops overhead and ships faster.
+A modern serverless web application for managing the full client lifecycle at Andy'K Group International. Built on Next.js, Convex, and Auth0, A.D.A.M. eliminates backend devops overhead and ships fast with real-time capabilities out of the box.
 
 ### Scope
 
 **In scope (MVP):**
 
 - Public landing page (adapted from `andyk-landing` design system)
-- Authentication via Clerk (Google + email/password, RBAC)
+- Authentication via Auth0 (Google + email/password, RBAC)
 - Multi-segment questionnaire (B2B, B2G, ADAM License)
 - Client dashboard (contracts, status, activity)
 - Contract flow (full state machine, signatures, appendices, comments)
@@ -89,18 +89,15 @@ Andy'K Group International currently manages client onboarding through a fragmen
 
 3. **Manual contract workflow** — Contracts are drafted in documents, sent via email, revised through reply chains, and signed through various means. There is no state machine, no version tracking, no audit trail.
 
-4. **Infrastructure burden** — The existing Frappe-based architecture requires Docker orchestration with 7+ services (MariaDB, two Redis instances, backend, three worker queues, scheduler, frontend, Traefik). Development setup is complex, deployment is fragile, and debugging requires knowledge of multiple systems.
+4. **No real-time updates** — Clients and staff have no visibility into what's happening until someone sends an email. Contract status changes, comments, and document uploads all require manual notification.
 
-5. **No real-time updates** — Clients and staff have no visibility into what's happening until someone sends an email. Contract status changes, comments, and document uploads all require manual notification.
-
-### What the Rebuild Solves
+### What A.D.A.M. Solves
 
 | Problem | Solution |
 |---------|----------|
 | Scattered intake | Structured questionnaire with conditional branching |
 | No client portal | Self-service dashboard with real-time status |
 | Manual contracts | Full state machine with digital signatures |
-| Infrastructure complexity | Serverless stack (Convex + Clerk + Vercel) |
 | No real-time updates | Convex reactive queries + email notifications |
 
 ---
@@ -113,9 +110,9 @@ Andy'K Group International currently manages client onboarding through a fragmen
 |-----------|--------|
 | **Role** | Company owner / admin (Andrej) |
 | **Goals** | Full control over all clients, contracts, and team members. Monitor pipeline health. |
-| **Pain points** | Currently relies on Frappe Desk which requires technical knowledge. No pipeline overview. |
+| **Pain points** | No pipeline overview. Needs a single interface for managing all operations. |
 | **Access level** | Everything — all CRUD, all clients, all contracts, user management |
-| **Clerk role** | `org:admin` |
+| **Auth0 role** | `admin` |
 | **Key actions** | Create/edit contracts, countersign, manage clients, verify appendices, manage staff |
 
 ### Staff
@@ -126,7 +123,7 @@ Andy'K Group International currently manages client onboarding through a fragmen
 | **Goals** | Manage assigned clients, draft contracts, process questionnaires |
 | **Pain points** | No clear task queue. Manual follow-ups. |
 | **Access level** | Assigned clients and their contracts. No user management. |
-| **Clerk role** | `org:staff` |
+| **Auth0 role** | `staff` |
 | **Key actions** | Draft contracts, publish, review questionnaires, add comments |
 
 ### Client
@@ -137,7 +134,7 @@ Andy'K Group International currently manages client onboarding through a fragmen
 | **Goals** | View contract, sign, upload appendices, track status |
 | **Pain points** | No portal. Must email for every status update. |
 | **Access level** | Own contracts and documents only |
-| **Clerk role** | `org:client` |
+| **Auth0 role** | `client` |
 | **Key actions** | View contracts, sign, request changes, upload documents, comment |
 
 ### Prospect
@@ -148,7 +145,7 @@ Andy'K Group International currently manages client onboarding through a fragmen
 | **Goals** | Understand offerings, submit intake questionnaire |
 | **Pain points** | Unclear process. No self-service option. |
 | **Access level** | Public pages only (landing page, questionnaire) |
-| **Clerk role** | None (unauthenticated) |
+| **Auth0 role** | None (unauthenticated) |
 | **Key actions** | Browse landing page, fill questionnaire, submit |
 
 ---
@@ -161,23 +158,12 @@ Andy'K Group International currently manages client onboarding through a fragmen
 |-------|-----------|---------|
 | **Framework** | Next.js (App Router) | SSR, API routes, file-based routing |
 | **UI** | Shadcn/UI + Tailwind CSS v4 | Component library, customized to ADAM design system |
-| **Auth** | Clerk | Social + email login, RBAC, webhooks |
+| **Auth** | Auth0 | Social + email login, RBAC, webhooks |
 | **Database** | Convex | Real-time serverless database, functions, file storage |
 | **Email** | Resend + React Email | Transactional emails with templated components |
 | **Styling** | Tailwind CSS v4 | CSS-first config, ported from andyk-landing |
 | **Hosting** | Vercel | Edge deployment, preview environments |
 | **Language** | TypeScript 5 | Full type safety across frontend and backend |
-
-### Why This Stack
-
-| Old (Frappe) | New (Serverless) | Benefit |
-|-------------|-------------------|---------|
-| MariaDB + Redis + Dragonfly | Convex | Zero database ops, real-time built-in |
-| Frappe Python backend | Convex functions | TypeScript everywhere, no Python |
-| Docker Compose (7 services) | Vercel + Convex cloud | No infrastructure management |
-| Frappe RBAC | Clerk RBAC | Modern auth with social login |
-| Custom email via SMTP | Resend + React Email | Templated, reliable delivery |
-| Traefik reverse proxy | Vercel Edge | Automatic SSL, CDN, edge routing |
 
 ### Architecture Diagram
 
@@ -199,14 +185,14 @@ Andy'K Group International currently manages client onboarding through a fragmen
 │                  │                                          │
 │  ┌──────────┐   │   ┌──────────────┐                       │
 │  │ API      │   │   │ Middleware    │                       │
-│  │ Routes   │◄──┘   │ (Clerk Auth) │                       │
+│  │ Routes   │◄──┘   │ (Auth0 Auth) │                       │
 │  │ /webhooks│       └──────────────┘                       │
 │  └────┬─────┘                                              │
 └───────┼────────────────────────────────────────────────────┘
         │
         ▼
 ┌───────────────────┐   ┌─────────────┐   ┌──────────────┐
-│      CONVEX       │   │    CLERK    │   │    RESEND    │
+│      CONVEX       │   │    AUTH0    │   │    RESEND    │
 │                   │   │             │   │              │
 │  ┌─────────────┐  │   │  Auth       │   │  Email       │
 │  │  Queries    │  │   │  Sessions   │   │  Templates   │
@@ -233,7 +219,7 @@ Convex replaces traditional REST APIs. All data operations go through Convex fun
 | **Query** | Read data, reactive (auto-update UI) | `getClientContracts`, `getContractById` |
 | **Mutation** | Write data, transactional | `createContract`, `signContract`, `submitQuestionnaire` |
 | **Action** | Side effects (external APIs) | `sendEmail`, `processWebhook` |
-| **HTTP Action** | Webhook endpoints | `POST /clerk-webhook`, `POST /resend-webhook` |
+| **HTTP Action** | Webhook endpoints | `POST /auth0-webhook`, `POST /resend-webhook` |
 
 ### File Storage Strategy
 
@@ -452,7 +438,7 @@ No database tables. Content sourced from `lib/data.ts` (same pattern as andyk-la
 ### 6.2 Authentication
 
 **Routes:** `/sign-in`, `/sign-up`
-**Auth:** Public (Clerk components handle the flow)
+**Auth:** Public (Auth0 Universal Login handles the flow)
 **Purpose:** Authenticate users and sync to Convex database.
 
 #### User Stories
@@ -466,13 +452,13 @@ No database tables. Content sourced from `lib/data.ts` (same pattern as andyk-la
 
 #### Acceptance Criteria
 
-- Clerk `<SignIn>` and `<SignUp>` components render with ADAM styling
+- Auth0 Universal Login Page renders with ADAM styling
 - Google OAuth and email/password both work
 - After sign-in, users redirect based on role:
-  - `org:admin` or `org:staff` → `/admin`
-  - `org:client` → `/dashboard`
+  - `admin` or `staff` → `/admin`
+  - `client` → `/dashboard`
   - No role → `/dashboard` (default)
-- Clerk webhook fires on user creation → syncs user to Convex `users` table
+- Auth0 webhook fires on user creation → syncs user to Convex `users` table
 - Protected routes redirect unauthenticated users to `/sign-in`
 
 #### UI Description
@@ -480,19 +466,19 @@ No database tables. Content sourced from `lib/data.ts` (same pattern as andyk-la
 Centered card layout on a subtle background (hero-gradient or section-radial-bg):
 
 - ADAM logo at top
-- Clerk component (sign in or sign up)
+- Auth0 Universal Login (redirect-based sign in or sign up)
 - Styled to match: `foreground` text, `grid-500` borders, `highlight` accent on buttons
 - "Or continue with Google" separator
 - Link to switch between sign-in and sign-up
 
 #### Data Model
 
-User data synced from Clerk to Convex:
+User data synced from Auth0 to Convex:
 
 ```typescript
-// Synced via Clerk webhook
+// Synced via Auth0 webhook
 {
-  clerkId: string,        // Clerk user ID
+  auth0Id: string,        // Auth0 user ID
   email: string,
   firstName: string,
   lastName: string,
@@ -506,7 +492,7 @@ User data synced from Clerk to Convex:
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| Convex HTTP Action: `/clerk-webhook` | POST | Receives Clerk `user.created` / `user.updated` events, upserts user in Convex |
+| Convex HTTP Action: `/auth0-webhook` | POST | Receives Auth0 `user.created` / `user.updated` events, upserts user in Convex |
 
 ---
 
@@ -1144,10 +1130,10 @@ import { v } from "convex/values";
 
 export default defineSchema({
   // ═══════════════════════════════════════
-  // USERS (synced from Clerk)
+  // USERS (synced from Auth0)
   // ═══════════════════════════════════════
   users: defineTable({
-    clerkId: v.string(),
+    auth0Id: v.string(),
     email: v.string(),
     firstName: v.string(),
     lastName: v.string(),
@@ -1161,7 +1147,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_clerkId", ["clerkId"])
+    .index("by_auth0Id", ["auth0Id"])
     .index("by_email", ["email"])
     .index("by_role", ["role"]),
 
@@ -1432,7 +1418,7 @@ For external services that send webhooks:
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/clerk-webhook` | POST | Clerk user events → sync to `users` table |
+| `/auth0-webhook` | POST | Auth0 user events → sync to `users` table |
 | `/resend-webhook` | POST | Resend delivery events → update email status |
 
 ### Convex Function Map
@@ -1441,7 +1427,7 @@ For external services that send webhooks:
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `users.getCurrent` | Any auth | Get current user profile by Clerk ID |
+| `users.getCurrent` | Any auth | Get current user profile by Auth0 ID |
 | `clients.list` | Admin/Staff | List clients with optional filters (stage, search) |
 | `clients.getById` | Admin/Staff | Get full client record with contracts |
 | `contracts.listForClient` | Client | Get contracts for the authenticated client |
@@ -1458,7 +1444,7 @@ For external services that send webhooks:
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `users.upsert` | System (webhook) | Create or update user from Clerk data |
+| `users.upsert` | System (webhook) | Create or update user from Auth0 data |
 | `clients.create` | Admin/Staff | Create new client record |
 | `clients.update` | Admin/Staff | Update client details |
 | `clients.updateStage` | Admin/Staff | Move client in pipeline |
@@ -1493,16 +1479,16 @@ For external services that send webhooks:
 
 ## 9. Auth & Authorization
 
-### Clerk Configuration
+### Auth0 Configuration
 
 | Setting | Value |
 |---------|-------|
 | **Auth methods** | Google OAuth, Email/Password |
-| **Organization** | Single org (Andy'K Group International) |
-| **Roles** | `org:admin`, `org:staff`, `org:client` |
+| **Tenant** | Single tenant (Andy'K Group International) |
+| **Roles** | `admin`, `staff`, `client` |
 | **Webhook events** | `user.created`, `user.updated`, `user.deleted` |
-| **Session token claims** | `role`, `orgId`, `userId` |
-| **Redirect URLs** | `/sign-in`, `/sign-up`, `/dashboard`, `/admin` |
+| **Access token claims** | `role`, `userId` |
+| **Redirect URLs** | `/api/auth/callback`, `/dashboard`, `/admin` |
 
 ### RBAC Matrix
 
@@ -1530,33 +1516,41 @@ For external services that send webhooks:
 
 ```typescript
 // middleware.ts
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { withMiddlewareAuthRequired, getSession } from "@auth0/nextjs-auth0/edge";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/questionnaire(.*)",
-  "/api/contact",
-]);
+const publicRoutes = ["/", "/questionnaire", "/api/contact", "/api/auth"];
 
-const isAdminRoute = createRouteMatcher([
-  "/admin(.*)",
-]);
+function isPublicRoute(pathname: string) {
+  return publicRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"));
+}
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isPublicRoute(req)) return;
+function isAdminRoute(pathname: string) {
+  return pathname.startsWith("/admin");
+}
 
-  const { userId, orgRole } = await auth();
+export default async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  if (!userId) {
-    return auth.redirectToSignIn();
+  if (isPublicRoute(pathname)) return NextResponse.next();
+
+  // Protect non-public routes with Auth0
+  const res = await withMiddlewareAuthRequired()(req);
+  const session = await getSession(req, res);
+
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/api/auth/login", req.url));
   }
 
-  if (isAdminRoute(req) && orgRole !== "org:admin" && orgRole !== "org:staff") {
-    return Response.redirect(new URL("/dashboard", req.url));
+  const role = session.user["https://adam.andykgroupinternational.com/role"];
+
+  if (isAdminRoute(pathname) && role !== "admin" && role !== "staff") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
-});
+
+  return res;
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
@@ -1565,15 +1559,15 @@ export const config = {
 
 ### Convex Auth Integration
 
-Convex functions validate auth using the Clerk JWT:
+Convex functions validate auth using the Auth0 JWT:
 
 ```typescript
 // convex/auth.config.ts
 export default {
   providers: [
     {
-      domain: process.env.CLERK_JWT_ISSUER_DOMAIN,
-      applicationID: "convex",
+      domain: process.env.AUTH0_ISSUER_BASE_URL,
+      applicationID: process.env.AUTH0_CLIENT_ID,
     },
   ],
 };
@@ -1589,7 +1583,7 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+    .withIndex("by_auth0Id", (q) => q.eq("auth0Id", identity.subject))
     .unique();
 
   if (!user) throw new Error("User not found");
@@ -1711,16 +1705,16 @@ adam/
 │
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx                  # Root layout (fonts, Clerk provider, Convex provider)
+│   │   ├── layout.tsx                  # Root layout (fonts, Auth0 provider, Convex provider)
 │   │   ├── globals.css                 # Theme tokens + visual effect classes
 │   │   ├── page.tsx                    # Landing page (/)
 │   │   │
 │   │   ├── sign-in/
 │   │   │   └── [[...sign-in]]/
-│   │   │       └── page.tsx            # Clerk sign-in
+│   │   │       └── page.tsx            # Auth0 sign-in
 │   │   ├── sign-up/
 │   │   │   └── [[...sign-up]]/
-│   │   │       └── page.tsx            # Clerk sign-up
+│   │   │       └── page.tsx            # Auth0 sign-up
 │   │   │
 │   │   ├── questionnaire/
 │   │   │   └── page.tsx                # Questionnaire flow
@@ -1829,7 +1823,7 @@ adam/
 │   │   │   └── QuestionnairePreview.tsx # Read-only questionnaire view
 │   │   │
 │   │   └── shared/                     # Shared components
-│   │       ├── ConvexClientProvider.tsx # Convex + Clerk provider wrapper
+│   │       ├── ConvexClientProvider.tsx # Convex + Auth0 provider wrapper
 │   │       ├── ThemeProvider.tsx        # Theme context (if needed)
 │   │       └── LoadingSpinner.tsx
 │   │
@@ -1846,7 +1840,7 @@ adam/
 ├── convex/
 │   ├── _generated/                     # Auto-generated by Convex
 │   ├── schema.ts                       # Database schema (see Section 7)
-│   ├── auth.config.ts                  # Clerk auth config for Convex
+│   ├── auth.config.ts                  # Auth0 auth config for Convex
 │   │
 │   ├── users.ts                        # User queries and mutations
 │   ├── clients.ts                      # Client queries and mutations
@@ -1860,7 +1854,7 @@ adam/
 │   ├── actions/
 │   │   └── email.ts                   # Resend email actions
 │   │
-│   └── http.ts                        # HTTP actions (Clerk webhook, Resend webhook)
+│   └── http.ts                        # HTTP actions (Auth0 webhook, Resend webhook)
 │
 ├── emails/                             # React Email templates
 │   ├── QuestionnaireReceived.tsx
@@ -1878,7 +1872,7 @@ adam/
 │       ├── EmailButton.tsx             # CTA button component
 │       └── EmailFooter.tsx             # Footer with company info
 │
-├── middleware.ts                       # Clerk auth middleware
+├── middleware.ts                       # Auth0 auth middleware
 ├── next.config.ts                      # Next.js config
 ├── tailwind.config.ts                  # Tailwind v4 config (if needed beyond globals.css)
 ├── tsconfig.json
@@ -1895,12 +1889,14 @@ adam/
 ```bash
 # .env.local
 
-# Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
-CLERK_SECRET_KEY=sk_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-CLERK_WEBHOOK_SECRET=whsec_...
+# Auth0
+AUTH0_SECRET=...
+AUTH0_BASE_URL=http://localhost:3000
+AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
+AUTH0_CLIENT_ID=...
+AUTH0_CLIENT_SECRET=...
+AUTH0_AUDIENCE=https://adam-api
+AUTH0_WEBHOOK_SECRET=...
 
 # Convex
 NEXT_PUBLIC_CONVEX_URL=https://...convex.cloud
@@ -1927,8 +1923,8 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 | Set up Convex | Schema, dev environment, connection |
 | Port design system | Copy `globals.css` tokens, install IBM Plex fonts, configure Tailwind |
 | Install Shadcn/UI | Add all needed components, customize theme |
-| Set up Clerk | Auth provider, middleware, webhook handler |
-| Implement user sync | Clerk webhook → Convex `users` table |
+| Set up Auth0 | Auth provider, middleware, webhook handler |
+| Implement user sync | Auth0 webhook → Convex `users` table |
 | Create shared components | `ConvexClientProvider`, `LoadingSpinner`, layout shells |
 | Deploy to Vercel | CI/CD pipeline, preview environments |
 
@@ -2064,14 +2060,14 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 |-------------|---------------|
 | Input validation | Convex argument validators on all mutations |
 | File validation | Whitelist MIME types, max 20MB, server-side validation |
-| Authentication | Clerk handles all auth. No custom password storage. |
+| Authentication | Auth0 handles all auth. No custom password storage. |
 | Authorization | Role checks in every Convex function. No client-side-only guards. |
-| CSRF protection | Convex handles via WebSocket transport. API routes use Clerk auth. |
+| CSRF protection | Convex handles via WebSocket transport. API routes use Auth0 auth. |
 | XSS prevention | React auto-escapes. Rich text sanitized before storage. |
 | Audit trail | All state changes logged to `activityLog` with actor and timestamp |
 | GDPR | Data enrichment consent in questionnaire. Right to deletion supported. |
 | Secrets | All API keys in environment variables. Never in client bundle. |
-| Webhook verification | Clerk webhook signature validated. Resend webhook signature validated. |
+| Webhook verification | Auth0 webhook signature validated. Resend webhook signature validated. |
 
 ### Accessibility
 
@@ -2105,7 +2101,7 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 |-------------|----------|
 | Hosting | Vercel (Pro plan) |
 | Database | Convex (Professional plan) |
-| Auth | Clerk (Pro plan) |
+| Auth | Auth0 (Professional plan) |
 | Email | Resend (Pro plan) |
 | Domain | `adam.andykgroupinternational.com` |
 | SSL | Automatic via Vercel |

@@ -1,0 +1,140 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Upload, CheckCircle, XCircle, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Id } from "../../../convex/_generated/dataModel";
+
+interface Appendix {
+  slot: string;
+  label: string;
+  required: boolean;
+  fileId?: Id<"contractFiles">;
+  status: "empty" | "uploaded" | "verified" | "rejected";
+  rejectionNote?: string;
+}
+
+interface AppendixUploadProps {
+  contractId: Id<"contracts">;
+  appendices: Appendix[];
+  canUpload: boolean;
+}
+
+const statusIcons = {
+  empty: null,
+  uploaded: <FileText className="h-4 w-4 text-info" />,
+  verified: <CheckCircle className="h-4 w-4 text-success" />,
+  rejected: <XCircle className="h-4 w-4 text-error" />,
+};
+
+const statusLabels = {
+  empty: "Not uploaded",
+  uploaded: "Uploaded",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+
+export default function AppendixUpload({
+  contractId,
+  appendices,
+  canUpload,
+}: AppendixUploadProps) {
+  const [uploading, setUploading] = useState<string | null>(null);
+  const generateUploadUrl = useMutation(api.contractFiles.generateUploadUrl);
+  const createFile = useMutation(api.contractFiles.create);
+
+  const handleUpload = async (slot: string, file: File) => {
+    setUploading(slot);
+    try {
+      const uploadUrl = await generateUploadUrl();
+      const result = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await result.json();
+      await createFile({
+        contractId,
+        storageId,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        category: "appendix",
+        slot,
+      });
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      {appendices.map((appendix) => (
+        <div
+          key={appendix.slot}
+          className="flex items-center gap-3 p-3 bg-grid-300/30 rounded-lg"
+        >
+          <span className="text-xs font-bold text-muted-2 w-6">
+            {appendix.slot}:
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-foreground truncate">
+              {appendix.label}
+              {appendix.required && (
+                <span className="text-error ml-1">*</span>
+              )}
+            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {statusIcons[appendix.status]}
+              <span
+                className={cn(
+                  "text-xs",
+                  appendix.status === "verified"
+                    ? "text-success"
+                    : appendix.status === "rejected"
+                      ? "text-error"
+                      : "text-muted-2"
+                )}
+              >
+                {statusLabels[appendix.status]}
+              </span>
+            </div>
+            {appendix.status === "rejected" && appendix.rejectionNote && (
+              <p className="text-xs text-error mt-1">
+                {appendix.rejectionNote}
+              </p>
+            )}
+          </div>
+          {canUpload && appendix.status !== "verified" && (
+            <label className="cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpload(appendix.slot, file);
+                }}
+                disabled={uploading === appendix.slot}
+              />
+              <div
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  uploading === appendix.slot
+                    ? "bg-grid-300 animate-pulse"
+                    : "bg-highlight/10 text-highlight hover:bg-highlight/20"
+                )}
+              >
+                <Upload className="h-3.5 w-3.5" />
+              </div>
+            </label>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}

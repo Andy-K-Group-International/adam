@@ -2,85 +2,109 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { siteConfig, navLinks } from "@/lib/data";
+import { navLinks } from "@/lib/data";
+import CompanyLogo from "./CompanyLogo";
+
+function HamburgerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6">
+      <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6">
+      <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 768) setMobileOpen(false);
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/95 backdrop-blur-md border-b border-grid-300 shadow-sm"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-[1200px] mx-auto px-8 flex items-center justify-between h-16">
-        {/* Logo */}
-        <Link href="/" className="text-foreground font-bold text-xl tracking-tight">
-          {siteConfig.name}
-        </Link>
+  function closeMobile() {
+    setMobileOpen(false);
+  }
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
+  return (
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-grid-300">
+      <div className="relative max-w-[1200px] mx-auto flex items-center justify-between px-6 sm:px-8 h-[60px]">
+        {/* Logo */}
+        <a href="#hero" className="shrink-0 text-foreground">
+          <CompanyLogo size="md" />
+        </a>
+
+        {/* Desktop nav - centered */}
+        <div className="hidden md:flex items-center gap-7 text-sm text-muted absolute left-1/2 -translate-x-1/2">
           {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-sm text-muted hover:text-foreground transition-colors"
-            >
+            <a key={link.label} href={link.href} className="hover:text-foreground transition-colors">
               {link.label}
             </a>
           ))}
+        </div>
+
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center">
           <Link
             href="/questionnaire"
-            className="btn-primary-gradient rounded-lg px-5 py-2 text-sm font-medium"
+            className="relative inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-foreground btn-primary-gradient rounded-lg"
           >
-            Get Started
+            <span className="relative z-10">Get Started</span>
           </Link>
         </div>
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
+          className="md:hidden flex items-center justify-center w-10 h-10 -mr-2 text-foreground"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
         >
-          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileOpen ? <CloseIcon /> : <HamburgerIcon />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-background border-b border-grid-300 px-8 pb-6 pt-2">
-          <div className="flex flex-col gap-4">
+        <div className="md:hidden fixed inset-0 top-[60px] z-40 bg-white overflow-y-auto">
+          <div className="px-6 py-6 space-y-1">
             {navLinks.map((link) => (
               <a
-                key={link.href}
+                key={link.label}
                 href={link.href}
-                className="text-sm text-muted hover:text-foreground transition-colors py-1"
-                onClick={() => setMobileOpen(false)}
+                onClick={closeMobile}
+                className="block py-3 text-base font-medium text-foreground border-b border-grid-300 last:border-b-0"
               >
                 {link.label}
               </a>
             ))}
-            <Link
-              href="/questionnaire"
-              className="btn-primary-gradient rounded-lg px-5 py-2.5 text-sm font-medium text-center mt-2"
-              onClick={() => setMobileOpen(false)}
-            >
-              Get Started
-            </Link>
+
+            {/* Mobile CTA */}
+            <div className="pt-4">
+              <Link
+                href="/questionnaire"
+                onClick={closeMobile}
+                className="relative inline-flex items-center justify-center w-full h-12 text-sm font-medium text-foreground btn-primary-gradient rounded-lg"
+              >
+                <span className="relative z-10">Get Started</span>
+              </Link>
+            </div>
           </div>
         </div>
       )}

@@ -15,9 +15,9 @@ export default function CtaSection() {
 
         <Link
           href="/questionnaire"
-          className="btn-primary-gradient rounded-lg px-8 py-3 text-base font-medium inline-block"
+          className="relative inline-flex items-center justify-center h-12 px-8 text-sm font-medium text-foreground btn-primary-gradient rounded-lg"
         >
-          Start Questionnaire
+          <span className="relative z-10">Start Questionnaire</span>
         </Link>
 
         <div className="mt-10 pt-8 border-t border-white/10">

@@ -1,36 +1,36 @@
-import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
-import LogoBar from "@/components/landing/LogoBar";
+import { HeroBackground } from "@/components/landing/BackgroundGrid";
 import TronDivider from "@/components/landing/TronDivider";
 import RoadmapSection from "@/components/landing/RoadmapSection";
-import TestimonialPair from "@/components/landing/TestimonialPair";
 import PricingSection from "@/components/landing/PricingSection";
 import LovedBySection from "@/components/landing/LovedBySection";
-import FaqSection from "@/components/landing/FaqSection";
-import IntegrationsSection from "@/components/landing/IntegrationsSection";
-import ContactForm from "@/components/landing/ContactForm";
 import CtaSection from "@/components/landing/CtaSection";
 import Footer from "@/components/landing/Footer";
 
 export default function Home() {
   return (
-    <>
-      <Navbar />
-      <Hero />
-      <LogoBar />
+    <main className="overflow-x-hidden">
+      {/* Hero area with background layers */}
+      <div className="relative overflow-clip">
+        <HeroBackground />
+        <Hero />
+      </div>
+
       <TronDivider />
+
+      {/* A.D.A.M. Roadmap Section */}
       <RoadmapSection />
+
       <TronDivider />
-      <TestimonialPair />
-      <TronDivider />
+
+      {/* Pricing Plans */}
       <PricingSection />
+
       <TronDivider />
-      <LovedBySection />
-      <FaqSection />
-      <IntegrationsSection />
-      <ContactForm />
+
+      {/* <LovedBySection /> */}
       <CtaSection />
       <Footer />
-    </>
+    </main>
   );
 }

@@ -71,9 +71,9 @@ export default function CommentThread({
         <button
           type="submit"
           disabled={!newComment.trim()}
-          className="btn-primary-gradient p-2 rounded-lg disabled:opacity-50"
+          className="btn-primary-gradient p-2 rounded-lg disabled:opacity-50 text-foreground"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-4 w-4 relative z-10" />
         </button>
       </form>
     </div>

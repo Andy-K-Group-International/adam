@@ -108,9 +108,9 @@ export default function SignatureCanvas({
         <button
           onClick={save}
           disabled={!hasSignature || disabled}
-          className="btn-primary-gradient px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
+          className="btn-primary-gradient px-4 py-1.5 rounded-lg text-sm disabled:opacity-50 text-foreground"
         >
-          Sign Contract
+          <span className="relative z-10">Sign Contract</span>
         </button>
       </div>
     </div>

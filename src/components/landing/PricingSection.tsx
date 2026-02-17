@@ -1,154 +1,166 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Check } from "lucide-react";
-import { pricingData, commitmentOptions } from "@/lib/data";
+import { pricingData, siteConfig } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import SectionHeader from "./SectionHeader";
 
-type TabKey = "b2b" | "b2g" | "tech";
+function CheckIcon({ highlighted }: { highlighted?: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={cn("w-4 h-4 shrink-0", highlighted ? "text-highlight" : "text-highlight")}>
+      <path
+        fillRule="evenodd"
+        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
 
-const tabs: { key: TabKey; label: string }[] = [
-  { key: "b2b", label: "B2B" },
-  { key: "b2g", label: "B2G" },
-  { key: "tech", label: "A.D.A.M." },
-];
+interface PlanData {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  cta: string;
+  highlighted: boolean;
+}
 
-function applyDiscount(priceStr: string, discount: number): string {
-  // If price is "Custom" or doesn't start with a currency symbol, return as-is
-  if (priceStr === "Custom") return priceStr;
+function PricingCard({ plan }: { plan: PlanData }) {
+  return (
+    <div
+      className={cn(
+        "relative rounded-xl p-6 flex flex-col h-full transition-all duration-300",
+        plan.highlighted
+          ? "bg-foreground text-white shadow-[0_8px_40px_rgba(1,1,27,0.2)]"
+          : "bg-white border border-grid-300 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
+      )}
+    >
+      {plan.highlighted && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-[10px] uppercase tracking-widest font-mono bg-highlight text-white rounded-full">
+          Popular
+        </span>
+      )}
 
-  const currencyMatch = priceStr.match(/^([^\d]+)/);
-  const currency = currencyMatch ? currencyMatch[1] : "";
-  const numericStr = priceStr.replace(/[^\d]/g, "");
-  const numericValue = parseInt(numericStr, 10);
+      <div className="mb-5">
+        <h4
+          className={cn(
+            "text-base font-bold tracking-tight mb-3",
+            plan.highlighted ? "text-white" : "text-foreground"
+          )}
+        >
+          {plan.name}
+        </h4>
+        <span
+          className={cn(
+            "text-3xl font-bold tracking-tight",
+            plan.highlighted ? "text-white" : "text-foreground"
+          )}
+        >
+          {plan.price}
+        </span>
+        {plan.period && (
+          <span
+            className={cn(
+              "text-sm ml-1",
+              plan.highlighted ? "text-white/60" : "text-muted-2"
+            )}
+          >
+            {plan.period}
+          </span>
+        )}
+      </div>
 
-  if (isNaN(numericValue) || discount === 0) return priceStr;
+      <div
+        className={cn(
+          "w-full h-px mb-5",
+          plan.highlighted ? "bg-white/15" : "bg-grid-300"
+        )}
+      />
 
-  const discounted = Math.round(numericValue * (1 - discount / 100));
-  // Format with comma for thousands
-  const formatted = discounted.toLocaleString("en-GB");
-  return `${currency}${formatted}`;
+      <p
+        className={cn(
+          "text-sm mb-5 leading-relaxed",
+          plan.highlighted ? "text-white/70" : "text-muted"
+        )}
+      >
+        {plan.description}
+      </p>
+
+      <ul className="space-y-3 flex-1 mb-6">
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2.5">
+            <CheckIcon highlighted={plan.highlighted} />
+            <span
+              className={cn(
+                "text-sm leading-snug",
+                plan.highlighted ? "text-white/80" : "text-muted"
+              )}
+            >
+              {feature}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href={plan.cta === "Request Quote" ? `mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan` : "/questionnaire"}
+        className={cn(
+          "block text-center py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200",
+          plan.highlighted
+            ? "bg-white text-foreground hover:bg-white/90"
+            : "bg-foreground text-white hover:bg-foreground/90"
+        )}
+      >
+        {plan.cta}
+      </Link>
+    </div>
+  );
 }
 
 export default function PricingSection() {
-  const [activeTab, setActiveTab] = useState<TabKey>("b2b");
-  const [commitment, setCommitment] = useState(0);
-
-  const currentData = pricingData[activeTab];
-  const currentDiscount = commitmentOptions[commitment].discount;
+  const plans = pricingData.tech.plans;
 
   return (
-    <section id="pricing" className="py-20 px-8">
+    <section id="pricing" className="relative py-20 px-8">
       <div className="max-w-[1200px] mx-auto">
-        <SectionHeader
-          label="PRICING"
-          subtitle={currentData.subtitle}
-        >
-          Choose Your Plan
-        </SectionHeader>
-
-        {/* Tab switcher */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex bg-grid-300 rounded-lg p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-6 py-2 text-sm font-medium rounded-md transition-all",
-                  activeTab === tab.key
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-2 hover:text-foreground"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        {/* Header */}
+        <div className="text-center max-w-[700px] mx-auto mb-12">
+          <span className="text-[10px] uppercase tracking-[0.25em] text-muted-2 font-mono block mb-3">
+            Pricing
+          </span>
+          <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
+            Choose Your{" "}
+            <span className="font-serif font-light italic text-[1.2em]">
+              Plan
+            </span>
+          </h2>
+          <p className="text-lg leading-relaxed text-muted font-light">
+            {pricingData.tech.subtitle}
+          </p>
         </div>
 
-        {/* Commitment selector */}
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-grid-300 rounded-lg p-1">
-            {commitmentOptions.map((option, idx) => (
-              <button
-                key={option.label}
-                onClick={() => setCommitment(idx)}
-                className={cn(
-                  "px-4 py-1.5 text-sm rounded-md transition-all",
-                  commitment === idx
-                    ? "bg-background text-foreground shadow-sm font-medium"
-                    : "text-muted-2 hover:text-foreground"
-                )}
-              >
-                {option.label}
-                {option.discount > 0 && (
-                  <span className="ml-1 text-xs text-highlight font-medium">
-                    -{option.discount}%
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {currentData.plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={cn(
-                "rounded-xl p-8 flex flex-col",
-                plan.highlighted
-                  ? "glass-card border-2 border-highlight shadow-lg relative"
-                  : "glass-card"
-              )}
-            >
-              {plan.highlighted && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-highlight text-white text-xs font-medium px-3 py-1 rounded-full">
-                  Popular
-                </span>
-              )}
-
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-wide mb-2">
-                {plan.name}
-              </h3>
-
-              <div className="mb-2">
-                <span className="text-3xl font-bold text-foreground">
-                  {applyDiscount(plan.price, currentDiscount)}
-                </span>
-                {plan.period && (
-                  <span className="text-muted-2 text-sm">{plan.period}</span>
-                )}
-              </div>
-
-              <p className="text-sm text-muted mb-6">{plan.description}</p>
-
-              <ul className="flex-1 space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-muted">
-                    <Check className="w-4 h-4 text-highlight shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={plan.cta === "Contact Us" ? "#contact" : "/questionnaire"}
-                className={cn(
-                  "rounded-lg px-6 py-2.5 text-sm font-medium text-center transition-all",
-                  plan.highlighted
-                    ? "btn-primary-gradient"
-                    : "btn-secondary"
-                )}
-              >
-                {plan.cta}
-              </Link>
-            </div>
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[960px] mx-auto">
+          {plans.map((plan) => (
+            <PricingCard key={plan.name} plan={plan} />
           ))}
+        </div>
+
+        {/* Custom quote CTA */}
+        <div className="text-center mt-12">
+          <p className="text-sm text-muted mb-3">
+            Need a tailored solution for your organization?
+          </p>
+          <a
+            href={`mailto:${siteConfig.email}?subject=Custom Quote Request`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
+          >
+            Request a Custom Quote
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
+              <path d="M6 4l4 4-4 4" />
+            </svg>
+          </a>
         </div>
       </div>
     </section>

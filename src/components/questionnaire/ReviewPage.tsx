@@ -5,7 +5,7 @@ import type { Question } from "@/lib/questionnaire-schema";
 import { questionSections } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Edit2, Send, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Edit2, Send, Loader2 } from "lucide-react";
 
 interface ReviewPageProps {
   answers: Record<string, any>;
@@ -157,9 +157,6 @@ export default function ReviewPage({
                         className="flex items-start justify-between gap-4 px-5 py-3 border-b border-grid-300 last:border-b-0 hover:bg-grid-300/30 transition-colors"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-muted-2 mb-0.5">
-                            Q{q.number}
-                          </p>
                           <p className="text-sm font-medium text-foreground leading-snug">
                             {q.question}
                           </p>
@@ -252,5 +249,3 @@ export default function ReviewPage({
   );
 }
 
-// Re-export the Check icon locally (it's from lucide)
-import { Check } from "lucide-react";

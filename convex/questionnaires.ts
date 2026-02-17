@@ -98,6 +98,113 @@ export const getById = query({
   },
 });
 
+export const saveDraft = mutation({
+  args: {
+    email: v.string(),
+    answers: v.any(),
+    selectedSegments: v.array(v.string()),
+    currentPageIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Look for existing draft by email
+    const existing = await ctx.db
+      .query("questionnaires")
+      .withIndex("by_email", (q) => q.eq("contactEmail", args.email))
+      .filter((q) => q.eq(q.field("status"), "draft"))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        b2bData: args.answers,
+        segments: args.selectedSegments,
+        sessionId: String(args.currentPageIndex),
+        updatedAt: now,
+      });
+      return existing._id;
+    }
+
+    // Create new draft
+    const id = await ctx.db.insert("questionnaires", {
+      companyName: args.answers.companyName || "",
+      websiteUrl: args.answers.websiteUrl || undefined,
+      billingCurrency: args.answers.billingCurrency || "",
+      contactName: args.answers.contactName || "",
+      contactPhone: args.answers.contactPhone || "",
+      contactEmail: args.email,
+      address: args.answers.address || {
+        line1: "",
+        city: "",
+        postcode: "",
+        country: "",
+      },
+      dataEnrichmentConsent: !!args.answers.dataEnrichmentConsent,
+      socialProfiles: args.answers.socialProfiles || undefined,
+      countriesOfOperation: args.answers.countriesOfOperation || "",
+      yearsInBusiness: args.answers.yearsInBusiness || "",
+      annualRevenue: args.answers.annualRevenue || undefined,
+      productsServices: args.answers.productsServices || "",
+      businessGoals: args.answers.businessGoals || "",
+      challenges: args.answers.challenges || "",
+      competitors: args.answers.competitors || undefined,
+      usp: args.answers.usp || "",
+      communicationChannels: args.answers.communicationChannels || [],
+      securityRequirements: args.answers.securityRequirements || undefined,
+      privacyPolicyAgreed: !!args.answers.privacyPolicyAgreed,
+      segments: args.selectedSegments,
+      b2bData: args.answers,
+      b2gData: undefined,
+      adamData: undefined,
+      attachmentIds: undefined,
+      status: "draft",
+      sessionId: String(args.currentPageIndex),
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return id;
+  },
+});
+
+export const getDraftByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.email) return null;
+
+    const draft = await ctx.db
+      .query("questionnaires")
+      .withIndex("by_email", (q) => q.eq("contactEmail", args.email))
+      .filter((q) => q.eq(q.field("status"), "draft"))
+      .first();
+
+    if (!draft) return null;
+
+    return {
+      _id: draft._id,
+      answers: draft.b2bData || {},
+      selectedSegments: draft.segments || [],
+      currentPageIndex: parseInt(draft.sessionId) || 0,
+      updatedAt: draft.updatedAt,
+    };
+  },
+});
+
+export const deleteDraft = mutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const draft = await ctx.db
+      .query("questionnaires")
+      .withIndex("by_email", (q) => q.eq("contactEmail", args.email))
+      .filter((q) => q.eq(q.field("status"), "draft"))
+      .first();
+
+    if (draft) {
+      await ctx.db.delete(draft._id);
+    }
+  },
+});
+
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {

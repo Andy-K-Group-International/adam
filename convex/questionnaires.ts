@@ -205,6 +205,135 @@ export const deleteDraft = mutation({
   },
 });
 
+export const submitDraft = mutation({
+  args: {
+    email: v.string(),
+    answers: v.any(),
+    selectedSegments: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Find the draft by email
+    const draft = await ctx.db
+      .query("questionnaires")
+      .withIndex("by_email", (q) => q.eq("contactEmail", args.email))
+      .filter((q) => q.eq(q.field("status"), "draft"))
+      .first();
+
+    if (draft) {
+      // Update draft to submitted with final answers
+      await ctx.db.patch(draft._id, {
+        companyName: args.answers.companyName || draft.companyName,
+        websiteUrl: args.answers.websiteUrl || draft.websiteUrl,
+        billingCurrency: args.answers.billingCurrency || draft.billingCurrency,
+        contactName: args.answers.contactName || draft.contactName,
+        contactPhone: args.answers.contactPhone || draft.contactPhone,
+        address: args.answers.address || draft.address,
+        dataEnrichmentConsent: !!args.answers.dataEnrichmentConsent,
+        socialProfiles: args.answers.socialProfiles || draft.socialProfiles,
+        countriesOfOperation: args.answers.countriesOfOperation || draft.countriesOfOperation,
+        yearsInBusiness: args.answers.yearsInBusiness || draft.yearsInBusiness,
+        annualRevenue: args.answers.annualRevenue || draft.annualRevenue,
+        productsServices: args.answers.productsServices || draft.productsServices,
+        businessGoals: args.answers.businessGoals || draft.businessGoals,
+        challenges: args.answers.challenges || draft.challenges,
+        competitors: args.answers.competitors || draft.competitors,
+        usp: args.answers.usp || draft.usp,
+        communicationChannels: args.answers.communicationChannels || draft.communicationChannels,
+        securityRequirements: args.answers.securityRequirements || draft.securityRequirements,
+        privacyPolicyAgreed: !!args.answers.privacyPolicyAgreed,
+        segments: args.selectedSegments,
+        b2bData: args.answers,
+        status: "submitted",
+        submittedAt: now,
+        updatedAt: now,
+      });
+
+      await ctx.db.insert("activityLog", {
+        type: "questionnaire_submitted",
+        questionnaireId: draft._id,
+        metadata: {
+          companyName: args.answers.companyName || draft.companyName,
+          contactEmail: args.email,
+        },
+        createdAt: now,
+      });
+
+      return draft._id;
+    }
+
+    // No draft found — create submitted questionnaire directly
+    const id = await ctx.db.insert("questionnaires", {
+      companyName: args.answers.companyName || "",
+      websiteUrl: args.answers.websiteUrl || undefined,
+      billingCurrency: args.answers.billingCurrency || "",
+      contactName: args.answers.contactName || "",
+      contactPhone: args.answers.contactPhone || "",
+      contactEmail: args.email,
+      address: args.answers.address || {
+        line1: "",
+        city: "",
+        postcode: "",
+        country: "",
+      },
+      dataEnrichmentConsent: !!args.answers.dataEnrichmentConsent,
+      socialProfiles: args.answers.socialProfiles || undefined,
+      countriesOfOperation: args.answers.countriesOfOperation || "",
+      yearsInBusiness: args.answers.yearsInBusiness || "",
+      annualRevenue: args.answers.annualRevenue || undefined,
+      productsServices: args.answers.productsServices || "",
+      businessGoals: args.answers.businessGoals || "",
+      challenges: args.answers.challenges || "",
+      competitors: args.answers.competitors || undefined,
+      usp: args.answers.usp || "",
+      communicationChannels: args.answers.communicationChannels || [],
+      securityRequirements: args.answers.securityRequirements || undefined,
+      privacyPolicyAgreed: !!args.answers.privacyPolicyAgreed,
+      segments: args.selectedSegments,
+      b2bData: args.answers,
+      status: "submitted",
+      sessionId: "0",
+      submittedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("activityLog", {
+      type: "questionnaire_submitted",
+      questionnaireId: id,
+      metadata: {
+        companyName: args.answers.companyName || "",
+        contactEmail: args.email,
+      },
+      createdAt: now,
+    });
+
+    return id;
+  },
+});
+
+export const linkToUser = mutation({
+  args: {
+    email: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const questionnaires = await ctx.db
+      .query("questionnaires")
+      .withIndex("by_email", (q) => q.eq("contactEmail", args.email))
+      .collect();
+
+    for (const q of questionnaires) {
+      if (!q.userId) {
+        await ctx.db.patch(q._id, { userId: args.userId });
+      }
+    }
+
+    return questionnaires.length;
+  },
+});
+
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {

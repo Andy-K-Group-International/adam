@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils";
 import StepProgressBar, { JOURNEY_STEPS } from "./StepProgressBar";
 import FieldRenderer from "./FieldRenderer";
 import ReviewPage from "./ReviewPage";
-import { CheckCircle2, ArrowLeft, ArrowRight, Check, RotateCcw } from "lucide-react";
+import { CheckCircle2, ArrowLeft, ArrowRight, Check, RotateCcw, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import confetti from "canvas-confetti";
 
 /** Section-based page groupings for the questionnaire (all within the "Onboarding" journey step) */
 const SECTION_ORDER = [
@@ -49,6 +50,7 @@ export default function QuestionnaireFlow() {
 
   const saveDraftMutation = useMutation(api.questionnaires.saveDraft);
   const deleteDraftMutation = useMutation(api.questionnaires.deleteDraft);
+  const submitDraftMutation = useMutation(api.questionnaires.submitDraft);
 
   // Read email from localStorage (set by hero form)
   useEffect(() => {
@@ -221,18 +223,11 @@ export default function QuestionnaireFlow() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      console.log("Submitting questionnaire:", {
+      await submitDraftMutation({
         email,
         answers,
         selectedSegments,
-        submittedAt: new Date().toISOString(),
       });
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Delete the draft after successful submission
-      if (email) {
-        await deleteDraftMutation({ email }).catch(() => {});
-      }
 
       setIsSubmitted(true);
     } catch (error) {
@@ -240,7 +235,7 @@ export default function QuestionnaireFlow() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, answers, selectedSegments, deleteDraftMutation]);
+  }, [email, answers, selectedSegments, submitDraftMutation]);
 
   const handleResumeDraft = useCallback(() => {
     if (draft) {
@@ -338,6 +333,21 @@ export default function QuestionnaireFlow() {
     );
   }
 
+  // Fire confetti when submitted
+  const [showFinishButton, setShowFinishButton] = useState(false);
+  useEffect(() => {
+    if (!isSubmitted) return;
+    // Fire confetti burst
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+    });
+    // Fade in "Finish your account" button after 250ms
+    const timer = setTimeout(() => setShowFinishButton(true), 250);
+    return () => clearTimeout(timer);
+  }, [isSubmitted]);
+
   // Success screen
   if (isSubmitted) {
     return (
@@ -349,20 +359,35 @@ export default function QuestionnaireFlow() {
           )}
         >
           <div className="flex justify-center mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-              <CheckCircle2 className="h-8 w-8 text-success" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-highlight/10">
+              <PartyPopper className="h-8 w-8 text-highlight" />
             </div>
           </div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">
-            Thank you!
+            Congratulations!
           </h2>
-          <p className="text-muted leading-relaxed mb-6">
-            Your questionnaire has been submitted successfully. Our team will
-            review your responses and reach out within 1-2 business days.
+          <p className="text-muted leading-relaxed mb-8">
+            Your questionnaire has been submitted successfully. Create your
+            account to track progress and access your dashboard.
           </p>
-          <Button variant="secondary" onClick={handleStartOver}>
-            Start New Questionnaire
-          </Button>
+          <div
+            className={cn(
+              "transition-all duration-500 ease-out",
+              showFinishButton
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2"
+            )}
+          >
+            <Button
+              onClick={() => {
+                window.location.href = "/create-account";
+              }}
+              className="gap-2"
+            >
+              Finish Your Account
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     );

@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 const auth0 = new Auth0Client();
 
-const publicRoutes = ["/", "/questionnaire", "/api/contact"];
+const publicRoutes = ["/", "/questionnaire", "/api/contact", "/create-account", "/api/auth/create-account"];
 
 function isPublicRoute(pathname: string) {
   return publicRoutes.some(

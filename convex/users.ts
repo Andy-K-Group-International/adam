@@ -31,6 +31,9 @@ export const upsert = mutation({
       v.literal("staff"),
       v.literal("client")
     ),
+    accountStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("active"))
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -46,6 +49,7 @@ export const upsert = mutation({
         lastName: args.lastName,
         imageUrl: args.imageUrl,
         role: args.role,
+        accountStatus: args.accountStatus ?? existing.accountStatus ?? "active",
         updatedAt: now,
       });
       return existing._id;
@@ -58,6 +62,7 @@ export const upsert = mutation({
       lastName: args.lastName,
       imageUrl: args.imageUrl,
       role: args.role,
+      accountStatus: args.accountStatus ?? "active",
       createdAt: now,
       updatedAt: now,
     });

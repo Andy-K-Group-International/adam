@@ -14,6 +14,9 @@ export default defineSchema({
       v.literal("client")
     ),
     clientId: v.optional(v.id("clients")),
+    accountStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("active"))
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -92,6 +95,7 @@ export default defineSchema({
     b2gData: v.optional(v.any()),
     adamData: v.optional(v.any()),
     attachmentIds: v.optional(v.array(v.string())),
+    userId: v.optional(v.id("users")),
     status: v.union(
       v.literal("draft"),
       v.literal("submitted"),

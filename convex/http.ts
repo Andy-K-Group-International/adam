@@ -24,13 +24,20 @@ http.route({
         return new Response("Missing required fields", { status: 400 });
       }
 
-      await ctx.runMutation(api.users.upsert, {
+      const userId = await ctx.runMutation(api.users.upsert, {
         auth0Id,
         email,
         firstName,
         lastName,
         imageUrl,
         role: role || "client",
+        accountStatus: "active",
+      });
+
+      // Link any questionnaires submitted with this email
+      await ctx.runMutation(api.questionnaires.linkToUser, {
+        email,
+        userId,
       });
 
       return new Response(JSON.stringify({ success: true }), {

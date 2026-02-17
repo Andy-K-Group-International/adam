@@ -342,55 +342,52 @@ export default function QuestionCard({
       )}
     >
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-2">
-            Q{question.number}
-          </span>
-          {question.required && (
-            <span className="text-highlight text-xs font-medium">
-              Required
-            </span>
-          )}
-        </div>
         {/* For checkbox type, the question text is rendered inside the checkbox label */}
         {question.type !== "checkbox" && (
           <h2 className="text-xl md:text-2xl font-semibold text-foreground leading-snug">
             {question.question}
+            {question.required && (
+              <span className="text-highlight ml-1">*</span>
+            )}
           </h2>
         )}
       </div>
 
       <div className="mb-10">{renderInput()}</div>
 
-      <div className="flex items-center gap-3">
-        {!isFirst && (
-          <Button
-            variant="secondary"
-            onClick={onBack}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-        )}
-        <Button onClick={onNext} className="gap-2">
-          {isLast ? (
-            <>
-              Review Answers
-              <Check className="h-4 w-4" />
-            </>
-          ) : (
-            <>
-              Next
-              <ArrowRight className="h-4 w-4" />
-            </>
+      <div className="flex items-center justify-between mt-14">
+        <div>
+          {!isFirst && (
+            <Button
+              variant="secondary"
+              onClick={onBack}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
           )}
-        </Button>
-        {question.type === "long-text" && (
-          <span className="text-xs text-muted-2 ml-2 hidden sm:inline">
-            Press Ctrl+Enter to continue
-          </span>
-        )}
+        </div>
+        <div className="flex items-center gap-3">
+          {question.type === "long-text" && (
+            <span className="text-xs text-muted-2 hidden sm:inline">
+              Press Ctrl+Enter to continue
+            </span>
+          )}
+          <Button onClick={onNext} className="gap-2">
+            {isLast ? (
+              <>
+                Review Answers
+                <Check className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Next
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

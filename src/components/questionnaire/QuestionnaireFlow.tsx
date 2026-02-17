@@ -225,7 +225,7 @@ export default function QuestionnaireFlow() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       {/* Progress bar */}
       <div className="mb-10">
         <ProgressBar
@@ -233,30 +233,6 @@ export default function QuestionnaireFlow() {
           total={totalQuestions}
         />
       </div>
-
-      {/* Section label */}
-      {!showReview && currentQuestion && (
-        <div className="mb-6">
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-highlight">
-            {(() => {
-              const section = allQuestions.find(
-                (q) => q.section === currentQuestion.section
-              );
-              if (!section) return "";
-              // Find section title from questionSections
-              const sectionData = [
-                { id: "company-profile", title: "Company Profile" },
-                { id: "segment-selection", title: "Service Selection" },
-                { id: "b2b", title: "B2B -- Lead Generation" },
-                { id: "b2g", title: "B2G -- Government Contracts" },
-                { id: "adam", title: "A.D.A.M. -- System Licensing" },
-                { id: "attachments", title: "Attachments" },
-              ].find((s) => s.id === currentQuestion.section);
-              return sectionData?.title || "";
-            })()}
-          </span>
-        </div>
-      )}
 
       {/* Content area */}
       {showReview ? (

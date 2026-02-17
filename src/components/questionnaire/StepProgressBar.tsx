@@ -5,21 +5,30 @@ import { cn } from "@/lib/utils";
 export interface Step {
   id: string;
   label: string;
-  /** Number of pages inside this step */
-  pageCount: number;
 }
 
 interface StepProgressBarProps {
   steps: Step[];
   currentStepIndex: number;
-  /** 0-based page within the current step */
-  currentPageInStep: number;
+  /** 0-1 progress within the current step */
+  progress: number;
 }
+
+const JOURNEY_STEPS: Step[] = [
+  { id: "onboarding", label: "Onboarding" },
+  { id: "proposal", label: "Proposal" },
+  { id: "contract", label: "Contract" },
+  { id: "strategy", label: "Strategy" },
+  { id: "billing", label: "Billing" },
+  { id: "kick-off", label: "Kick-off" },
+];
+
+export { JOURNEY_STEPS };
 
 export default function StepProgressBar({
   steps,
   currentStepIndex,
-  currentPageInStep,
+  progress,
 }: StepProgressBarProps) {
   return (
     <div className="w-full">
@@ -27,19 +36,15 @@ export default function StepProgressBar({
         {steps.map((step, i) => {
           const isCompleted = i < currentStepIndex;
           const isCurrent = i === currentStepIndex;
-          const isFuture = i > currentStepIndex;
-
-          // Progress within the current step (0 to 1)
-          const stepProgress = isCurrent
-            ? step.pageCount > 1
-              ? currentPageInStep / (step.pageCount - 1)
-              : 1
-            : isCompleted
-              ? 1
-              : 0;
 
           return (
-            <div key={step.id} className={cn("flex items-center", i < steps.length - 1 ? "flex-1" : "flex-none")}>
+            <div
+              key={step.id}
+              className={cn(
+                "flex items-center",
+                i < steps.length - 1 ? "flex-1" : "flex-none"
+              )}
+            >
               {/* Step label + dot */}
               <div className="flex flex-col items-center gap-1.5 min-w-0">
                 <span
@@ -66,7 +71,7 @@ export default function StepProgressBar({
                 />
               </div>
 
-              {/* Connector line (not after last step) */}
+              {/* Connector line */}
               {i < steps.length - 1 && (
                 <div className="flex-1 h-[2px] mx-1.5 bg-grid-300 rounded-full overflow-hidden relative">
                   <div
@@ -82,7 +87,7 @@ export default function StepProgressBar({
                       width: isCompleted
                         ? "100%"
                         : isCurrent
-                          ? `${stepProgress * 100}%`
+                          ? `${progress * 100}%`
                           : "0%",
                     }}
                   />

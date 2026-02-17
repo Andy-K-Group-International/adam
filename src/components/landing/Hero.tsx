@@ -18,7 +18,7 @@ export default function Hero() {
     e.preventDefault();
     if (!email.trim()) return;
     localStorage.setItem("adam_email", email.trim());
-    router.push(`/questionnaire?email=${encodeURIComponent(email.trim())}`);
+    router.push("/questionnaire");
   }
 
   return (

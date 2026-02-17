@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import {
   questions as allQuestions,
   questionSections,
@@ -8,51 +10,32 @@ import {
 } from "@/lib/questionnaire-schema";
 import type { Question } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
-import StepProgressBar, { type Step } from "./StepProgressBar";
+import StepProgressBar, { JOURNEY_STEPS } from "./StepProgressBar";
 import FieldRenderer from "./FieldRenderer";
 import ReviewPage from "./ReviewPage";
-import { CheckCircle2, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { CheckCircle2, ArrowLeft, ArrowRight, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY_PREFIX = "adam_questionnaire_";
-
-function getSessionId(): string {
-  if (typeof window === "undefined") return "";
-  const existing = sessionStorage.getItem("adam_questionnaire_session_id");
-  if (existing) return existing;
-  const id =
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : String(Date.now());
-  sessionStorage.setItem("adam_questionnaire_session_id", id);
-  return id;
-}
-
-function getStorageKey(sessionId: string) {
-  return `${STORAGE_KEY_PREFIX}${sessionId}`;
-}
-
-/** Short step labels for the top bar */
-const STEP_CONFIG: { sectionId: string; label: string; conditional?: boolean }[] = [
-  { sectionId: "company-profile", label: "Company" },
-  { sectionId: "segment-selection", label: "Services" },
-  { sectionId: "b2b", label: "B2B", conditional: true },
-  { sectionId: "b2g", label: "B2G", conditional: true },
-  { sectionId: "adam", label: "A.D.A.M.", conditional: true },
-  { sectionId: "attachments", label: "Uploads" },
-  { sectionId: "review", label: "Review" },
+/** Section-based page groupings for the questionnaire (all within the "Onboarding" journey step) */
+const SECTION_ORDER = [
+  "company-profile",
+  "segment-selection",
+  "b2b",
+  "b2g",
+  "adam",
+  "attachments",
 ];
 
 interface PageData {
-  stepIndex: number;
   sectionId: string;
   subsectionId: string;
   subsectionTitle: string;
+  sectionLabel: string;
   questions: Question[];
 }
 
 export default function QuestionnaireFlow() {
-  const [sessionId, setSessionId] = useState("");
+  const [email, setEmail] = useState("");
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
@@ -61,45 +44,63 @@ export default function QuestionnaireFlow() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
+  const saveDraftMutation = useMutation(api.questionnaires.saveDraft);
+  const deleteDraftMutation = useMutation(api.questionnaires.deleteDraft);
+
+  // Read email from localStorage (set by hero form)
   useEffect(() => {
-    const sid = getSessionId();
-    setSessionId(sid);
-    try {
-      const saved = localStorage.getItem(getStorageKey(sid));
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.answers) setAnswers(parsed.answers);
-        if (parsed.currentPageIndex !== undefined)
-          setCurrentPageIndex(parsed.currentPageIndex);
-        if (parsed.selectedSegments)
-          setSelectedSegments(parsed.selectedSegments);
-        if (parsed.showReview) setShowReview(parsed.showReview);
-      }
-    } catch {
-      // Ignore corrupted storage
+    const saved = localStorage.getItem("adam_email");
+    if (saved) {
+      setEmail(saved);
+    } else {
+      // No email — skip draft lookup, go straight to questionnaire
+      setDraftLoaded(true);
     }
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!sessionId || !mounted) return;
-    try {
-      localStorage.setItem(
-        getStorageKey(sessionId),
-        JSON.stringify({
-          answers,
-          currentPageIndex,
-          selectedSegments,
-          showReview,
-        })
-      );
-    } catch {
-      // Storage full
-    }
-  }, [answers, currentPageIndex, selectedSegments, showReview, sessionId, mounted]);
+  // Query for existing draft
+  const draft = useQuery(
+    api.questionnaires.getDraftByEmail,
+    email ? { email } : "skip"
+  );
 
-  // Build the filtered question list
+  // Show resume prompt when draft is found, or mark loaded if no draft
+  useEffect(() => {
+    if (!mounted || draftLoaded) return;
+    if (draft && Object.keys(draft.answers || {}).length > 0) {
+      setShowResumePrompt(true);
+    } else if (draft === null) {
+      setDraftLoaded(true);
+    }
+  }, [draft, draftLoaded, mounted]);
+
+  // Auto-save draft to Convex (debounced)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  useEffect(() => {
+    if (!email || !mounted || showResumePrompt || !draftLoaded) return;
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveDraftMutation({
+        email,
+        answers,
+        selectedSegments,
+        currentPageIndex,
+      }).catch(() => {
+        // Silent fail — localStorage is the fallback
+      });
+    }, 2000);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [answers, currentPageIndex, selectedSegments, email, mounted, showResumePrompt, draftLoaded, saveDraftMutation]);
+
+  // Build filtered questions
   const filteredQuestions = useMemo(() => {
     const base = getQuestionsForSegments(selectedSegments);
     return base.filter((q) => {
@@ -108,32 +109,38 @@ export default function QuestionnaireFlow() {
     });
   }, [selectedSegments, answers]);
 
-  // Build active steps (hide conditional steps that aren't selected)
-  const activeSteps = useMemo(() => {
-    return STEP_CONFIG.filter((cfg) => {
-      if (!cfg.conditional) return true;
-      if (cfg.sectionId === "b2b") return selectedSegments.includes("B2B");
-      if (cfg.sectionId === "b2g") return selectedSegments.includes("B2G");
-      if (cfg.sectionId === "adam") return selectedSegments.includes("ADAM");
+  // Determine which sections are active
+  const activeSections = useMemo(() => {
+    return SECTION_ORDER.filter((sectionId) => {
+      if (sectionId === "b2b") return selectedSegments.includes("B2B");
+      if (sectionId === "b2g") return selectedSegments.includes("B2G");
+      if (sectionId === "adam") return selectedSegments.includes("ADAM");
       return true;
     });
   }, [selectedSegments]);
 
-  // Build pages: group questions by subsection within each step
+  // Section label lookup
+  const sectionLabels: Record<string, string> = {
+    "company-profile": "Company",
+    "segment-selection": "Services",
+    b2b: "B2B",
+    b2g: "B2G",
+    adam: "A.D.A.M.",
+    attachments: "Uploads",
+  };
+
+  // Build pages grouped by subsection
   const pages = useMemo(() => {
     const result: PageData[] = [];
 
-    activeSteps.forEach((stepCfg, stepIndex) => {
-      if (stepCfg.sectionId === "review") return; // Review is special
-
-      const section = questionSections.find((s) => s.id === stepCfg.sectionId);
+    activeSections.forEach((sectionId) => {
+      const section = questionSections.find((s) => s.id === sectionId);
       if (!section) return;
 
       const sectionQuestions = filteredQuestions.filter(
-        (q) => q.section === stepCfg.sectionId
+        (q) => q.section === sectionId
       );
 
-      // Group by subsection
       section.subsections.forEach((sub) => {
         const subQuestions = sectionQuestions.filter(
           (q) => q.subsection === sub.id
@@ -141,57 +148,34 @@ export default function QuestionnaireFlow() {
         if (subQuestions.length === 0) return;
 
         result.push({
-          stepIndex,
-          sectionId: stepCfg.sectionId,
+          sectionId,
           subsectionId: sub.id,
           subsectionTitle: sub.title,
+          sectionLabel: sectionLabels[sectionId] || sectionId,
           questions: subQuestions,
         });
       });
     });
 
     return result;
-  }, [activeSteps, filteredQuestions]);
+  }, [activeSections, filteredQuestions]);
 
-  // Build Step objects for the progress bar
-  const stepBarSteps: Step[] = useMemo(() => {
-    return activeSteps.map((cfg, i) => {
-      if (cfg.sectionId === "review") {
-        return { id: cfg.sectionId, label: cfg.label, pageCount: 1 };
-      }
-      const pagesInStep = pages.filter((p) => p.stepIndex === i);
-      return {
-        id: cfg.sectionId,
-        label: cfg.label,
-        pageCount: Math.max(pagesInStep.length, 1),
-      };
-    });
-  }, [activeSteps, pages]);
+  // Progress within the "Onboarding" step (0-1)
+  const onboardingProgress = useMemo(() => {
+    if (showReview) return 1;
+    const total = pages.length;
+    if (total <= 1) return 0;
+    return currentPageIndex / total;
+  }, [showReview, pages.length, currentPageIndex]);
 
-  // Current step index and page-within-step
   const currentPage = pages[currentPageIndex];
-  const currentStepIndex = showReview
-    ? activeSteps.length - 1
-    : currentPage?.stepIndex ?? 0;
 
-  const currentPageInStep = useMemo(() => {
-    if (showReview) return 0;
-    if (!currentPage) return 0;
-    const pagesInThisStep = pages.filter(
-      (p) => p.stepIndex === currentPage.stepIndex
-    );
-    return pagesInThisStep.indexOf(currentPage);
-  }, [showReview, currentPage, pages]);
-
-  const handleAnswerChange = useCallback(
-    (questionId: string, value: any) => {
-      setAnswers((prev) => ({ ...prev, [questionId]: value }));
-      if (questionId === "segments") {
-        setSelectedSegments(Array.isArray(value) ? value : []);
-      }
-    },
-    []
-  );
+  const handleAnswerChange = useCallback((questionId: string, value: any) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    if (questionId === "segments") {
+      setSelectedSegments(Array.isArray(value) ? value : []);
+    }
+  }, []);
 
   const animateTransition = useCallback((cb: () => void) => {
     setPageVisible(false);
@@ -238,40 +222,59 @@ export default function QuestionnaireFlow() {
     setIsSubmitting(true);
     try {
       console.log("Submitting questionnaire:", {
-        sessionId,
+        email,
         answers,
         selectedSegments,
         submittedAt: new Date().toISOString(),
       });
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      setIsSubmitted(true);
-      try {
-        localStorage.removeItem(getStorageKey(sessionId));
-        sessionStorage.removeItem("adam_questionnaire_session_id");
-      } catch {
-        // Ignore
+
+      // Delete the draft after successful submission
+      if (email) {
+        await deleteDraftMutation({ email }).catch(() => {});
       }
+
+      setIsSubmitted(true);
     } catch (error) {
       console.error("Submission failed:", error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [sessionId, answers, selectedSegments]);
+  }, [email, answers, selectedSegments, deleteDraftMutation]);
+
+  const handleResumeDraft = useCallback(() => {
+    if (draft) {
+      setAnswers(draft.answers || {});
+      setSelectedSegments(draft.selectedSegments || []);
+      setCurrentPageIndex(draft.currentPageIndex || 0);
+    }
+    setShowResumePrompt(false);
+    setDraftLoaded(true);
+  }, [draft]);
+
+  const handleStartFresh = useCallback(() => {
+    if (email) {
+      deleteDraftMutation({ email }).catch(() => {});
+    }
+    setAnswers({});
+    setSelectedSegments([]);
+    setCurrentPageIndex(0);
+    setShowReview(false);
+    setShowResumePrompt(false);
+    setDraftLoaded(true);
+  }, [email, deleteDraftMutation]);
 
   const handleStartOver = useCallback(() => {
+    if (email) {
+      deleteDraftMutation({ email }).catch(() => {});
+    }
     setAnswers({});
     setSelectedSegments([]);
     setCurrentPageIndex(0);
     setShowReview(false);
     setIsSubmitted(false);
-    try {
-      sessionStorage.removeItem("adam_questionnaire_session_id");
-    } catch {
-      // Ignore
-    }
-    const newSid = getSessionId();
-    setSessionId(newSid);
-  }, []);
+    setDraftLoaded(true);
+  }, [email, deleteDraftMutation]);
 
   if (!mounted) {
     return (
@@ -281,6 +284,61 @@ export default function QuestionnaireFlow() {
     );
   }
 
+  // Resume prompt
+  if (showResumePrompt && draft) {
+    const updatedDate = new Date(draft.updatedAt).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+    return (
+      <div className="w-full max-w-lg mx-auto">
+        <div className="mb-10">
+          <StepProgressBar
+            steps={JOURNEY_STEPS}
+            currentStepIndex={0}
+            progress={0}
+          />
+        </div>
+        <div className="rounded-xl border border-grid-300 bg-background p-8 text-center">
+          <div className="flex justify-center mb-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-highlight/10">
+              <RotateCcw className="h-5 w-5 text-highlight" />
+            </div>
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Welcome back
+          </h2>
+          <p className="text-sm text-muted mb-1">
+            You have an unfinished questionnaire from {updatedDate}.
+          </p>
+          <p className="text-sm text-muted mb-6">
+            Would you like to continue where you left off?
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Button variant="secondary" onClick={handleStartFresh}>
+              Start Fresh
+            </Button>
+            <Button onClick={handleResumeDraft}>
+              Continue
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wait for draft check before showing questionnaire (only if email exists)
+  if (email && draft === undefined && !draftLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="h-8 w-8 rounded-full border-2 border-grid-500 border-t-highlight animate-spin" />
+      </div>
+    );
+  }
+
+  // Success screen
   if (isSubmitted) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -312,12 +370,12 @@ export default function QuestionnaireFlow() {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      {/* Step progress bar */}
+      {/* Journey step progress bar */}
       <div className="mb-10">
         <StepProgressBar
-          steps={stepBarSteps}
-          currentStepIndex={currentStepIndex}
-          currentPageInStep={currentPageInStep}
+          steps={JOURNEY_STEPS}
+          currentStepIndex={0}
+          progress={onboardingProgress}
         />
       </div>
 
@@ -340,10 +398,10 @@ export default function QuestionnaireFlow() {
           />
         ) : currentPage ? (
           <>
-            {/* Subsection title */}
+            {/* Section + subsection header */}
             <div className="mb-8">
               <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-highlight">
-                {activeSteps[currentPage.stepIndex]?.label}
+                {currentPage.sectionLabel}
               </span>
               <h2 className="text-xl md:text-2xl font-semibold text-foreground leading-snug mt-1">
                 {currentPage.subsectionTitle}
@@ -354,7 +412,6 @@ export default function QuestionnaireFlow() {
             <div className="space-y-6">
               {currentPage.questions.map((q) => (
                 <div key={q.id}>
-                  {/* For checkbox type, the label is inside the field */}
                   {q.type !== "checkbox" && (
                     <label className="block text-sm font-medium text-foreground mb-2">
                       {q.question}

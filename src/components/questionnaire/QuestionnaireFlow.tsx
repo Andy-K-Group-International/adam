@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   questions as allQuestions,
+  questionSections,
   getQuestionsForSegments,
 } from "@/lib/questionnaire-schema";
+import type { Question } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
-import ProgressBar from "./ProgressBar";
-import QuestionCard from "./QuestionCard";
+import StepProgressBar, { type Step } from "./StepProgressBar";
+import FieldRenderer from "./FieldRenderer";
 import ReviewPage from "./ReviewPage";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY_PREFIX = "adam_questionnaire_";
@@ -30,28 +32,46 @@ function getStorageKey(sessionId: string) {
   return `${STORAGE_KEY_PREFIX}${sessionId}`;
 }
 
+/** Short step labels for the top bar */
+const STEP_CONFIG: { sectionId: string; label: string; conditional?: boolean }[] = [
+  { sectionId: "company-profile", label: "Company" },
+  { sectionId: "segment-selection", label: "Services" },
+  { sectionId: "b2b", label: "B2B", conditional: true },
+  { sectionId: "b2g", label: "B2G", conditional: true },
+  { sectionId: "adam", label: "A.D.A.M.", conditional: true },
+  { sectionId: "attachments", label: "Uploads" },
+  { sectionId: "review", label: "Review" },
+];
+
+interface PageData {
+  stepIndex: number;
+  sectionId: string;
+  subsectionId: string;
+  subsectionTitle: string;
+  questions: Question[];
+}
+
 export default function QuestionnaireFlow() {
   const [sessionId, setSessionId] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
   const [showReview, setShowReview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
 
-  // Initialize session and load from localStorage
   useEffect(() => {
     const sid = getSessionId();
     setSessionId(sid);
-
     try {
       const saved = localStorage.getItem(getStorageKey(sid));
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.answers) setAnswers(parsed.answers);
-        if (parsed.currentIndex !== undefined)
-          setCurrentIndex(parsed.currentIndex);
+        if (parsed.currentPageIndex !== undefined)
+          setCurrentPageIndex(parsed.currentPageIndex);
         if (parsed.selectedSegments)
           setSelectedSegments(parsed.selectedSegments);
         if (parsed.showReview) setShowReview(parsed.showReview);
@@ -59,11 +79,9 @@ export default function QuestionnaireFlow() {
     } catch {
       // Ignore corrupted storage
     }
-
     setMounted(true);
   }, []);
 
-  // Auto-save to localStorage
   useEffect(() => {
     if (!sessionId || !mounted) return;
     try {
@@ -71,92 +89,162 @@ export default function QuestionnaireFlow() {
         getStorageKey(sessionId),
         JSON.stringify({
           answers,
-          currentIndex,
+          currentPageIndex,
           selectedSegments,
           showReview,
         })
       );
     } catch {
-      // Storage full or unavailable
+      // Storage full
     }
-  }, [answers, currentIndex, selectedSegments, showReview, sessionId, mounted]);
+  }, [answers, currentPageIndex, selectedSegments, showReview, sessionId, mounted]);
 
   // Build the filtered question list
   const filteredQuestions = useMemo(() => {
     const base = getQuestionsForSegments(selectedSegments);
-    // Filter out conditional questions whose condition is not met
     return base.filter((q) => {
       if (!q.conditionalOn) return true;
       return answers[q.conditionalOn.questionId] === q.conditionalOn.value;
     });
   }, [selectedSegments, answers]);
 
-  const currentQuestion = filteredQuestions[currentIndex];
-  const totalQuestions = filteredQuestions.length;
+  // Build active steps (hide conditional steps that aren't selected)
+  const activeSteps = useMemo(() => {
+    return STEP_CONFIG.filter((cfg) => {
+      if (!cfg.conditional) return true;
+      if (cfg.sectionId === "b2b") return selectedSegments.includes("B2B");
+      if (cfg.sectionId === "b2g") return selectedSegments.includes("B2G");
+      if (cfg.sectionId === "adam") return selectedSegments.includes("ADAM");
+      return true;
+    });
+  }, [selectedSegments]);
+
+  // Build pages: group questions by subsection within each step
+  const pages = useMemo(() => {
+    const result: PageData[] = [];
+
+    activeSteps.forEach((stepCfg, stepIndex) => {
+      if (stepCfg.sectionId === "review") return; // Review is special
+
+      const section = questionSections.find((s) => s.id === stepCfg.sectionId);
+      if (!section) return;
+
+      const sectionQuestions = filteredQuestions.filter(
+        (q) => q.section === stepCfg.sectionId
+      );
+
+      // Group by subsection
+      section.subsections.forEach((sub) => {
+        const subQuestions = sectionQuestions.filter(
+          (q) => q.subsection === sub.id
+        );
+        if (subQuestions.length === 0) return;
+
+        result.push({
+          stepIndex,
+          sectionId: stepCfg.sectionId,
+          subsectionId: sub.id,
+          subsectionTitle: sub.title,
+          questions: subQuestions,
+        });
+      });
+    });
+
+    return result;
+  }, [activeSteps, filteredQuestions]);
+
+  // Build Step objects for the progress bar
+  const stepBarSteps: Step[] = useMemo(() => {
+    return activeSteps.map((cfg, i) => {
+      if (cfg.sectionId === "review") {
+        return { id: cfg.sectionId, label: cfg.label, pageCount: 1 };
+      }
+      const pagesInStep = pages.filter((p) => p.stepIndex === i);
+      return {
+        id: cfg.sectionId,
+        label: cfg.label,
+        pageCount: Math.max(pagesInStep.length, 1),
+      };
+    });
+  }, [activeSteps, pages]);
+
+  // Current step index and page-within-step
+  const currentPage = pages[currentPageIndex];
+  const currentStepIndex = showReview
+    ? activeSteps.length - 1
+    : currentPage?.stepIndex ?? 0;
+
+  const currentPageInStep = useMemo(() => {
+    if (showReview) return 0;
+    if (!currentPage) return 0;
+    const pagesInThisStep = pages.filter(
+      (p) => p.stepIndex === currentPage.stepIndex
+    );
+    return pagesInThisStep.indexOf(currentPage);
+  }, [showReview, currentPage, pages]);
 
   const handleAnswerChange = useCallback(
-    (value: any) => {
-      if (!currentQuestion) return;
-      setAnswers((prev) => ({
-        ...prev,
-        [currentQuestion.id]: value,
-      }));
-
-      // If this is the segment selection question, update segments
-      if (currentQuestion.id === "segments") {
+    (questionId: string, value: any) => {
+      setAnswers((prev) => ({ ...prev, [questionId]: value }));
+      if (questionId === "segments") {
         setSelectedSegments(Array.isArray(value) ? value : []);
       }
     },
-    [currentQuestion]
+    []
   );
 
+  const animateTransition = useCallback((cb: () => void) => {
+    setPageVisible(false);
+    setTimeout(() => {
+      cb();
+      setPageVisible(true);
+    }, 150);
+  }, []);
+
   const handleNext = useCallback(() => {
-    if (currentIndex < totalQuestions - 1) {
-      setCurrentIndex((prev) => prev + 1);
+    if (currentPageIndex < pages.length - 1) {
+      animateTransition(() => setCurrentPageIndex((prev) => prev + 1));
     } else {
-      // Reached the end
-      setShowReview(true);
+      animateTransition(() => setShowReview(true));
     }
-  }, [currentIndex, totalQuestions]);
+  }, [currentPageIndex, pages.length, animateTransition]);
 
   const handleBack = useCallback(() => {
     if (showReview) {
-      setShowReview(false);
+      animateTransition(() => setShowReview(false));
       return;
     }
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
+    if (currentPageIndex > 0) {
+      animateTransition(() => setCurrentPageIndex((prev) => prev - 1));
     }
-  }, [currentIndex, showReview]);
+  }, [currentPageIndex, showReview, animateTransition]);
 
   const handleEditFromReview = useCallback(
     (questionId: string) => {
-      const idx = filteredQuestions.findIndex((q) => q.id === questionId);
-      if (idx >= 0) {
-        setCurrentIndex(idx);
-        setShowReview(false);
+      const pageIdx = pages.findIndex((p) =>
+        p.questions.some((q) => q.id === questionId)
+      );
+      if (pageIdx >= 0) {
+        animateTransition(() => {
+          setCurrentPageIndex(pageIdx);
+          setShowReview(false);
+        });
       }
     },
-    [filteredQuestions]
+    [pages, animateTransition]
   );
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      // For now, log data. In the future, POST to Convex.
       console.log("Submitting questionnaire:", {
         sessionId,
         answers,
         selectedSegments,
         submittedAt: new Date().toISOString(),
       });
-
-      // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
       setIsSubmitted(true);
-
-      // Clear saved state on successful submission
       try {
         localStorage.removeItem(getStorageKey(sessionId));
         sessionStorage.removeItem("adam_questionnaire_session_id");
@@ -173,7 +261,7 @@ export default function QuestionnaireFlow() {
   const handleStartOver = useCallback(() => {
     setAnswers({});
     setSelectedSegments([]);
-    setCurrentIndex(0);
+    setCurrentPageIndex(0);
     setShowReview(false);
     setIsSubmitted(false);
     try {
@@ -185,7 +273,6 @@ export default function QuestionnaireFlow() {
     setSessionId(newSid);
   }, []);
 
-  // Prevent flash of unstyled/unhydrated content
   if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -194,7 +281,6 @@ export default function QuestionnaireFlow() {
     );
   }
 
-  // Success screen
   if (isSubmitted) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -226,35 +312,97 @@ export default function QuestionnaireFlow() {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      {/* Progress bar */}
+      {/* Step progress bar */}
       <div className="mb-10">
-        <ProgressBar
-          current={showReview ? totalQuestions : currentIndex + 1}
-          total={totalQuestions}
+        <StepProgressBar
+          steps={stepBarSteps}
+          currentStepIndex={currentStepIndex}
+          currentPageInStep={currentPageInStep}
         />
       </div>
 
-      {/* Content area */}
-      {showReview ? (
-        <ReviewPage
-          answers={answers}
-          questions={filteredQuestions}
-          onEdit={handleEditFromReview}
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-        />
-      ) : currentQuestion ? (
-        <QuestionCard
-          key={currentQuestion.id}
-          question={currentQuestion}
-          value={answers[currentQuestion.id]}
-          onChange={handleAnswerChange}
-          onNext={handleNext}
-          onBack={handleBack}
-          isFirst={currentIndex === 0}
-          isLast={currentIndex === totalQuestions - 1}
-        />
-      ) : null}
+      {/* Page content */}
+      <div
+        className={cn(
+          "transition-all duration-200 ease-out",
+          pageVisible
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-2"
+        )}
+      >
+        {showReview ? (
+          <ReviewPage
+            answers={answers}
+            questions={filteredQuestions}
+            onEdit={handleEditFromReview}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+        ) : currentPage ? (
+          <>
+            {/* Subsection title */}
+            <div className="mb-8">
+              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-highlight">
+                {activeSteps[currentPage.stepIndex]?.label}
+              </span>
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground leading-snug mt-1">
+                {currentPage.subsectionTitle}
+              </h2>
+            </div>
+
+            {/* Questions */}
+            <div className="space-y-6">
+              {currentPage.questions.map((q) => (
+                <div key={q.id}>
+                  {/* For checkbox type, the label is inside the field */}
+                  {q.type !== "checkbox" && (
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      {q.question}
+                      {q.required && (
+                        <span className="text-highlight ml-1">*</span>
+                      )}
+                    </label>
+                  )}
+                  <FieldRenderer
+                    question={q}
+                    value={answers[q.id]}
+                    onChange={(val) => handleAnswerChange(q.id, val)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-12">
+              <div>
+                {currentPageIndex > 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleBack}
+                    className="gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                )}
+              </div>
+              <Button onClick={handleNext} className="gap-2">
+                {currentPageIndex === pages.length - 1 ? (
+                  <>
+                    Review Answers
+                    <Check className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

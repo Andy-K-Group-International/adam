@@ -3,12 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import {
-  questions as allQuestions,
-  questionSections,
-  getQuestionsForSegments,
-} from "@/lib/questionnaire-schema";
-import type { Question } from "@/lib/questionnaire-schema";
+import type { Question, QuestionSection } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
 import StepProgressBar, { JOURNEY_STEPS } from "./StepProgressBar";
 import FieldRenderer from "./FieldRenderer";
@@ -19,11 +14,13 @@ import confetti from "canvas-confetti";
 
 /** Section-based page groupings for the questionnaire (all within the "Onboarding" journey step) */
 const SECTION_ORDER = [
+  "goals-context",
   "company-profile",
   "segment-selection",
   "b2b",
   "b2g",
   "adam",
+  "proposal-readiness",
   "attachments",
 ];
 
@@ -47,10 +44,18 @@ export default function QuestionnaireFlow() {
   const [pageVisible, setPageVisible] = useState(true);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const [showFinishButton, setShowFinishButton] = useState(false);
 
   const saveDraftMutation = useMutation(api.questionnaires.saveDraft);
   const deleteDraftMutation = useMutation(api.questionnaires.deleteDraft);
   const submitDraftMutation = useMutation(api.questionnaires.submitDraft);
+
+  // Load questions and sections from Convex
+  const dbQuestions = useQuery(api.questionItems.listActive);
+  const dbSections = useQuery(api.questionItems.listActiveSections);
+
+  const allQuestions: Question[] = dbQuestions ?? [];
+  const questionSections: QuestionSection[] = dbSections ?? [];
 
   // Read email from localStorage (set by hero form)
   useEffect(() => {
@@ -102,14 +107,48 @@ export default function QuestionnaireFlow() {
     };
   }, [answers, currentPageIndex, selectedSegments, email, mounted, showResumePrompt, draftLoaded, saveDraftMutation]);
 
-  // Build filtered questions
+  // Fire confetti when submitted
+  useEffect(() => {
+    if (!isSubmitted) return;
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+    });
+    const timer = setTimeout(() => setShowFinishButton(true), 250);
+    return () => clearTimeout(timer);
+  }, [isSubmitted]);
+
+  // Segment filtering: get questions for selected segments
   const filteredQuestions = useMemo(() => {
-    const base = getQuestionsForSegments(selectedSegments);
-    return base.filter((q) => {
+    const base = allQuestions.filter(
+      (q) =>
+        q.section === "goals-context" ||
+        q.section === "company-profile" ||
+        q.section === "segment-selection" ||
+        q.section === "proposal-readiness" ||
+        q.section === "attachments" ||
+        q.section === "review"
+    );
+
+    const segmentQuestions: Question[] = [];
+    if (selectedSegments.includes("B2B")) {
+      segmentQuestions.push(...allQuestions.filter((q) => q.section === "b2b"));
+    }
+    if (selectedSegments.includes("B2G")) {
+      segmentQuestions.push(...allQuestions.filter((q) => q.section === "b2g"));
+    }
+    if (selectedSegments.includes("ADAM")) {
+      segmentQuestions.push(...allQuestions.filter((q) => q.section === "adam"));
+    }
+
+    const combined = [...base, ...segmentQuestions];
+
+    return combined.filter((q) => {
       if (!q.conditionalOn) return true;
       return answers[q.conditionalOn.questionId] === q.conditionalOn.value;
     });
-  }, [selectedSegments, answers]);
+  }, [allQuestions, selectedSegments, answers]);
 
   // Determine which sections are active
   const activeSections = useMemo(() => {
@@ -123,11 +162,13 @@ export default function QuestionnaireFlow() {
 
   // Section label lookup
   const sectionLabels: Record<string, string> = {
+    "goals-context": "Goals",
     "company-profile": "Company",
     "segment-selection": "Services",
     b2b: "B2B",
     b2g: "B2G",
     adam: "A.D.A.M.",
+    "proposal-readiness": "Proposal",
     attachments: "Uploads",
   };
 
@@ -160,7 +201,7 @@ export default function QuestionnaireFlow() {
     });
 
     return result;
-  }, [activeSections, filteredQuestions]);
+  }, [activeSections, filteredQuestions, questionSections]);
 
   // Progress within the "Onboarding" step (0-1)
   const onboardingProgress = useMemo(() => {
@@ -271,7 +312,8 @@ export default function QuestionnaireFlow() {
     setDraftLoaded(true);
   }, [email, deleteDraftMutation]);
 
-  if (!mounted) {
+  // Loading: waiting for mount or DB questions
+  if (!mounted || dbQuestions === undefined || dbSections === undefined) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-8 w-8 rounded-full border-2 border-grid-500 border-t-highlight animate-spin" />
@@ -332,21 +374,6 @@ export default function QuestionnaireFlow() {
       </div>
     );
   }
-
-  // Fire confetti when submitted
-  const [showFinishButton, setShowFinishButton] = useState(false);
-  useEffect(() => {
-    if (!isSubmitted) return;
-    // Fire confetti burst
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 },
-    });
-    // Fade in "Finish your account" button after 250ms
-    const timer = setTimeout(() => setShowFinishButton(true), 250);
-    return () => clearTimeout(timer);
-  }, [isSubmitted]);
 
   // Success screen
   if (isSubmitted) {
@@ -417,6 +444,7 @@ export default function QuestionnaireFlow() {
           <ReviewPage
             answers={answers}
             questions={filteredQuestions}
+            sections={questionSections}
             onEdit={handleEditFromReview}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}

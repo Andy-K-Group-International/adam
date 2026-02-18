@@ -17,7 +17,9 @@ import type * as contractVersions from "../contractVersions.js";
 import type * as contracts from "../contracts.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
+import type * as questionItems from "../questionItems.js";
 import type * as questionnaires from "../questionnaires.js";
+import type * as seedQuestions from "../seedQuestions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -36,7 +38,9 @@ declare const fullApi: ApiFromModules<{
   contracts: typeof contracts;
   helpers: typeof helpers;
   http: typeof http;
+  questionItems: typeof questionItems;
   questionnaires: typeof questionnaires;
+  seedQuestions: typeof seedQuestions;
   users: typeof users;
 }>;
 

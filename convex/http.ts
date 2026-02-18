@@ -52,6 +52,41 @@ http.route({
 });
 
 http.route({
+  path: "/sync-auth",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = await request.json();
+
+    try {
+      const { auth0Id, email, firstName, lastName, imageUrl } = body;
+
+      if (!auth0Id || !email) {
+        return new Response("Missing required fields", { status: 400 });
+      }
+
+      await ctx.runMutation(api.users.ensureExists, {
+        auth0Id,
+        email,
+        firstName: firstName || "",
+        lastName: lastName || "",
+        imageUrl,
+      });
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    } catch (error) {
+      console.error("Sync auth error:", error);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+  }),
+});
+
+http.route({
   path: "/resend-webhook",
   method: "POST",
   handler: httpAction(async (ctx, request) => {

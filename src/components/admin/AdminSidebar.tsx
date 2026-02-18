@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   ClipboardList,
+  MessageSquareText,
   LogOut,
 } from "lucide-react";
 
@@ -18,13 +19,14 @@ const navItems = [
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },
   { label: "Questionnaires", href: "/admin/questionnaires", icon: ClipboardList },
+  { label: "Questions", href: "/admin/questions", icon: MessageSquareText },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-foreground text-white flex flex-col">
+    <aside className="w-64 h-screen sticky top-0 bg-foreground text-white flex flex-col">
       <div className="p-6">
         <Link href="/admin" className="text-xl font-bold tracking-tight">
           A.D.A.M.

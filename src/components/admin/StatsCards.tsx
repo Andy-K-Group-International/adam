@@ -15,8 +15,8 @@ const cards = [
     key: "totalClients",
     label: "Total Clients",
     icon: Users,
-    color: "text-info",
-    bgColor: "bg-info/10",
+    color: "text-highlight",
+    bgColor: "bg-highlight/10",
   },
   {
     key: "activeContracts",
@@ -29,15 +29,15 @@ const cards = [
     key: "pendingActions",
     label: "Pending Actions",
     icon: AlertTriangle,
-    color: "text-warning",
-    bgColor: "bg-warning/10",
+    color: "text-highlight",
+    bgColor: "bg-highlight/10",
   },
   {
     key: "newQuestionnaires",
     label: "New Questionnaires",
     icon: ClipboardList,
-    color: "text-success",
-    bgColor: "bg-success/10",
+    color: "text-highlight",
+    bgColor: "bg-highlight/10",
   },
 ];
 

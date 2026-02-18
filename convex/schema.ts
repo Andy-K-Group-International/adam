@@ -219,6 +219,52 @@ export default defineSchema({
     .index("by_contractId_sectionId", ["contractId", "sectionId"])
     .index("by_parentId", ["parentId"]),
 
+  questionSections: defineTable({
+    sectionId: v.string(),
+    title: v.string(),
+    subsections: v.array(
+      v.object({
+        id: v.string(),
+        title: v.string(),
+      })
+    ),
+    order: v.number(),
+    isActive: v.boolean(),
+  }).index("by_sectionId", ["sectionId"]),
+
+  questionItems: defineTable({
+    questionId: v.string(),
+    number: v.number(),
+    question: v.string(),
+    type: v.union(
+      v.literal("text"),
+      v.literal("url"),
+      v.literal("email"),
+      v.literal("phone"),
+      v.literal("long-text"),
+      v.literal("single-select"),
+      v.literal("multi-select"),
+      v.literal("checkbox"),
+      v.literal("address"),
+      v.literal("file"),
+      v.literal("group")
+    ),
+    required: v.boolean(),
+    options: v.optional(
+      v.array(v.object({ label: v.string(), value: v.string() }))
+    ),
+    placeholder: v.optional(v.string()),
+    conditionalOn: v.optional(
+      v.object({ questionId: v.string(), value: v.string() })
+    ),
+    section: v.string(),
+    subsection: v.string(),
+    isActive: v.boolean(),
+  })
+    .index("by_questionId", ["questionId"])
+    .index("by_section", ["section"])
+    .index("by_number", ["number"]),
+
   activityLog: defineTable({
     type: v.union(
       v.literal("contract_created"),

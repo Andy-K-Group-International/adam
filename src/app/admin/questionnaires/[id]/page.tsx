@@ -61,7 +61,7 @@ export default function QuestionnaireDetailPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
           <Link
             href="/admin/questionnaires"
@@ -72,7 +72,7 @@ export default function QuestionnaireDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-foreground">
-                {questionnaire.companyName}
+                {questionnaire.companyName || "Untitled"}
               </h1>
               <span
                 className={cn(

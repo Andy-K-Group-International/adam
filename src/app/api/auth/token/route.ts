@@ -1,7 +1,6 @@
-import { Auth0Client } from "@auth0/nextjs-auth0/server";
 import { NextResponse } from "next/server";
 
-const auth0 = new Auth0Client();
+import { auth0 } from "@/lib/auth0";
 
 export async function GET() {
   try {

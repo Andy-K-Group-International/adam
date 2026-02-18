@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Question } from "@/lib/questionnaire-schema";
-import { questionSections } from "@/lib/questionnaire-schema";
+import type { Question, QuestionSection } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, Edit2, Send, Loader2 } from "lucide-react";
@@ -10,6 +9,7 @@ import { Check, ChevronDown, Edit2, Send, Loader2 } from "lucide-react";
 interface ReviewPageProps {
   answers: Record<string, any>;
   questions: Question[];
+  sections: QuestionSection[];
   onEdit: (questionId: string) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
@@ -18,6 +18,7 @@ interface ReviewPageProps {
 export default function ReviewPage({
   answers,
   questions,
+  sections,
   onEdit,
   onSubmit,
   isSubmitting,
@@ -26,7 +27,7 @@ export default function ReviewPage({
   const activeSectionIds = Array.from(
     new Set(questions.map((q) => q.section))
   );
-  const activeSections = questionSections.filter((s) =>
+  const activeSections = sections.filter((s) =>
     activeSectionIds.includes(s.id)
   );
 
@@ -248,4 +249,3 @@ export default function ReviewPage({
     </div>
   );
 }
-

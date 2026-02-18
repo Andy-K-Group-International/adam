@@ -27,8 +27,38 @@ export default function CreateAccountPage() {
     e.preventDefault();
     setError("");
 
+    if (!email) {
+      setError("Email is missing. Please start from the homepage.");
+      return;
+    }
+    const trimmedFirst = firstName.trim();
+    const trimmedLast = lastName.trim();
+    if (trimmedFirst.length < 2) {
+      setError("First name must be at least 2 characters.");
+      return;
+    }
+    if (trimmedLast.length < 2) {
+      setError("Last name must be at least 2 characters.");
+      return;
+    }
+    if (/[^a-zA-ZÀ-ÿ\s'-]/.test(trimmedFirst) || /[^a-zA-ZÀ-ÿ\s'-]/.test(trimmedLast)) {
+      setError("Names can only contain letters, spaces, hyphens, and apostrophes.");
+      return;
+    }
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must include at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError("Password must include at least one lowercase letter.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setError("Password must include at least one number.");
       return;
     }
     if (password !== confirmPassword) {
@@ -150,6 +180,9 @@ export default function CreateAccountPage() {
                 )}
               </button>
             </div>
+            <p className="text-xs text-muted-2 mt-1.5">
+              Min. 8 characters, with uppercase, lowercase, and a number.
+            </p>
           </div>
 
           {/* Confirm Password */}

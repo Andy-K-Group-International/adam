@@ -64,7 +64,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center">
           <Link
             href="/questionnaire"
-            className="relative inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-foreground btn-primary-gradient rounded-lg"
+            className="relative inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-foreground btn-primary-gradient"
           >
             <span className="relative z-10">Get Started</span>
           </Link>
@@ -100,7 +100,7 @@ export default function Navbar() {
               <Link
                 href="/questionnaire"
                 onClick={closeMobile}
-                className="relative inline-flex items-center justify-center w-full h-12 text-sm font-medium text-foreground btn-primary-gradient rounded-lg"
+                className="relative inline-flex items-center justify-center w-full h-12 text-sm font-medium text-foreground btn-primary-gradient"
               >
                 <span className="relative z-10">Get Started</span>
               </Link>

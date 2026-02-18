@@ -106,7 +106,7 @@ function PricingCard({ plan }: { plan: PlanData }) {
       <Link
         href={plan.cta === "Request Quote" ? `mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan` : "/questionnaire"}
         className={cn(
-          "block text-center py-3 px-4 rounded-lg text-sm font-medium transition-all duration-200",
+          "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
           plan.highlighted
             ? "bg-white text-foreground hover:bg-white/90"
             : "bg-foreground text-white hover:bg-foreground/90"
@@ -120,6 +120,7 @@ function PricingCard({ plan }: { plan: PlanData }) {
 
 export default function PricingSection() {
   const plans = pricingData.tech.plans;
+  const addon = pricingData.tech.addon;
 
   return (
     <section id="pricing" className="relative py-20 px-8">
@@ -147,6 +148,27 @@ export default function PricingSection() {
           ))}
         </div>
 
+        {/* Branding Add-on */}
+        <div className="max-w-[960px] mx-auto mt-8">
+          <div className="relative rounded-xl border border-grid-300 bg-white p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5 text-foreground">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-foreground">{addon.name}</h4>
+                <p className="text-sm text-muted">{addon.description}</p>
+              </div>
+            </div>
+            <span className="text-2xl font-bold text-foreground whitespace-nowrap">
+              {addon.price}
+              <span className="text-sm font-normal text-muted-2 ml-1">one-time</span>
+            </span>
+          </div>
+        </div>
+
         {/* Custom quote CTA */}
         <div className="text-center mt-12">
           <p className="text-sm text-muted mb-3">
@@ -154,12 +176,9 @@ export default function PricingSection() {
           </p>
           <a
             href={`mailto:${siteConfig.email}?subject=Custom Quote Request`}
-            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
+            className="text-sm font-medium text-foreground hover:underline underline-offset-4"
           >
-            Request a Custom Quote
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
-              <path d="M6 4l4 4-4 4" />
-            </svg>
+            Request a Custom Quote ›
           </a>
         </div>
       </div>

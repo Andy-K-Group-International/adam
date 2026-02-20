@@ -1,13 +1,25 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getContractsForClient } from "@/lib/supabase/queries/contracts";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { FileText, Download } from "lucide-react";
 import Link from "next/link";
 
 export default function DocumentsPage() {
-  const contracts = useQuery(api.contracts.listForClient);
+  const [contracts, setContracts] = useState<any[] | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const data = await getContractsForClient(supabase);
+      setContracts(data);
+    }
+
+    fetchData();
+  }, []);
 
   if (contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -36,8 +48,8 @@ export default function DocumentsPage() {
         <div className="space-y-3">
           {finalContracts.map((contract) => (
             <Link
-              key={contract._id}
-              href={`/dashboard/contracts/${contract._id}`}
+              key={contract.id}
+              href={`/dashboard/contracts/${contract.id}`}
               className="flex items-center justify-between bg-white rounded-xl border border-grid-300 p-5 hover:border-highlight/30 transition-colors"
             >
               <div className="flex items-center gap-4">
@@ -47,7 +59,7 @@ export default function DocumentsPage() {
                 <div>
                   <p className="font-medium text-foreground">{contract.title}</p>
                   <p className="text-sm text-muted-2 mt-0.5">
-                    Finalized {contract.finalizedAt ? new Date(contract.finalizedAt).toLocaleDateString() : ""}
+                    Finalized {contract.finalized_at ? new Date(contract.finalized_at).toLocaleDateString() : ""}
                   </p>
                 </div>
               </div>

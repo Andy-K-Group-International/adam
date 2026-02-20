@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { listAllContracts } from "@/lib/supabase/queries/contracts";
+import { listClients } from "@/lib/supabase/queries/clients";
+import type { Contract, Client } from "@/lib/supabase/types";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,12 +27,29 @@ const statusOptions: { value: StatusFilter; label: string }[] = [
 
 export default function ContractsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
+  const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
+  const [clients, setClients] = useState<Client[]>([]);
 
-  const contracts = useQuery(
-    api.contracts.listAll,
-    statusFilter ? { status: statusFilter as "draft" | "published" | "viewed" | "changes_requested" | "client_signed" | "countersigned" | "final" } : {}
-  );
-  const clients = useQuery(api.clients.list, {});
+  const fetchData = useCallback(async () => {
+    const supabase = createClient();
+    try {
+      const [contractsData, clientsData] = await Promise.all([
+        listAllContracts(
+          supabase,
+          statusFilter ? { status: statusFilter } : {}
+        ),
+        listClients(supabase),
+      ]);
+      setContracts(contractsData);
+      setClients(clientsData);
+    } catch {
+      setContracts([]);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -39,7 +58,7 @@ export default function ContractsPage() {
   // Build client lookup
   const clientMap = new Map<string, string>();
   (clients || []).forEach((c) => {
-    clientMap.set(c._id, c.companyName);
+    clientMap.set(c.id, c.company_name);
   });
 
   return (
@@ -108,19 +127,19 @@ export default function ContractsPage() {
               ) : (
                 (contracts || []).map((contract) => (
                   <tr
-                    key={contract._id}
+                    key={contract.id}
                     className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                   >
                     <td className="px-5 py-4">
                       <Link
-                        href={`/admin/contracts/${contract._id}`}
+                        href={`/admin/contracts/${contract.id}`}
                         className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
                       >
                         {contract.title}
                       </Link>
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
-                      {clientMap.get(contract.clientId) || "Unknown Client"}
+                      {clientMap.get(contract.client_id) || "Unknown Client"}
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={contract.status} />
@@ -129,7 +148,7 @@ export default function ContractsPage() {
                       v{contract.version}
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
-                      {formatDate(contract.updatedAt)}
+                      {formatDate(contract.updated_at)}
                     </td>
                   </tr>
                 ))

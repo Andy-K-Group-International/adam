@@ -1,13 +1,15 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { listClients } from "@/lib/supabase/queries/clients";
+import { createContract } from "@/lib/supabase/queries/contracts";
+import type { Client } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import type { Id } from "../../../../../convex/_generated/dataModel";
 
 interface AppendixSlot {
   label: string;
@@ -26,9 +28,9 @@ function NewContractForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clientId") || "";
+  const { user } = useCurrentUser();
 
-  const clients = useQuery(api.clients.list, {});
-  const createContract = useMutation(api.contracts.create);
+  const [clients, setClients] = useState<Client[] | undefined>(undefined);
 
   const [clientId, setClientId] = useState(preselectedClientId);
   const [title, setTitle] = useState("");
@@ -42,6 +44,13 @@ function NewContractForm() {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    listClients(supabase)
+      .then(setClients)
+      .catch(() => setClients([]));
+  }, []);
 
   if (clients === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -66,6 +75,7 @@ function NewContractForm() {
 
     setIsSubmitting(true);
     try {
+      const supabase = createClient();
       const appendices = appendixSlots
         .filter((slot) => slot.label.trim())
         .map((slot, index) => ({
@@ -75,14 +85,27 @@ function NewContractForm() {
           status: "empty" as const,
         }));
 
-      const contractId = await createContract({
-        clientId: clientId as Id<"clients">,
+      const contract = await createContract(supabase, {
+        client_id: clientId,
         title: title.trim(),
         content: content.trim(),
-        appendices: appendices.length > 0 ? appendices : undefined,
+        version: 1,
+        appendices: appendices.length > 0 ? appendices : null,
+        created_by: user?.id || "",
+        proposal_id: null,
+        sections: null,
+        client_signature: null,
+        client_signed_at: null,
+        client_signed_by: null,
+        admin_signature: null,
+        admin_signed_at: null,
+        admin_signed_by: null,
+        published_at: null,
+        viewed_at: null,
+        finalized_at: null,
       });
 
-      router.push(`/admin/contracts/${contractId}`);
+      router.push(`/admin/contracts/${contract.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create contract");
     } finally {
@@ -140,8 +163,8 @@ function NewContractForm() {
           >
             <option value="">Select a client...</option>
             {(clients || []).map((client) => (
-              <option key={client._id} value={client._id}>
-                {client.companyName} ({client.contactEmail})
+              <option key={client.id} value={client.id}>
+                {client.company_name} ({client.contact_email})
               </option>
             ))}
           </select>

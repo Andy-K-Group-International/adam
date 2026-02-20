@@ -1,17 +1,43 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { listClients } from "@/lib/supabase/queries/clients";
+import { listAllContracts } from "@/lib/supabase/queries/contracts";
+import { listQuestionnaires } from "@/lib/supabase/queries/questionnaires";
+import { listAll as listAllActivities } from "@/lib/supabase/queries/activity-log";
+import type { Client, Contract, Questionnaire, ActivityLog } from "@/lib/supabase/types";
 import StatsCards from "@/components/admin/StatsCards";
 import ActionItems from "@/components/admin/ActionItems";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 export default function AdminDashboardPage() {
-  const clients = useQuery(api.clients.list, {});
-  const contracts = useQuery(api.contracts.listAll, {});
-  const questionnaires = useQuery(api.questionnaires.list, { status: "submitted" });
-  const activities = useQuery(api.activityLog.listAll, { limit: 15 });
+  const [clients, setClients] = useState<Client[] | undefined>(undefined);
+  const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
+  const [activities, setActivities] = useState<ActivityLog[] | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const [clientsData, contractsData, questionnairesData, activitiesData] =
+        await Promise.all([
+          listClients(supabase).catch(() => []),
+          listAllContracts(supabase).catch(() => []),
+          listQuestionnaires(supabase, { status: "submitted" }).catch(() => []),
+          listAllActivities(supabase, 15).catch(() => []),
+        ]);
+
+      setClients(clientsData);
+      setContracts(contractsData);
+      setQuestionnaires(questionnairesData);
+      setActivities(activitiesData);
+    }
+
+    fetchData();
+  }, []);
 
   if (clients === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -37,11 +63,11 @@ export default function AdminDashboardPage() {
     .filter((c) => c.status === "client_signed")
     .forEach((c) => {
       actionItems.push({
-        id: `cs-${c._id}`,
+        id: `cs-${c.id}`,
         type: "unsigned_contract",
         title: c.title,
         description: "Client has signed. Awaiting your countersignature.",
-        href: `/admin/contracts/${c._id}`,
+        href: `/admin/contracts/${c.id}`,
         priority: "high",
       });
     });
@@ -51,11 +77,11 @@ export default function AdminDashboardPage() {
     .filter((c) => c.status === "changes_requested")
     .forEach((c) => {
       actionItems.push({
-        id: `cr-${c._id}`,
+        id: `cr-${c.id}`,
         type: "change_request",
         title: c.title,
         description: "Client has requested changes to this contract.",
-        href: `/admin/contracts/${c._id}`,
+        href: `/admin/contracts/${c.id}`,
         priority: "high",
       });
     });
@@ -67,11 +93,11 @@ export default function AdminDashboardPage() {
     )
     .forEach((c) => {
       actionItems.push({
-        id: `ap-${c._id}`,
+        id: `ap-${c.id}`,
         type: "unverified_appendix",
         title: c.title,
         description: "Uploaded appendix needs verification.",
-        href: `/admin/contracts/${c._id}`,
+        href: `/admin/contracts/${c.id}`,
         priority: "medium",
       });
     });
@@ -79,11 +105,11 @@ export default function AdminDashboardPage() {
   // New questionnaires
   (questionnaires || []).forEach((q) => {
     actionItems.push({
-      id: `q-${q._id}`,
+      id: `q-${q.id}`,
       type: "new_questionnaire",
-      title: q.companyName,
-      description: `Submitted by ${q.contactName} (${q.contactEmail})`,
-      href: `/admin/questionnaires/${q._id}`,
+      title: q.company_name,
+      description: `Submitted by ${q.contact_name} (${q.contact_email})`,
+      href: `/admin/questionnaires/${q.id}`,
       priority: "medium",
     });
   });

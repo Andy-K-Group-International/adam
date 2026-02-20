@@ -1,12 +1,24 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getContractsForClient } from "@/lib/supabase/queries/contracts";
 import ContractCard from "@/components/dashboard/ContractCard";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 export default function ContractsPage() {
-  const contracts = useQuery(api.contracts.listForClient);
+  const [contracts, setContracts] = useState<any[] | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const data = await getContractsForClient(supabase);
+      setContracts(data);
+    }
+
+    fetchData();
+  }, []);
 
   if (contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -30,12 +42,12 @@ export default function ContractsPage() {
         <div className="space-y-3">
           {(contracts || []).map((contract) => (
             <ContractCard
-              key={contract._id}
-              id={contract._id}
+              key={contract.id}
+              id={contract.id}
               title={contract.title}
               status={contract.status}
               stage="contract"
-              updatedAt={contract.updatedAt}
+              updatedAt={contract.updated_at}
             />
           ))}
         </div>

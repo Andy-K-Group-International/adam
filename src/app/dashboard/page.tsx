@@ -1,15 +1,32 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getContractsForClient } from "@/lib/supabase/queries/contracts";
+import { getActivityLogForCurrentClient } from "@/lib/supabase/queries/activityLog";
 import StatusCards from "@/components/dashboard/StatusCards";
 import ContractCard from "@/components/dashboard/ContractCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 export default function DashboardPage() {
-  const contracts = useQuery(api.contracts.listForClient);
-  const activities = useQuery(api.activityLog.listForCurrentClient, { limit: 10 });
+  const [contracts, setContracts] = useState<any[] | undefined>(undefined);
+  const [activities, setActivities] = useState<any[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const [contractsData, activitiesData] = await Promise.all([
+        getContractsForClient(supabase),
+        getActivityLogForCurrentClient(supabase, { limit: 10 }),
+      ]);
+      setContracts(contractsData);
+      setActivities(activitiesData);
+    }
+
+    fetchData();
+  }, []);
 
   if (contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -52,12 +69,12 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {(contracts || []).map((contract) => (
                 <ContractCard
-                  key={contract._id}
-                  id={contract._id}
+                  key={contract.id}
+                  id={contract.id}
                   title={contract.title}
                   status={contract.status}
                   stage="contract"
-                  updatedAt={contract.updatedAt}
+                  updatedAt={contract.updated_at}
                 />
               ))}
             </div>

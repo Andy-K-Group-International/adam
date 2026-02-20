@@ -1,32 +1,50 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
+import { useEffect, useState, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getContractById, markContractViewed, requestContractChanges, clientSignContract } from "@/lib/supabase/queries/contracts";
+import { getCommentsByContract } from "@/lib/supabase/queries/contractComments";
+import { getVersionsByContract } from "@/lib/supabase/queries/contractVersions";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export default function ContractPage() {
   const params = useParams();
-  const contractId = params.id as Id<"contracts">;
+  const contractId = params.id as string;
 
-  const contract = useQuery(api.contracts.getById, { id: contractId });
-  const comments = useQuery(api.contractComments.listByContract, {
-    contractId,
-  });
-  const versions = useQuery(api.contractVersions.listByContract, {
-    contractId,
-  });
+  const [contract, setContract] = useState<any | undefined>(undefined);
+  const [comments, setComments] = useState<any[]>([]);
+  const [versions, setVersions] = useState<any[]>([]);
+  const markedViewedRef = useRef(false);
 
-  const markViewed = useMutation(api.contracts.markViewed);
-  const requestChanges = useMutation(api.contracts.requestChanges);
-  const clientSign = useMutation(api.contracts.clientSign);
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const [contractData, commentsData, versionsData] = await Promise.all([
+        getContractById(supabase, contractId),
+        getCommentsByContract(supabase, contractId),
+        getVersionsByContract(supabase, contractId),
+      ]);
+      setContract(contractData);
+      setComments(commentsData);
+      setVersions(versionsData);
+    }
+
+    fetchData();
+  }, [contractId]);
 
   // Auto-mark as viewed
-  if (contract && contract.status === "published") {
-    markViewed({ id: contractId });
-  }
+  useEffect(() => {
+    if (contract && contract.status === "published" && !markedViewedRef.current) {
+      markedViewedRef.current = true;
+      const supabase = createClient();
+      markContractViewed(supabase, contractId).then((updated) => {
+        if (updated) setContract(updated);
+      });
+    }
+  }, [contract, contractId]);
 
   if (contract === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -53,10 +71,14 @@ export default function ContractPage() {
       canSign={canSign}
       canRequestChanges={canRequestChanges}
       onSign={async (signature) => {
-        await clientSign({ id: contractId, signatureStorageId: signature });
+        const supabase = createClient();
+        const updated = await clientSignContract(supabase, contractId, signature);
+        if (updated) setContract(updated);
       }}
       onRequestChanges={async (comment) => {
-        await requestChanges({ id: contractId, comment });
+        const supabase = createClient();
+        const updated = await requestContractChanges(supabase, contractId, comment);
+        if (updated) setContract(updated);
       }}
       backHref="/dashboard"
     />

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-import { Auth0Provider } from "@auth0/nextjs-auth0/client";
-import ConvexClientProvider from "@/components/shared/ConvexClientProvider";
 import "./globals.css";
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -34,9 +32,7 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
-        <Auth0Provider>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-        </Auth0Provider>
+        {children}
       </body>
     </html>
   );

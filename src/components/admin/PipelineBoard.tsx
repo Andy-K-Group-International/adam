@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getClients } from "@/lib/supabase/queries/clients";
 import ClientCard from "./ClientCard";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
@@ -15,7 +16,18 @@ const stages = [
 ] as const;
 
 export default function PipelineBoard() {
-  const clients = useQuery(api.clients.list, {});
+  const [clients, setClients] = useState<any[] | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const data = await getClients(supabase);
+      setClients(data);
+    }
+
+    fetchData();
+  }, []);
 
   if (clients === undefined) {
     return <LoadingSpinner className="min-h-[40vh]" />;
@@ -50,11 +62,11 @@ export default function PipelineBoard() {
             ) : (
               column.clients.map((client) => (
                 <ClientCard
-                  key={client._id}
-                  id={client._id}
-                  companyName={client.companyName}
-                  contactName={client.contactName}
-                  contactEmail={client.contactEmail}
+                  key={client.id}
+                  id={client.id}
+                  companyName={client.company_name}
+                  contactName={client.contact_name}
+                  contactEmail={client.contact_email}
                   stage={client.stage}
                   contractCount={0}
                 />

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { updateQuestion as updateQuestionQuery } from "@/lib/supabase/queries/question-items";
 import { Button } from "@/components/ui/button";
 import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ export default function QuestionEditor({
   allQuestions,
   onClose,
 }: QuestionEditorProps) {
-  const updateQuestion = useMutation(api.questionItems.updateQuestion);
+  
 
   const [text, setText] = useState(question.question);
   const [type, setType] = useState(question.type);
@@ -97,8 +97,9 @@ export default function QuestionEditor({
 
     setSaving(true);
     try {
-      await updateQuestion({
-        questionId: question.id,
+      const supabase = createClient();
+      await updateQuestionQuery(supabase,
+        question.id, {
         question: text,
         type: type as any,
         required,

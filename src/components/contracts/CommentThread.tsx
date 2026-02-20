@@ -1,42 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { createComment } from "@/lib/supabase/queries/contractComments";
 import { formatRelativeTime } from "@/lib/utils";
 import { Send } from "lucide-react";
-import type { Id } from "../../../convex/_generated/dataModel";
 
 interface Comment {
-  _id: string;
+  id: string;
   content: string;
-  authorId: string;
-  createdAt: number;
+  author_id: string;
+  created_at: string;
 }
 
 interface CommentThreadProps {
-  contractId: Id<"contracts">;
+  contractId: string;
   sectionId?: string;
   comments: Comment[];
+  onCommentAdded?: () => void;
 }
 
 export default function CommentThread({
   contractId,
   sectionId,
   comments,
+  onCommentAdded,
 }: CommentThreadProps) {
   const [newComment, setNewComment] = useState("");
-  const addComment = useMutation(api.contractComments.create);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    await addComment({
+    const supabase = createClient();
+    await createComment(supabase, {
       contractId,
       sectionId,
       content: newComment.trim(),
     });
     setNewComment("");
+    onCommentAdded?.();
   };
 
   return (
@@ -49,12 +51,12 @@ export default function CommentThread({
         )}
         {comments.map((comment) => (
           <div
-            key={comment._id}
+            key={comment.id}
             className="bg-grid-300/50 rounded-lg p-3"
           >
             <p className="text-sm text-foreground">{comment.content}</p>
             <p className="text-xs text-muted-2 mt-1">
-              {formatRelativeTime(comment.createdAt)}
+              {formatRelativeTime(new Date(comment.created_at).getTime())}
             </p>
           </div>
         ))}

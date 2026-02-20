@@ -1,25 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { uploadContractFile } from "@/lib/supabase/queries/contractFiles";
 import { Upload, CheckCircle, XCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Id } from "../../../convex/_generated/dataModel";
 
 interface Appendix {
   slot: string;
   label: string;
   required: boolean;
-  fileId?: Id<"contractFiles">;
+  fileId?: string;
   status: "empty" | "uploaded" | "verified" | "rejected";
   rejectionNote?: string;
 }
 
 interface AppendixUploadProps {
-  contractId: Id<"contracts">;
+  contractId: string;
   appendices: Appendix[];
   canUpload: boolean;
+  onUploadComplete?: () => void;
 }
 
 const statusIcons = {
@@ -40,30 +40,24 @@ export default function AppendixUpload({
   contractId,
   appendices,
   canUpload,
+  onUploadComplete,
 }: AppendixUploadProps) {
   const [uploading, setUploading] = useState<string | null>(null);
-  const generateUploadUrl = useMutation(api.contractFiles.generateUploadUrl);
-  const createFile = useMutation(api.contractFiles.create);
 
   const handleUpload = async (slot: string, file: File) => {
     setUploading(slot);
     try {
-      const uploadUrl = await generateUploadUrl();
-      const result = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      const { storageId } = await result.json();
-      await createFile({
+      const supabase = createClient();
+      await uploadContractFile(supabase, {
         contractId,
-        storageId,
+        file,
         fileName: file.name,
         fileType: file.type,
         fileSize: file.size,
         category: "appendix",
         slot,
       });
+      onUploadComplete?.();
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {

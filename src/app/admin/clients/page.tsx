@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { listClients } from "@/lib/supabase/queries/clients";
+import type { Client } from "@/lib/supabase/types";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,11 +30,24 @@ const stageLabels: Record<string, string> = {
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
+  const [clients, setClients] = useState<Client[] | undefined>(undefined);
 
-  const clients = useQuery(
-    api.clients.list,
-    search.trim().length > 0 ? { search: search.trim() } : {}
-  );
+  const fetchClients = useCallback(async () => {
+    const supabase = createClient();
+    try {
+      const data = await listClients(
+        supabase,
+        search.trim().length > 0 ? { search: search.trim() } : {}
+      );
+      setClients(data);
+    } catch {
+      setClients([]);
+    }
+  }, [search]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   if (clients === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -101,20 +115,20 @@ export default function ClientsPage() {
               ) : (
                 (clients || []).map((client) => (
                   <tr
-                    key={client._id}
+                    key={client.id}
                     className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                   >
                     <td className="px-5 py-4">
                       <Link
-                        href={`/admin/clients/${client._id}`}
+                        href={`/admin/clients/${client.id}`}
                         className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
                       >
-                        {client.companyName}
+                        {client.company_name}
                       </Link>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-foreground">{client.contactName}</p>
-                      <p className="text-xs text-muted-2">{client.contactEmail}</p>
+                      <p className="text-sm text-foreground">{client.contact_name}</p>
+                      <p className="text-xs text-muted-2">{client.contact_email}</p>
                     </td>
                     <td className="px-5 py-4">
                       <span
@@ -127,7 +141,7 @@ export default function ClientsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
-                      {formatDate(client.createdAt)}
+                      {formatDate(client.created_at)}
                     </td>
                   </tr>
                 ))

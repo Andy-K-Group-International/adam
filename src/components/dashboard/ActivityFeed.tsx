@@ -48,15 +48,10 @@ const activityLabels: Record<string, string> = {
   client_stage_changed: "Client stage changed",
 };
 
-interface ActivityItem {
-  _id: string;
-  type: string;
-  createdAt: number;
-  metadata?: Record<string, string>;
-}
+import type { ActivityLog } from "@/lib/supabase/types";
 
 interface ActivityFeedProps {
-  activities: ActivityItem[];
+  activities: ActivityLog[];
 }
 
 export default function ActivityFeed({ activities }: ActivityFeedProps) {
@@ -74,7 +69,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
         const Icon = activityIcons[activity.type] || FileText;
         return (
           <div
-            key={activity._id}
+            key={activity.id}
             className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-grid-300/50 transition-colors"
           >
             <div className="p-1.5 rounded-lg bg-grid-300 mt-0.5">
@@ -85,7 +80,7 @@ export default function ActivityFeed({ activities }: ActivityFeedProps) {
                 {activityLabels[activity.type] || activity.type}
               </p>
               <p className="text-xs text-muted-2">
-                {formatRelativeTime(activity.createdAt)}
+                {formatRelativeTime(activity.created_at)}
               </p>
             </div>
           </div>

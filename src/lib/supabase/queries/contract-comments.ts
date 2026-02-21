@@ -47,7 +47,7 @@ export async function createComment(
       client_id: contract.client_id,
       action: 'comment_added',
       description: `Comment added on contract ${contract.title}`,
-      user_id: data.user_id,
+      user_id: data.author_id,
       created_at: new Date().toISOString(),
     });
 

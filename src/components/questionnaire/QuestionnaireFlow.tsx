@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getActiveQuestionItems, getActiveSections } from "@/lib/supabase/queries/questionItems";
+import { listActive, listActiveSections } from "@/lib/supabase/queries/question-items";
 import { getDraftByEmail, saveDraft, deleteDraft, submitDraft } from "@/lib/supabase/queries/questionnaires";
 import type { Question, QuestionSection } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
@@ -62,10 +62,21 @@ export default function QuestionnaireFlow() {
 
     async function fetchData() {
       const [questions, sections] = await Promise.all([
-        getActiveQuestionItems(supabase),
-        getActiveSections(supabase),
+        listActive(supabase),
+        listActiveSections(supabase),
       ]);
-      setDbQuestions(questions);
+      setDbQuestions(questions.map((q) => ({
+        id: q.question_id,
+        number: q.number,
+        question: q.question,
+        type: q.type,
+        required: q.required,
+        options: q.options ?? undefined,
+        placeholder: q.placeholder ?? undefined,
+        conditionalOn: q.conditional_on ?? undefined,
+        section: q.section,
+        subsection: q.subsection,
+      })));
       setDbSections(sections);
     }
 

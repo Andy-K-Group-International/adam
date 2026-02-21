@@ -98,9 +98,9 @@ export default function AdminQuestionsPage() {
     ? allQuestions.find((q) => q.question_id === editingQuestion)
     : null;
 
-  const handleToggleActive = async (questionId: string, isActive: boolean) => {
+  const handleToggleActive = async (questionId: string, is_active: boolean) => {
     const supabase = createClient();
-    await toggleActive(supabase, questionId, !isActive);
+    await toggleActive(supabase, questionId, !is_active);
     // Refresh
     const updated = await listAll(supabase);
     setAllQuestions(updated as QuestionData[]);
@@ -141,7 +141,7 @@ export default function AdminQuestionsPage() {
           {filteredQuestions.map((q) => (
             <QuestionRow
               key={q.question_id}
-              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, isActive: q.is_active }}
+              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
               onEdit={() => setEditingQuestion(q.question_id)}
               onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
             />
@@ -217,7 +217,7 @@ export default function AdminQuestionsPage() {
                           {subQuestions.map((q) => (
                             <QuestionRow
                               key={q.question_id}
-                              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, isActive: q.is_active }}
+                              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
                               onEdit={() => setEditingQuestion(q.question_id)}
                               onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
                             />
@@ -236,8 +236,8 @@ export default function AdminQuestionsPage() {
       {/* Edit modal */}
       {editingQuestionData && (
         <QuestionEditor
-          question={{ id: editingQuestionData.question_id, number: editingQuestionData.number, question: editingQuestionData.question, type: editingQuestionData.type, required: editingQuestionData.required, options: editingQuestionData.options, placeholder: editingQuestionData.placeholder, conditionalOn: editingQuestionData.conditional_on, section: editingQuestionData.section, subsection: editingQuestionData.subsection, isActive: editingQuestionData.is_active }}
-          allQuestions={allQuestions.map((q) => ({ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, options: q.options, placeholder: q.placeholder, conditionalOn: q.conditional_on, section: q.section, subsection: q.subsection, isActive: q.is_active }))}
+          question={{ id: editingQuestionData.question_id, number: editingQuestionData.number, question: editingQuestionData.question, type: editingQuestionData.type, required: editingQuestionData.required, options: editingQuestionData.options, placeholder: editingQuestionData.placeholder, conditional_on: editingQuestionData.conditional_on, section: editingQuestionData.section, subsection: editingQuestionData.subsection, isActive: editingQuestionData.is_active }}
+          allQuestions={allQuestions.map((q) => ({ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, options: q.options, placeholder: q.placeholder, conditional_on: q.conditional_on, section: q.section, subsection: q.subsection, isActive: q.is_active }))}
           onClose={() => setEditingQuestion(null)}
         />
       )}
@@ -254,7 +254,7 @@ interface QuestionRowProps {
     question: string;
     type: string;
     required: boolean;
-    isActive: boolean;
+    is_active: boolean;
   };
   onEdit: () => void;
   onToggleActive: () => void;
@@ -265,7 +265,7 @@ function QuestionRow({ question, onEdit, onToggleActive }: QuestionRowProps) {
     <div
       className={cn(
         "flex items-center gap-4 px-5 py-3 border-b border-grid-300 last:border-b-0 hover:bg-grid-300/30 transition-colors",
-        !question.isActive && "opacity-50"
+        !question.is_active && "opacity-50"
       )}
     >
       <span className="text-xs font-mono text-muted-2 w-7 shrink-0">
@@ -292,9 +292,9 @@ function QuestionRow({ question, onEdit, onToggleActive }: QuestionRowProps) {
           type="button"
           onClick={onToggleActive}
           className="p-1.5 rounded-md text-muted-2 hover:text-foreground hover:bg-grid-300/50 transition-colors cursor-pointer"
-          title={question.isActive ? "Deactivate" : "Activate"}
+          title={question.is_active ? "Deactivate" : "Activate"}
         >
-          {question.isActive ? (
+          {question.is_active ? (
             <Eye className="h-3.5 w-3.5" />
           ) : (
             <EyeOff className="h-3.5 w-3.5" />

@@ -26,7 +26,7 @@ export function useCurrentUser(): CurrentUser {
     async function fetchUser() {
       try {
         const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (\!authUser) {
+        if (!authUser) {
           setUser(null);
           setIsLoading(false);
           return;
@@ -57,7 +57,7 @@ export function useCurrentUser(): CurrentUser {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (\!session) {
+        if (!session) {
           setUser(null);
         } else {
           fetchUser();

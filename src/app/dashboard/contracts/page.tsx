@@ -2,25 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getContractsForClient } from "@/lib/supabase/queries/contracts";
+import { listContractsForClient } from "@/lib/supabase/queries/contracts";
 import ContractCard from "@/components/dashboard/ContractCard";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ContractsPage() {
+  const { user, isLoading: userLoading } = useCurrentUser();
   const [contracts, setContracts] = useState<any[] | undefined>(undefined);
 
   useEffect(() => {
+    if (!user?.client_id) return;
     const supabase = createClient();
 
     async function fetchData() {
-      const data = await getContractsForClient(supabase);
+      const data = await listContractsForClient(supabase, user!.client_id!);
       setContracts(data);
     }
 
     fetchData();
-  }, []);
+  }, [user]);
 
-  if (contracts === undefined) {
+  if (userLoading || contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
   }
 

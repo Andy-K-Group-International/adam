@@ -3,15 +3,17 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getContractById, markContractViewed, requestContractChanges, clientSignContract } from "@/lib/supabase/queries/contracts";
-import { getCommentsByContract } from "@/lib/supabase/queries/contractComments";
-import { getVersionsByContract } from "@/lib/supabase/queries/contractVersions";
+import { getContractById, markViewed, requestChanges, clientSign } from "@/lib/supabase/queries/contracts";
+import { listByContract as getCommentsByContract } from "@/lib/supabase/queries/contract-comments";
+import { listByContract as getVersionsByContract } from "@/lib/supabase/queries/contract-versions";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ContractPage() {
   const params = useParams();
   const contractId = params.id as string;
+  const { user } = useCurrentUser();
 
   const [contract, setContract] = useState<any | undefined>(undefined);
   const [comments, setComments] = useState<any[]>([]);
@@ -37,14 +39,14 @@ export default function ContractPage() {
 
   // Auto-mark as viewed
   useEffect(() => {
-    if (contract && contract.status === "published" && !markedViewedRef.current) {
+    if (contract && contract.status === "published" && !markedViewedRef.current && user) {
       markedViewedRef.current = true;
       const supabase = createClient();
-      markContractViewed(supabase, contractId).then((updated) => {
+      markViewed(supabase, contractId, user.id).then((updated) => {
         if (updated) setContract(updated);
       });
     }
-  }, [contract, contractId]);
+  }, [contract, contractId, user]);
 
   if (contract === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -71,13 +73,15 @@ export default function ContractPage() {
       canSign={canSign}
       canRequestChanges={canRequestChanges}
       onSign={async (signature) => {
+        if (!user) return;
         const supabase = createClient();
-        const updated = await clientSignContract(supabase, contractId, signature);
+        const updated = await clientSign(supabase, contractId, user.id, signature);
         if (updated) setContract(updated);
       }}
       onRequestChanges={async (comment) => {
+        if (!user) return;
         const supabase = createClient();
-        const updated = await requestContractChanges(supabase, contractId, comment);
+        const updated = await requestChanges(supabase, contractId, user.id, comment);
         if (updated) setContract(updated);
       }}
       backHref="/dashboard"

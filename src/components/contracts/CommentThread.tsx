@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { createComment } from "@/lib/supabase/queries/contractComments";
+import { createComment } from "@/lib/supabase/queries/contract-comments";
 import { formatRelativeTime } from "@/lib/utils";
 import { Send } from "lucide-react";
 
@@ -32,10 +32,14 @@ export default function CommentThread({
     e.preventDefault();
     if (!newComment.trim()) return;
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     await createComment(supabase, {
-      contractId,
-      sectionId,
+      contract_id: contractId,
+      section_id: sectionId ?? null,
+      parent_id: null,
       content: newComment.trim(),
+      author_id: user?.id ?? "",
+      updated_at: new Date().toISOString(),
     });
     setNewComment("");
     onCommentAdded?.();

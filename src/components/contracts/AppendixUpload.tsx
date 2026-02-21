@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { uploadContractFile } from "@/lib/supabase/queries/contractFiles";
+import { createFile } from "@/lib/supabase/queries/contract-files";
+import { uploadContractFile } from "@/lib/supabase/storage";
 import { Upload, CheckCircle, XCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,14 +49,18 @@ export default function AppendixUpload({
     setUploading(slot);
     try {
       const supabase = createClient();
-      await uploadContractFile(supabase, {
-        contractId,
-        file,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
+      const { path, error: uploadError } = await uploadContractFile(supabase, file, contractId);
+      if (uploadError) throw new Error(uploadError);
+      const { data: { user } } = await supabase.auth.getUser();
+      await createFile(supabase, {
+        contract_id: contractId,
+        storage_key: path,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
         category: "appendix",
         slot,
+        uploaded_by: user?.id ?? "",
       });
       onUploadComplete?.();
     } catch (err) {

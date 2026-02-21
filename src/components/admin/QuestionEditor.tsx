@@ -27,9 +27,9 @@ interface QuestionData {
   question: string;
   type: string;
   required: boolean;
-  options?: { label: string; value: string }[];
-  placeholder?: string;
-  conditionalOn?: { questionId: string; value: string };
+  options?: { label: string; value: string }[] | null;
+  placeholder?: string | null;
+  conditional_on?: { questionId: string; value: string } | null;
   section: string;
   subsection: string;
   isActive: boolean;
@@ -56,10 +56,10 @@ export default function QuestionEditor({
     question.options ?? []
   );
   const [conditionalQuestionId, setConditionalQuestionId] = useState(
-    question.conditionalOn?.questionId ?? ""
+    question.conditional_on?.questionId ?? ""
   );
   const [conditionalValue, setConditionalValue] = useState(
-    question.conditionalOn?.value ?? ""
+    question.conditional_on?.value ?? ""
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -105,7 +105,7 @@ export default function QuestionEditor({
         required,
         placeholder: placeholder || undefined,
         options: hasOptions ? options : undefined,
-        conditionalOn:
+        conditional_on:
           conditionalQuestionId && conditionalValue
             ? { questionId: conditionalQuestionId, value: conditionalValue }
             : undefined,

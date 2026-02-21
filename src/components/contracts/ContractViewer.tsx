@@ -8,6 +8,7 @@ import SignatureCanvas from "./SignatureCanvas";
 import VersionHistory from "./VersionHistory";
 import { ArrowLeft, MessageSquare, Paperclip, Clock } from "lucide-react";
 import Link from "next/link";
+import type { Contract } from "@/lib/supabase/types";
 
 
 interface ContractViewerProps {
@@ -17,7 +18,7 @@ interface ContractViewerProps {
     content: string;
     status: string;
     version: number;
-    sections?: { id: string; title: string; content: string }[];
+    sections?: { id: string; title: string; content: string }[] | null;
     appendices?: {
       slot: string;
       label: string;
@@ -25,10 +26,11 @@ interface ContractViewerProps {
       fileId?: string;
       status: "empty" | "uploaded" | "verified" | "rejected";
       rejectionNote?: string;
-    }[];
+    }[] | null;
+
   };
   comments: { id: string; content: string; author_id: string; created_at: string }[];
-  versions: { id: string; version: number; change_note?: string | null; string; created_at: string }[];
+  versions: { id: string; version: number; change_note?: string | null; created_at: string }[];
   onSign?: (signature: string) => void;
   onRequestChanges?: (comment: string) => void;
   canSign?: boolean;

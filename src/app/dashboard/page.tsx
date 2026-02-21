@@ -2,33 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getContractsForClient } from "@/lib/supabase/queries/contracts";
-import { getActivityLogForCurrentClient } from "@/lib/supabase/queries/activityLog";
+import { listContractsForClient } from "@/lib/supabase/queries/contracts";
+import { listForCurrentClient } from "@/lib/supabase/queries/activity-log";
 import StatusCards from "@/components/dashboard/StatusCards";
 import ContractCard from "@/components/dashboard/ContractCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function DashboardPage() {
+  const { user, isLoading: userLoading } = useCurrentUser();
   const [contracts, setContracts] = useState<any[] | undefined>(undefined);
   const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!user?.client_id) return;
     const supabase = createClient();
 
     async function fetchData() {
       const [contractsData, activitiesData] = await Promise.all([
-        getContractsForClient(supabase),
-        getActivityLogForCurrentClient(supabase, { limit: 10 }),
+        listContractsForClient(supabase, user!.client_id!),
+        listForCurrentClient(supabase, user!.client_id!, 10),
       ]);
       setContracts(contractsData);
       setActivities(activitiesData);
     }
 
     fetchData();
-  }, []);
+  }, [user]);
 
-  if (contracts === undefined) {
+  if (userLoading || contracts === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
   }
 

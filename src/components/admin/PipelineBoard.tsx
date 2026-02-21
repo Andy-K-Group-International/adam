@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getClients } from "@/lib/supabase/queries/clients";
+import { listClients } from "@/lib/supabase/queries/clients";
 import ClientCard from "./ClientCard";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
@@ -22,7 +22,7 @@ export default function PipelineBoard() {
     const supabase = createClient();
 
     async function fetchData() {
-      const data = await getClients(supabase);
+      const data = await listClients(supabase);
       setClients(data);
     }
 

@@ -1,12 +1,24 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/supabase/queries/users";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { User, Mail } from "lucide-react";
 
 export default function ProfilePage() {
-  const user = useQuery(api.users.getCurrent);
+  const [user, setUser] = useState<any | undefined>(undefined);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const data = await getCurrentUser(supabase);
+      setUser(data ?? null);
+    }
+
+    fetchData();
+  }, []);
 
   if (user === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -33,7 +45,7 @@ export default function ProfilePage() {
             <User className="h-7 w-7 text-highlight" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">{user.firstName} {user.lastName}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{user.first_name} {user.last_name}</h2>
             <p className="text-sm text-muted-2">{user.role}</p>
           </div>
         </div>

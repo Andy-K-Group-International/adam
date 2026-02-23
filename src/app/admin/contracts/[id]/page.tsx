@@ -1,32 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { getContractById, updateContract, publishContract, countersign } from "@/lib/supabase/queries/contracts";
+import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
+import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
+import type { Contract, ContractComment, ContractVersion } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft, Check, X, Send, PenTool, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import StatusBadge from "@/components/contracts/StatusBadge";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export default function AdminContractDetailPage() {
   const params = useParams();
-  const contractId = params.id as Id<"contracts">;
+  const contractId = params.id as string;
+  const { user } = useCurrentUser();
 
-  const contract = useQuery(api.contracts.getById, { id: contractId });
-  const comments = useQuery(api.contractComments.listByContract, {
-    contractId,
-  });
-  const versions = useQuery(api.contractVersions.listByContract, {
-    contractId,
-  });
-
-  const updateContract = useMutation(api.contracts.update);
-  const publishContract = useMutation(api.contracts.publish);
-  const countersignContract = useMutation(api.contracts.countersign);
+  const [contract, setContract] = useState<Contract | null | undefined>(undefined);
+  const [comments, setComments] = useState<any[]>([]);
+  const [versions, setVersions] = useState<ContractVersion[]>([]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
@@ -34,6 +30,27 @@ export default function AdminContractDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isCountersigning, setIsCountersigning] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      try {
+        const [contractData, commentsData, versionsData] = await Promise.all([
+          getContractById(supabase, contractId),
+          listCommentsByContract(supabase, contractId).catch(() => []),
+          listVersionsByContract(supabase, contractId).catch(() => []),
+        ]);
+        setContract(contractData);
+        setComments(commentsData);
+        setVersions(versionsData);
+      } catch {
+        setContract(null);
+      }
+    }
+
+    fetchData();
+  }, [contractId]);
 
   if (contract === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -62,11 +79,12 @@ export default function AdminContractDetailPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateContract({
-        id: contractId,
+      const supabase = createClient();
+      const updated = await updateContract(supabase, contractId, {
         title: editTitle.trim() || undefined,
         content: editContent.trim() || undefined,
-      });
+      } as Partial<Contract>);
+      setContract(updated);
       setIsEditing(false);
     } catch (err) {
       console.error("Failed to save contract:", err);
@@ -78,7 +96,9 @@ export default function AdminContractDetailPage() {
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      await publishContract({ id: contractId });
+      const supabase = createClient();
+      const updated = await publishContract(supabase, contractId, user?.id || "");
+      setContract(updated);
     } catch (err) {
       console.error("Failed to publish contract:", err);
     } finally {
@@ -89,10 +109,14 @@ export default function AdminContractDetailPage() {
   const handleCountersign = async () => {
     setIsCountersigning(true);
     try {
-      await countersignContract({
-        id: contractId,
-        signatureStorageId: `admin_sig_${Date.now()}`,
-      });
+      const supabase = createClient();
+      const updated = await countersign(
+        supabase,
+        contractId,
+        user?.id || "",
+        `admin_sig_${Date.now()}`
+      );
+      setContract(updated);
     } catch (err) {
       console.error("Failed to countersign contract:", err);
     } finally {

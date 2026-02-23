@@ -8,27 +8,29 @@ import SignatureCanvas from "./SignatureCanvas";
 import VersionHistory from "./VersionHistory";
 import { ArrowLeft, MessageSquare, Paperclip, Clock } from "lucide-react";
 import Link from "next/link";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Contract } from "@/lib/supabase/types";
+
 
 interface ContractViewerProps {
   contract: {
-    _id: Id<"contracts">;
+    id: string;
     title: string;
     content: string;
     status: string;
     version: number;
-    sections?: { id: string; title: string; content: string }[];
+    sections?: { id: string; title: string; content: string }[] | null;
     appendices?: {
       slot: string;
       label: string;
       required: boolean;
-      fileId?: Id<"contractFiles">;
+      fileId?: string;
       status: "empty" | "uploaded" | "verified" | "rejected";
       rejectionNote?: string;
-    }[];
+    }[] | null;
+
   };
-  comments: { _id: string; content: string; authorId: string; createdAt: number }[];
-  versions: { _id: string; version: number; changeNote?: string; createdAt: number }[];
+  comments: { id: string; content: string; author_id: string; created_at: string }[];
+  versions: { id: string; version: number; change_note?: string | null; created_at: string }[];
   onSign?: (signature: string) => void;
   onRequestChanges?: (comment: string) => void;
   canSign?: boolean;
@@ -114,7 +116,7 @@ export default function ContractViewer({
 
             {activeTab === "appendices" && (
               <AppendixUpload
-                contractId={contract._id}
+                contractId={contract.id}
                 appendices={contract.appendices || []}
                 canUpload={
                   contract.status !== "final" &&
@@ -125,7 +127,7 @@ export default function ContractViewer({
 
             {activeTab === "comments" && (
               <CommentThread
-                contractId={contract._id}
+                contractId={contract.id}
                 comments={comments}
               />
             )}

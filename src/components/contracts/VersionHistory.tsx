@@ -4,10 +4,10 @@ import { formatDate } from "@/lib/utils";
 import { Clock } from "lucide-react";
 
 interface Version {
-  _id: string;
+  id: string;
   version: number;
   changeNote?: string;
-  createdAt: number;
+  created_at: string;
 }
 
 interface VersionHistoryProps {
@@ -27,7 +27,7 @@ export default function VersionHistory({ versions }: VersionHistoryProps) {
     <div className="space-y-3">
       {versions.map((version) => (
         <div
-          key={version._id}
+          key={version.id}
           className="flex items-start gap-3 p-3 bg-grid-300/30 rounded-lg"
         >
           <Clock className="h-4 w-4 text-muted-2 mt-0.5" />
@@ -41,7 +41,7 @@ export default function VersionHistory({ versions }: VersionHistoryProps) {
               </p>
             )}
             <p className="text-xs text-muted-2 mt-0.5">
-              {formatDate(version.createdAt)}
+              {formatDate(version.created_at)}
             </p>
           </div>
         </div>

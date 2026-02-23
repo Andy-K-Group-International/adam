@@ -1,25 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { createFile } from "@/lib/supabase/queries/contract-files";
+import { uploadContractFile } from "@/lib/supabase/storage";
 import { Upload, CheckCircle, XCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Id } from "../../../convex/_generated/dataModel";
 
 interface Appendix {
   slot: string;
   label: string;
   required: boolean;
-  fileId?: Id<"contractFiles">;
+  fileId?: string;
   status: "empty" | "uploaded" | "verified" | "rejected";
   rejectionNote?: string;
 }
 
 interface AppendixUploadProps {
-  contractId: Id<"contracts">;
+  contractId: string;
   appendices: Appendix[];
   canUpload: boolean;
+  onUploadComplete?: () => void;
 }
 
 const statusIcons = {
@@ -40,30 +41,28 @@ export default function AppendixUpload({
   contractId,
   appendices,
   canUpload,
+  onUploadComplete,
 }: AppendixUploadProps) {
   const [uploading, setUploading] = useState<string | null>(null);
-  const generateUploadUrl = useMutation(api.contractFiles.generateUploadUrl);
-  const createFile = useMutation(api.contractFiles.create);
 
   const handleUpload = async (slot: string, file: File) => {
     setUploading(slot);
     try {
-      const uploadUrl = await generateUploadUrl();
-      const result = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      const { storageId } = await result.json();
-      await createFile({
-        contractId,
-        storageId,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
+      const supabase = createClient();
+      const { path, error: uploadError } = await uploadContractFile(supabase, file, contractId);
+      if (uploadError) throw new Error(uploadError);
+      const { data: { user } } = await supabase.auth.getUser();
+      await createFile(supabase, {
+        contract_id: contractId,
+        storage_key: path,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
         category: "appendix",
         slot,
+        uploaded_by: user?.id ?? "",
       });
+      onUploadComplete?.();
     } catch (err) {
       console.error("Upload failed:", err);
     } finally {

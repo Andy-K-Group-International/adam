@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { listAll, listAllSections, toggleActive } from "@/lib/supabase/queries/question-items";
 import QuestionEditor from "@/components/admin/QuestionEditor";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
@@ -28,16 +28,51 @@ const TYPE_COLORS: Record<string, string> = {
   group: "bg-gray-500/10 text-gray-500",
 };
 
-export default function AdminQuestionsPage() {
-  const allQuestions = useQuery(api.questionItems.listAll);
-  const allSections = useQuery(api.questionItems.listAllSections);
-  const toggleActive = useMutation(api.questionItems.toggleActive);
+interface QuestionData {
+  id: string;
+  question_id: string;
+  number: number;
+  question: string;
+  type: string;
+  required: boolean;
+  options: { label: string; value: string }[] | null;
+  placeholder: string | null;
+  conditional_on: { questionId: string; value: string } | null;
+  section: string;
+  subsection: string;
+  is_active: boolean;
+}
 
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({});
+interface SectionData {
+  id: string;
+  section_id: string;
+  title: string;
+  subsections: { id: string; title: string }[];
+  order: number;
+  is_active: boolean;
+}
+
+export default function AdminQuestionsPage() {
+  const [allQuestions, setAllQuestions] = useState<QuestionData[] | undefined>(undefined);
+  const [allSections, setAllSections] = useState<SectionData[] | undefined>(undefined);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    Promise.all([
+      listAll(supabase),
+      listAllSections(supabase),
+    ]).then(([questions, sections]) => {
+      setAllQuestions(questions as QuestionData[]);
+      setAllSections(sections as SectionData[]);
+    }).catch(() => {
+      setAllQuestions([]);
+      setAllSections([]);
+    });
+  }, []);
 
   if (allQuestions === undefined || allSections === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -54,17 +89,21 @@ export default function AdminQuestionsPage() {
     ? allQuestions.filter(
         (q) =>
           q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          q.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          q.question_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
           String(q.number).includes(searchQuery)
       )
     : allQuestions;
 
   const editingQuestionData = editingQuestion
-    ? allQuestions.find((q) => q.id === editingQuestion)
+    ? allQuestions.find((q) => q.question_id === editingQuestion)
     : null;
 
-  const handleToggleActive = async (questionId: string, isActive: boolean) => {
-    await toggleActive({ questionId, isActive: !isActive });
+  const handleToggleActive = async (questionId: string, is_active: boolean) => {
+    const supabase = createClient();
+    await toggleActive(supabase, questionId, !is_active);
+    // Refresh
+    const updated = await listAll(supabase);
+    setAllQuestions(updated as QuestionData[]);
   };
 
   return (
@@ -101,10 +140,10 @@ export default function AdminQuestionsPage() {
           </div>
           {filteredQuestions.map((q) => (
             <QuestionRow
-              key={q.id}
-              question={q}
-              onEdit={() => setEditingQuestion(q.id)}
-              onToggleActive={() => handleToggleActive(q.id, q.isActive)}
+              key={q.question_id}
+              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
+              onEdit={() => setEditingQuestion(q.question_id)}
+              onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
             />
           ))}
           {filteredQuestions.length === 0 && (
@@ -118,22 +157,22 @@ export default function AdminQuestionsPage() {
         <div className="space-y-3">
           {allSections.map((section) => {
             const sectionQuestions = allQuestions.filter(
-              (q) => q.section === section.id
+              (q) => q.section === section.section_id
             );
             if (sectionQuestions.length === 0) return null;
 
-            const isExpanded = expandedSections[section.id] ?? false;
-            const activeCount = sectionQuestions.filter((q) => q.isActive).length;
+            const isExpanded = expandedSections[section.section_id] ?? false;
+            const activeCount = sectionQuestions.filter((q) => q.is_active).length;
 
             return (
               <div
-                key={section.id}
+                key={section.section_id}
                 className="rounded-xl border border-grid-300 bg-background overflow-hidden"
               >
                 {/* Section header */}
                 <button
                   type="button"
-                  onClick={() => toggleSection(section.id)}
+                  onClick={() => toggleSection(section.section_id)}
                   className="flex w-full items-center justify-between px-5 py-4 cursor-pointer hover:bg-grid-300/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -162,7 +201,6 @@ export default function AdminQuestionsPage() {
                   )}
                 >
                   <div className="border-t border-grid-300">
-                    {/* Subsection groups */}
                     {section.subsections.map((sub) => {
                       const subQuestions = sectionQuestions.filter(
                         (q) => q.subsection === sub.id
@@ -178,12 +216,10 @@ export default function AdminQuestionsPage() {
                           </div>
                           {subQuestions.map((q) => (
                             <QuestionRow
-                              key={q.id}
-                              question={q}
-                              onEdit={() => setEditingQuestion(q.id)}
-                              onToggleActive={() =>
-                                handleToggleActive(q.id, q.isActive)
-                              }
+                              key={q.question_id}
+                              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
+                              onEdit={() => setEditingQuestion(q.question_id)}
+                              onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
                             />
                           ))}
                         </div>
@@ -200,8 +236,8 @@ export default function AdminQuestionsPage() {
       {/* Edit modal */}
       {editingQuestionData && (
         <QuestionEditor
-          question={editingQuestionData}
-          allQuestions={allQuestions}
+          question={{ id: editingQuestionData.question_id, number: editingQuestionData.number, question: editingQuestionData.question, type: editingQuestionData.type, required: editingQuestionData.required, options: editingQuestionData.options, placeholder: editingQuestionData.placeholder, conditional_on: editingQuestionData.conditional_on, section: editingQuestionData.section, subsection: editingQuestionData.subsection, isActive: editingQuestionData.is_active }}
+          allQuestions={allQuestions.map((q) => ({ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, options: q.options, placeholder: q.placeholder, conditional_on: q.conditional_on, section: q.section, subsection: q.subsection, isActive: q.is_active }))}
           onClose={() => setEditingQuestion(null)}
         />
       )}
@@ -218,7 +254,7 @@ interface QuestionRowProps {
     question: string;
     type: string;
     required: boolean;
-    isActive: boolean;
+    is_active: boolean;
   };
   onEdit: () => void;
   onToggleActive: () => void;
@@ -229,20 +265,15 @@ function QuestionRow({ question, onEdit, onToggleActive }: QuestionRowProps) {
     <div
       className={cn(
         "flex items-center gap-4 px-5 py-3 border-b border-grid-300 last:border-b-0 hover:bg-grid-300/30 transition-colors",
-        !question.isActive && "opacity-50"
+        !question.is_active && "opacity-50"
       )}
     >
-      {/* Number */}
       <span className="text-xs font-mono text-muted-2 w-7 shrink-0">
         #{question.number}
       </span>
-
-      {/* Question text */}
       <p className="text-sm text-foreground flex-1 min-w-0 truncate">
         {question.question}
       </p>
-
-      {/* Type badge */}
       <span
         className={cn(
           "text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0",
@@ -251,23 +282,19 @@ function QuestionRow({ question, onEdit, onToggleActive }: QuestionRowProps) {
       >
         {question.type}
       </span>
-
-      {/* Required badge */}
       {question.required && (
         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-highlight/10 text-highlight shrink-0">
           required
         </span>
       )}
-
-      {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"
           onClick={onToggleActive}
           className="p-1.5 rounded-md text-muted-2 hover:text-foreground hover:bg-grid-300/50 transition-colors cursor-pointer"
-          title={question.isActive ? "Deactivate" : "Activate"}
+          title={question.is_active ? "Deactivate" : "Activate"}
         >
-          {question.isActive ? (
+          {question.is_active ? (
             <Eye className="h-3.5 w-3.5" />
           ) : (
             <EyeOff className="h-3.5 w-3.5" />

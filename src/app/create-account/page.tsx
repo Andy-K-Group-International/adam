@@ -81,7 +81,7 @@ export default function CreateAccountPage() {
         return;
       }
 
-      // Redirect to Auth0 login with email pre-filled
+      // Redirect to sign-in
       window.location.href = `/auth/login?login_hint=${encodeURIComponent(email)}`;
     } catch {
       setError("Something went wrong. Please try again.");

@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { getQuestionnaireById } from "@/lib/supabase/queries/questionnaires";
+import { convertFromQuestionnaire } from "@/lib/supabase/queries/clients";
+import type { Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import QuestionnairePreview from "@/components/admin/QuestionnairePreview";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
-import type { Id } from "../../../../../convex/_generated/dataModel";
 
 const statusColors: Record<string, string> = {
   draft: "bg-grid-300 text-muted",
@@ -27,13 +28,17 @@ const statusLabels: Record<string, string> = {
 export default function QuestionnaireDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const questionnaireId = params.id as Id<"questionnaires">;
+  const questionnaireId = params.id as string;
 
-  const questionnaire = useQuery(api.questionnaires.getById, {
-    id: questionnaireId,
-  });
-  const convertToClient = useMutation(api.clients.convertFromQuestionnaire);
+  const [questionnaire, setQuestionnaire] = useState<Questionnaire | null | undefined>(undefined);
   const [isConverting, setIsConverting] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    getQuestionnaireById(supabase, questionnaireId)
+      .then(setQuestionnaire)
+      .catch(() => setQuestionnaire(null));
+  }, [questionnaireId]);
 
   if (questionnaire === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -50,8 +55,9 @@ export default function QuestionnaireDetailPage() {
   const handleConvert = async () => {
     setIsConverting(true);
     try {
-      const clientId = await convertToClient({ questionnaireId });
-      router.push(`/admin/clients/${clientId}`);
+      const supabase = createClient();
+      const client = await convertFromQuestionnaire(supabase, questionnaire.id);
+      router.push(`/admin/clients/${client.id}`);
     } catch (err) {
       console.error("Failed to convert questionnaire:", err);
       setIsConverting(false);
@@ -72,7 +78,7 @@ export default function QuestionnaireDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-foreground">
-                {questionnaire.companyName || "Untitled"}
+                {questionnaire.company_name || "Untitled"}
               </h1>
               <span
                 className={cn(
@@ -85,8 +91,8 @@ export default function QuestionnaireDetailPage() {
             </div>
             <p className="text-sm text-muted-2 mt-0.5">
               Questionnaire submission
-              {questionnaire.submittedAt
-                ? ` - ${formatDate(questionnaire.submittedAt)}`
+              {questionnaire.submitted_at
+                ? ` - ${formatDate(questionnaire.submitted_at)}`
                 : ""}
             </p>
           </div>
@@ -102,9 +108,9 @@ export default function QuestionnaireDetailPage() {
               {isConverting ? "Converting..." : "Convert to Client"}
             </button>
           )}
-          {questionnaire.status === "converted" && questionnaire.convertedToClientId && (
+          {questionnaire.status === "converted" && questionnaire.converted_to_client_id && (
             <Link
-              href={`/admin/clients/${questionnaire.convertedToClientId}`}
+              href={`/admin/clients/${questionnaire.converted_to_client_id}`}
               className="inline-flex items-center gap-2 bg-success text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-success/90 transition-colors"
             >
               View Client

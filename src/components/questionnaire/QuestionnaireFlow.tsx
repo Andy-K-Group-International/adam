@@ -447,11 +447,11 @@ export default function QuestionnaireFlow() {
           >
             <Button
               onClick={() => {
-                window.location.href = "/create-account";
+                window.location.href = "/sign-in";
               }}
               className="gap-2"
             >
-              Finish Your Account
+              Go to Sign In
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

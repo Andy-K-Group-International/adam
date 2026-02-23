@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { listQuestionnaires } from "@/lib/supabase/queries/questionnaires";
+import { convertFromQuestionnaire } from "@/lib/supabase/queries/clients";
+import type { Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import { ClipboardList, UserPlus } from "lucide-react";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import type { Id } from "../../../../convex/_generated/dataModel";
 
 const statusColors: Record<string, string> = {
   draft: "bg-grid-300 text-muted",
@@ -24,10 +25,16 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function QuestionnairesPage() {
-  const questionnaires = useQuery(api.questionnaires.list, {});
-  const convertToClient = useMutation(api.clients.convertFromQuestionnaire);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
   const router = useRouter();
   const [convertingId, setConvertingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    listQuestionnaires(supabase)
+      .then(setQuestionnaires)
+      .catch(() => setQuestionnaires([]));
+  }, []);
 
   if (questionnaires === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -36,10 +43,9 @@ export default function QuestionnairesPage() {
   const handleConvert = async (questionnaireId: string) => {
     setConvertingId(questionnaireId);
     try {
-      const clientId = await convertToClient({
-        questionnaireId: questionnaireId as Id<"questionnaires">,
-      });
-      router.push(`/admin/clients/${clientId}`);
+      const supabase = createClient();
+      const client = await convertFromQuestionnaire(supabase, questionnaireId);
+      router.push(`/admin/clients/${client.id}`);
     } catch (err) {
       console.error("Failed to convert questionnaire:", err);
       setConvertingId(null);
@@ -92,20 +98,20 @@ export default function QuestionnairesPage() {
               ) : (
                 (questionnaires || []).map((q) => (
                   <tr
-                    key={q._id}
+                    key={q.id}
                     className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                   >
                     <td className="px-5 py-4">
                       <Link
-                        href={`/admin/questionnaires/${q._id}`}
+                        href={`/admin/questionnaires/${q.id}`}
                         className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
                       >
-                        {q.companyName}
+                        {q.company_name}
                       </Link>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-foreground">{q.contactName}</p>
-                      <p className="text-xs text-muted-2">{q.contactEmail}</p>
+                      <p className="text-sm text-foreground">{q.contact_name}</p>
+                      <p className="text-xs text-muted-2">{q.contact_email}</p>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
@@ -130,31 +136,31 @@ export default function QuestionnairesPage() {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
-                      {q.submittedAt ? formatDate(q.submittedAt) : "---"}
+                      {q.submitted_at ? formatDate(q.submitted_at) : "---"}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
-                          href={`/admin/questionnaires/${q._id}`}
+                          href={`/admin/questionnaires/${q.id}`}
                           className="text-xs text-highlight hover:underline"
                         >
                           View
                         </Link>
                         {q.status === "submitted" && (
                           <button
-                            onClick={() => handleConvert(q._id)}
-                            disabled={convertingId === q._id}
+                            onClick={() => handleConvert(q.id)}
+                            disabled={convertingId === q.id}
                             className="inline-flex items-center gap-1 text-xs font-medium text-white bg-highlight hover:bg-highlight/90 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                           >
                             <UserPlus className="h-3 w-3" />
-                            {convertingId === q._id
+                            {convertingId === q.id
                               ? "Converting..."
                               : "Convert to Client"}
                           </button>
                         )}
-                        {q.status === "converted" && q.convertedToClientId && (
+                        {q.status === "converted" && q.converted_to_client_id && (
                           <Link
-                            href={`/admin/clients/${q.convertedToClientId}`}
+                            href={`/admin/clients/${q.converted_to_client_id}`}
                             className="text-xs text-success hover:underline"
                           >
                             View Client

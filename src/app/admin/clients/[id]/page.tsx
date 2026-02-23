@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { getClientById } from "@/lib/supabase/queries/clients";
+import { listForClient as listActivitiesForClient } from "@/lib/supabase/queries/activity-log";
+import { getQuestionnaireById } from "@/lib/supabase/queries/questionnaires";
+import type { Client, Questionnaire, ActivityLog } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +15,6 @@ import ContractCard from "@/components/dashboard/ContractCard";
 import QuestionnairePreview from "@/components/admin/QuestionnairePreview";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import type { Id } from "../../../../../convex/_generated/dataModel";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -36,17 +38,37 @@ type Tab = "overview" | "contracts" | "questionnaire" | "activity";
 
 export default function ClientDetailPage() {
   const params = useParams();
-  const clientId = params.id as Id<"clients">;
+  const clientId = params.id as string;
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
-  const client = useQuery(api.clients.getById, { id: clientId });
-  const activities = useQuery(api.activityLog.listForClient, { clientId });
+  const [client, setClient] = useState<(Client & { contracts: any[] }) | null | undefined>(undefined);
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null);
 
-  const questionnaireId = client?.questionnaireId;
-  const questionnaire = useQuery(
-    api.questionnaires.getById,
-    questionnaireId ? { id: questionnaireId } : "skip"
-  );
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      try {
+        const clientData = await getClientById(supabase, clientId);
+        setClient(clientData);
+
+        // Fetch activities
+        const activitiesData = await listActivitiesForClient(supabase, clientId).catch(() => []);
+        setActivities(activitiesData);
+
+        // Fetch questionnaire if linked
+        if (clientData.questionnaire_id) {
+          const questionnaireData = await getQuestionnaireById(supabase, clientData.questionnaire_id).catch(() => null);
+          setQuestionnaire(questionnaireData);
+        }
+      } catch {
+        setClient(null);
+      }
+    }
+
+    fetchData();
+  }, [clientId]);
 
   if (client === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -81,7 +103,7 @@ export default function ClientDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-foreground">
-                {client.companyName}
+                {client.company_name}
               </h1>
               <span
                 className={cn(
@@ -93,7 +115,7 @@ export default function ClientDetailPage() {
               </span>
             </div>
             <p className="text-sm text-muted-2 mt-0.5">
-              Created {formatDate(client.createdAt)}
+              Created {formatDate(client.created_at)}
             </p>
           </div>
         </div>
@@ -134,28 +156,28 @@ export default function ClientDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Building2 className="h-4 w-4 text-muted-2 shrink-0" />
-                <span className="text-sm text-foreground">{client.companyName}</span>
+                <span className="text-sm text-foreground">{client.company_name}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-muted-2 shrink-0" />
-                <span className="text-sm text-foreground">{client.contactEmail}</span>
+                <span className="text-sm text-foreground">{client.contact_email}</span>
               </div>
-              {client.contactPhone && (
+              {client.contact_phone && (
                 <div className="flex items-center gap-3">
                   <Phone className="h-4 w-4 text-muted-2 shrink-0" />
-                  <span className="text-sm text-foreground">{client.contactPhone}</span>
+                  <span className="text-sm text-foreground">{client.contact_phone}</span>
                 </div>
               )}
-              {client.websiteUrl && (
+              {client.website_url && (
                 <div className="flex items-center gap-3">
                   <Globe className="h-4 w-4 text-muted-2 shrink-0" />
                   <a
-                    href={client.websiteUrl}
+                    href={client.website_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-highlight hover:underline"
                   >
-                    {client.websiteUrl}
+                    {client.website_url}
                   </a>
                 </div>
               )}
@@ -202,10 +224,10 @@ export default function ClientDetailPage() {
                   </div>
                 </div>
               )}
-              {client.billingCurrency && (
+              {client.billing_currency && (
                 <div>
                   <p className="text-xs text-muted-2 mb-0.5">Billing Currency</p>
-                  <p className="text-sm text-foreground">{client.billingCurrency}</p>
+                  <p className="text-sm text-foreground">{client.billing_currency}</p>
                 </div>
               )}
               {client.notes && (
@@ -235,14 +257,14 @@ export default function ClientDetailPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {(client.contracts || []).map((contract) => (
+              {(client.contracts || []).map((contract: any) => (
                 <ContractCard
-                  key={contract._id}
-                  id={contract._id}
+                  key={contract.id}
+                  id={contract.id}
                   title={contract.title}
                   status={contract.status}
                   stage={client.stage}
-                  updatedAt={contract.updatedAt}
+                  updatedAt={contract.updated_at}
                   isAdmin
                 />
               ))}
@@ -258,7 +280,7 @@ export default function ClientDetailPage() {
           ) : (
             <div className="bg-white rounded-xl border border-grid-300 p-8 text-center">
               <p className="text-muted-2">
-                {client.questionnaireId
+                {client.questionnaire_id
                   ? "Loading questionnaire..."
                   : "No questionnaire linked to this client."}
               </p>

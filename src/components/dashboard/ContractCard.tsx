@@ -31,7 +31,7 @@ interface ContractCardProps {
   title: string;
   status: string;
   stage: string;
-  updatedAt: number;
+  updatedAt: string | number;
   isAdmin?: boolean;
 }
 

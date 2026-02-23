@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { createClient } from "@/lib/supabase/client";
+import { listActive, listActiveSections } from "@/lib/supabase/queries/question-items";
+import { getDraftByEmail, saveDraft, deleteDraft, submitDraft } from "@/lib/supabase/queries/questionnaires";
 import type { Question, QuestionSection } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
 import StepProgressBar, { JOURNEY_STEPS } from "./StepProgressBar";
@@ -46,16 +47,41 @@ export default function QuestionnaireFlow() {
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [showFinishButton, setShowFinishButton] = useState(false);
 
-  const saveDraftMutation = useMutation(api.questionnaires.saveDraft);
-  const deleteDraftMutation = useMutation(api.questionnaires.deleteDraft);
-  const submitDraftMutation = useMutation(api.questionnaires.submitDraft);
-
-  // Load questions and sections from Convex
-  const dbQuestions = useQuery(api.questionItems.listActive);
-  const dbSections = useQuery(api.questionItems.listActiveSections);
+  // Supabase data state
+  const [dbQuestions, setDbQuestions] = useState<Question[] | undefined>(undefined);
+  const [dbSections, setDbSections] = useState<QuestionSection[] | undefined>(undefined);
+  const [draft, setDraft] = useState<any | undefined>(undefined);
+  const [draftChecked, setDraftChecked] = useState(false);
 
   const allQuestions: Question[] = dbQuestions ?? [];
   const questionSections: QuestionSection[] = dbSections ?? [];
+
+  // Load questions and sections from Supabase on mount
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function fetchData() {
+      const [questions, sections] = await Promise.all([
+        listActive(supabase),
+        listActiveSections(supabase),
+      ]);
+      setDbQuestions(questions.map((q) => ({
+        id: q.question_id,
+        number: q.number,
+        question: q.question,
+        type: q.type,
+        required: q.required,
+        options: q.options ?? undefined,
+        placeholder: q.placeholder ?? undefined,
+        conditionalOn: q.conditional_on ?? undefined,
+        section: q.section,
+        subsection: q.subsection,
+      })));
+      setDbSections(sections);
+    }
+
+    fetchData();
+  }, []);
 
   // Read email from localStorage (set by hero form)
   useEffect(() => {
@@ -65,34 +91,45 @@ export default function QuestionnaireFlow() {
     } else {
       // No email — skip draft lookup, go straight to questionnaire
       setDraftLoaded(true);
+      setDraftChecked(true);
     }
     setMounted(true);
   }, []);
 
-  // Query for existing draft
-  const draft = useQuery(
-    api.questionnaires.getDraftByEmail,
-    email ? { email } : "skip"
-  );
+  // Query for existing draft when email is available
+  useEffect(() => {
+    if (!email) return;
+
+    const supabase = createClient();
+
+    async function fetchDraft() {
+      const draftData = await getDraftByEmail(supabase, email);
+      setDraft(draftData);
+      setDraftChecked(true);
+    }
+
+    fetchDraft();
+  }, [email]);
 
   // Show resume prompt when draft is found, or mark loaded if no draft
   useEffect(() => {
-    if (!mounted || draftLoaded) return;
+    if (!mounted || draftLoaded || !draftChecked) return;
     if (draft && Object.keys(draft.answers || {}).length > 0) {
       setShowResumePrompt(true);
-    } else if (draft === null) {
+    } else if (draft === null || draft === undefined) {
       setDraftLoaded(true);
     }
-  }, [draft, draftLoaded, mounted]);
+  }, [draft, draftLoaded, mounted, draftChecked]);
 
-  // Auto-save draft to Convex (debounced)
+  // Auto-save draft to Supabase (debounced)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   useEffect(() => {
     if (!email || !mounted || showResumePrompt || !draftLoaded) return;
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      saveDraftMutation({
+      const supabase = createClient();
+      saveDraft(supabase, {
         email,
         answers,
         selectedSegments,
@@ -105,7 +142,7 @@ export default function QuestionnaireFlow() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [answers, currentPageIndex, selectedSegments, email, mounted, showResumePrompt, draftLoaded, saveDraftMutation]);
+  }, [answers, currentPageIndex, selectedSegments, email, mounted, showResumePrompt, draftLoaded]);
 
   // Fire confetti when submitted
   useEffect(() => {
@@ -264,7 +301,8 @@ export default function QuestionnaireFlow() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      await submitDraftMutation({
+      const supabase = createClient();
+      await submitDraft(supabase, {
         email,
         answers,
         selectedSegments,
@@ -276,13 +314,13 @@ export default function QuestionnaireFlow() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, answers, selectedSegments, submitDraftMutation]);
+  }, [email, answers, selectedSegments]);
 
   const handleResumeDraft = useCallback(() => {
     if (draft) {
       setAnswers(draft.answers || {});
-      setSelectedSegments(draft.selectedSegments || []);
-      setCurrentPageIndex(draft.currentPageIndex || 0);
+      setSelectedSegments(draft.selected_segments || []);
+      setCurrentPageIndex(draft.current_page_index || 0);
     }
     setShowResumePrompt(false);
     setDraftLoaded(true);
@@ -290,7 +328,8 @@ export default function QuestionnaireFlow() {
 
   const handleStartFresh = useCallback(() => {
     if (email) {
-      deleteDraftMutation({ email }).catch(() => {});
+      const supabase = createClient();
+      deleteDraft(supabase, email).catch(() => {});
     }
     setAnswers({});
     setSelectedSegments([]);
@@ -298,11 +337,12 @@ export default function QuestionnaireFlow() {
     setShowReview(false);
     setShowResumePrompt(false);
     setDraftLoaded(true);
-  }, [email, deleteDraftMutation]);
+  }, [email]);
 
   const handleStartOver = useCallback(() => {
     if (email) {
-      deleteDraftMutation({ email }).catch(() => {});
+      const supabase = createClient();
+      deleteDraft(supabase, email).catch(() => {});
     }
     setAnswers({});
     setSelectedSegments([]);
@@ -310,7 +350,7 @@ export default function QuestionnaireFlow() {
     setShowReview(false);
     setIsSubmitted(false);
     setDraftLoaded(true);
-  }, [email, deleteDraftMutation]);
+  }, [email]);
 
   // Loading: waiting for mount or DB questions
   if (!mounted || dbQuestions === undefined || dbSections === undefined) {
@@ -323,7 +363,7 @@ export default function QuestionnaireFlow() {
 
   // Resume prompt
   if (showResumePrompt && draft) {
-    const updatedDate = new Date(draft.updatedAt).toLocaleDateString("en-GB", {
+    const updatedDate = new Date(draft.updated_at).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -367,7 +407,7 @@ export default function QuestionnaireFlow() {
   }
 
   // Wait for draft check before showing questionnaire (only if email exists)
-  if (email && draft === undefined && !draftLoaded) {
+  if (email && !draftChecked && !draftLoaded) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-8 w-8 rounded-full border-2 border-grid-500 border-t-highlight animate-spin" />
@@ -407,11 +447,11 @@ export default function QuestionnaireFlow() {
           >
             <Button
               onClick={() => {
-                window.location.href = "/create-account";
+                window.location.href = "/sign-in";
               }}
               className="gap-2"
             >
-              Finish Your Account
+              Go to Sign In
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

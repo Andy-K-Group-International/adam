@@ -1,31 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "@/app/actions/auth";
 
 export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+    const form = new FormData(e.currentTarget);
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
 
-    try {
-      const result = await signIn(formData);
-      if (result?.error) {
-        setError(result.error);
-        setIsLoading(false);
-      }
-      // If no error, the server action will redirect
-    } catch {
-      // redirect() throws a NEXT_REDIRECT error — this is expected
-      // Next.js handles the redirect automatically
+    const result = await signIn(email, password);
+    if (result?.error) {
+      setError(result.error);
+      setIsLoading(false);
     }
   }
 
@@ -82,7 +76,6 @@ export default function SignInPage() {
             {isLoading ? "Signing in..." : "Sign in"}
           </button>
         </form>
-
       </div>
     </div>
   );

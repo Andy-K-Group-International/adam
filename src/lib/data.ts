@@ -45,17 +45,17 @@ export const roadmapSteps = [
   },
   {
     step: "03",
-    title: "Strategy",
-    description:
-      "Together we define the strategy and timeline. Every detail aligned before we start.",
-    icon: "target",
-  },
-  {
-    step: "04",
     title: "Contract",
     description:
       "Review, comment, and digitally sign your contract. Full transparency, no surprises.",
     icon: "pen-tool",
+  },
+  {
+    step: "04",
+    title: "Strategy",
+    description:
+      "Together we define the strategy and timeline. Every detail aligned before we start.",
+    icon: "target",
   },
   {
     step: "05",
@@ -85,7 +85,7 @@ export const founders = [
   {
     name: "Kobe Janssens",
     role: "CTO & Co-Founder",
-    bio: "Full-stack engineer and architect behind A.D.A.M. Obsessed with building tools that eliminate friction and let people focus on what matters.",
+    bio: "The technical architect behind A.D.A.M., Kobe leverages his extensive expertise to transform any idea into reality.",
     image: "/images/co-founder.jpg",
     quote:
       "Technology should disappear into the background. When it works perfectly, you don't even notice it's there.",

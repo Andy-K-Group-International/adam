@@ -1,0 +1,10 @@
+order,sectionId,title,isActive,subsections,_id,_creationTime
+0,goals-context,Goals & Context,true,goals: Goals & Context,k9793zc14645770gcmw6wv2jjd81crag,1771426538451.2454
+1,company-profile,Company Profile,true,company-contacts: Company & Contacts | scale-presence: Scale & Presence | market-position: Market Position,k97426jhvw3k6k34ksemyt44wh81dq99,1771426538451.2456
+2,segment-selection,Service Selection,true,segment: Select Your Services,k973n9624vzxzcpdv6kmh7g8qx81d7nc,1771426538451.2458
+3,b2b,B2B — Lead Generation,true,b2b-goals: What You're Trying to Achieve | b2b-package: Package Selection | b2b-target: Target Market | b2b-campaign: Campaign Intelligence | b2b-tech: Tech Stack & Reporting,k97eh42bx8gvtm2q99tke3trzn81dpqd,1771426538451.246
+4,b2g,B2G — Government Contracts,true,b2g-goals: What You're Trying to Achieve | b2g-package: Package Selection | b2g-scope: Target Scope | b2g-compliance: Capacity & Compliance | b2g-strategy: Strategy & Priorities,k971n5ygckn3r65ph4p3bedwm181c9ne,1771426538451.2463
+5,adam,A.D.A.M. — System Licensing,true,adam-automate: What You're Trying to Automate | adam-package: Package Selection | adam-config: Configuration & Integration | adam-future: Launch & Future Plans,k97fb39engfq7en89dk96r0sw181cewm,1771426538451.2466
+6,proposal-readiness,Proposal Readiness,true,proposal: Proposal Readiness,k979sx3ekjm1z6dth74s8ynb8h81cmc6,1771426538451.2468
+7,attachments,Attachments,true,uploads: Upload Documents,k97990549mz271tyyp8h62dhm981d3hy,1771426538451.247
+8,review,Review & Submit,true,review-submit: Review Your Answers,k974267kpqyyqqsfy2bsvrc89181c6n9,1771426538451.2473

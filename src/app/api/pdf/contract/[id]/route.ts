@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import ContractDocument from "@/lib/pdf/ContractDocument";
 import { createElement } from "react";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
   request: NextRequest,
@@ -10,45 +11,28 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-    if (!convexUrl) {
-      return NextResponse.json({ error: "Convex URL not configured" }, { status: 500 });
-    }
+    const supabase = createAdminClient();
 
-    const response = await fetch(`${convexUrl}/api/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: "contracts:getById",
-        args: { id },
-        format: "json",
-      }),
-    });
+    const { data: contract, error: contractError } = await supabase
+      .from("contracts")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch contract" }, { status: 500 });
-    }
-
-    const { value: contract } = await response.json();
-    if (!contract) {
+    if (contractError || !contract) {
       return NextResponse.json({ error: "Contract not found" }, { status: 404 });
     }
 
     // Fetch client name
-    const clientResponse = await fetch(`${convexUrl}/api/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: "clients:getById",
-        args: { id: contract.clientId },
-        format: "json",
-      }),
-    });
-
     let clientName = "Client";
-    if (clientResponse.ok) {
-      const { value: client } = await clientResponse.json();
-      if (client) clientName = client.contactName;
+    if (contract.client_id) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("contact_name")
+        .eq("id", contract.client_id)
+        .single();
+
+      if (client) clientName = client.contact_name;
     }
 
     const pdfBuffer = await renderToBuffer(
@@ -56,11 +40,15 @@ export async function GET(
         title: contract.title,
         sections: contract.sections || [],
         clientName,
-        clientSignature: contract.clientSignature,
-        clientSignedAt: contract.clientSignedAt,
-        adminSignature: contract.adminSignature,
-        adminSignedAt: contract.adminSignedAt,
-        date: new Date(contract.createdAt).toLocaleDateString("en-GB", {
+        clientSignature: contract.client_signature,
+        clientSignedAt: contract.client_signed_at
+          ? new Date(contract.client_signed_at).getTime()
+          : undefined,
+        adminSignature: contract.admin_signature,
+        adminSignedAt: contract.admin_signed_at
+          ? new Date(contract.admin_signed_at).getTime()
+          : undefined,
+        date: new Date(contract.created_at).toLocaleDateString("en-GB", {
           day: "numeric",
           month: "long",
           year: "numeric",

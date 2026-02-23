@@ -66,7 +66,7 @@ export const roadmapSteps = [
   },
   {
     step: "06",
-    title: "Kick-off",
+    title: "Onboarding",
     description:
       "Project launches. Real-time updates, document sharing, and ongoing support through A.D.A.M.",
     icon: "rocket",

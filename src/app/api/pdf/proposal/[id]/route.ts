@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import ProposalDocument from "@/lib/pdf/ProposalDocument";
 import { createElement } from "react";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(
   request: NextRequest,
@@ -10,56 +11,37 @@ export async function GET(
   const { id } = await params;
 
   try {
-    // Fetch proposal data from Convex via HTTP
-    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-    if (!convexUrl) {
-      return NextResponse.json({ error: "Convex URL not configured" }, { status: 500 });
-    }
+    const supabase = createAdminClient();
 
-    // Use Convex HTTP client to fetch proposal
-    const response = await fetch(`${convexUrl}/api/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: "proposals:getById",
-        args: { id },
-        format: "json",
-      }),
-    });
+    const { data: proposal, error: proposalError } = await supabase
+      .from("proposals")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-    if (!response.ok) {
-      return NextResponse.json({ error: "Failed to fetch proposal" }, { status: 500 });
-    }
-
-    const { value: proposal } = await response.json();
-    if (!proposal) {
+    if (proposalError || !proposal) {
       return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
     }
 
     // Fetch questionnaire for company name
-    const qResponse = await fetch(`${convexUrl}/api/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        path: "questionnaires:getById",
-        args: { id: proposal.questionnaireId },
-        format: "json",
-      }),
-    });
-
     let companyName = "Client";
-    if (qResponse.ok) {
-      const { value: questionnaire } = await qResponse.json();
-      if (questionnaire) companyName = questionnaire.companyName;
+    if (proposal.questionnaire_id) {
+      const { data: questionnaire } = await supabase
+        .from("questionnaires")
+        .select("company_name")
+        .eq("id", proposal.questionnaire_id)
+        .single();
+
+      if (questionnaire) companyName = questionnaire.company_name;
     }
 
     const pdfBuffer = await renderToBuffer(
       createElement(ProposalDocument, {
         title: proposal.title,
-        proposalRef: proposal.proposalRef,
+        proposalRef: proposal.proposal_ref,
         companyName,
-        sections: proposal.sections,
-        date: new Date(proposal.createdAt).toLocaleDateString("en-GB", {
+        sections: proposal.sections || [],
+        date: new Date(proposal.created_at).toLocaleDateString("en-GB", {
           day: "numeric",
           month: "long",
           year: "numeric",

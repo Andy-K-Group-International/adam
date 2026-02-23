@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/app/actions/auth-signout";
 import {
   LayoutDashboard,
   GitBranch,
@@ -58,13 +59,13 @@ export default function AdminSidebar() {
       </nav>
 
       <div className="p-4 border-t border-white/10">
-        <a
-          href="/auth/logout"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-white/80 hover:bg-white/5 transition-colors"
+        <button
+          onClick={() => signOut()}
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-white/80 hover:bg-white/5 transition-colors"
         >
           <LogOut className="h-4 w-4" />
           Sign Out
-        </a>
+        </button>
       </div>
     </aside>
   );

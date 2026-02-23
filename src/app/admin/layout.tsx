@@ -1,31 +1,28 @@
-"use client";
-
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useCurrentUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.replace("/auth/login?returnTo=/admin");
-    }
-  }, [isLoading, user, router]);
-
-  if (isLoading) {
-    return <LoadingSpinner className="min-h-screen" />;
-  }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return <LoadingSpinner className="min-h-screen" />;
+    redirect("/sign-in");
+  }
+
+  // Verify admin/staff role
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", user.id)
+    .single();
+
+  if (!profile || !['admin', 'staff'].includes(profile.role)) {
+    redirect("/sign-in");
   }
 
   return (

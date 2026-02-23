@@ -2,46 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signIn } from "@/app/actions/auth";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const formData = new FormData(e.currentTarget);
 
-    if (error) {
-      setError(error.message);
-      setIsLoading(false);
-      return;
-    }
-
-    // Check role to redirect
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from("users")
-        .select("role")
-        .eq("auth_id", user.id)
-        .single();
-
-      if (profile?.role === "client") {
-        router.push("/dashboard");
-      } else {
-        router.push("/admin");
+    try {
+      const result = await signIn(formData);
+      if (result?.error) {
+        setError(result.error);
+        setIsLoading(false);
       }
+      // If no error, the server action will redirect
+    } catch {
+      // redirect() throws a NEXT_REDIRECT error — this is expected
+      // Next.js handles the redirect automatically
     }
   }
 
@@ -68,9 +52,8 @@ export default function SignInPage() {
             </label>
             <input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full rounded-md border border-foreground/10 bg-background px-3 py-2 text-sm outline-none focus:border-highlight"
               placeholder="you@example.com"
@@ -83,12 +66,11 @@ export default function SignInPage() {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full rounded-md border border-foreground/10 bg-background px-3 py-2 text-sm outline-none focus:border-highlight"
-              placeholder="••••••••"
+              placeholder="********"
             />
           </div>
 

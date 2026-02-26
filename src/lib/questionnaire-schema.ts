@@ -1,3 +1,4 @@
+// @sync: shared with /root/andyk-landing/src/lib/questionnaire-schema.ts
 export type QuestionType =
   | "text"
   | "url"

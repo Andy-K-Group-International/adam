@@ -52,6 +52,17 @@ export default function FieldRenderer({
     case "text":
     case "url":
     case "email":
+    case "number":
+      return (
+        <Input
+          type="number"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={question.placeholder || ""}
+          className="w-full"
+        />
+      );
+
     case "phone":
       return (
         <Input

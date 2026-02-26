@@ -46,7 +46,8 @@ export type QuestionType =
   | "checkbox"
   | "address"
   | "file"
-  | "group";
+  | "group"
+  | "number";
 
 export type ActivityType =
   | "contract_created"
@@ -132,6 +133,8 @@ export interface Questionnaire {
   b2b_data: Record<string, unknown> | null;
   b2g_data: Record<string, unknown> | null;
   adam_data: Record<string, unknown> | null;
+  e2e_data: Record<string, unknown> | null;
+  pre_qualification_data: Record<string, unknown> | null;
   attachment_ids: string[] | null;
   user_id: string | null;
   status: QuestionnaireStatus;
@@ -268,7 +271,19 @@ export interface QuestionItem {
   conditional_on: { questionId: string; value: string } | null;
   section: string;
   subsection: string;
+  service_scope: string[] | null;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientLead {
+  id: string;
+  email: string;
+  pre_qualification_completed: boolean;
+  pre_qualification_completed_at: string | null;
+  pre_qualification_data: Record<string, unknown> | null;
+  service_type: string | null;
   created_at: string;
   updated_at: string;
 }

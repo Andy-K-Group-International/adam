@@ -9,7 +9,8 @@ export type QuestionType =
   | "checkbox"
   | "address"
   | "file"
-  | "group";
+  | "group"
+  | "number";
 
 export interface QuestionOption {
   label: string;
@@ -27,10 +28,12 @@ export interface Question {
   conditionalOn?: { questionId: string; value: string };
   section: string;
   subsection: string;
+  serviceScope?: string[];
 }
 
 export interface QuestionSection {
   id: string;
   title: string;
   subsections: { id: string; title: string }[];
+  order?: number;
 }

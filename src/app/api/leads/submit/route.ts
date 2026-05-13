@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateLeadScore } from "@/lib/lead-scoring";
-import { sendLeadConfirmation, sendLeadAdminNotification } from "@/app/actions/email";
+import { sendLeadConfirmation, sendLeadAdminNotification, sendLeadRejection } from "@/app/actions/email";
 
 const ALLOWED_ORIGINS = [
   "https://andykgroup.com",
   "https://www.andykgroup.com",
   "http://localhost:3000",
   "http://localhost:3001",
+];
+
+const BLOCKED_EMAIL_DOMAINS = [
+  "gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
+  "icloud.com", "protonmail.com", "gmx.com", "web.de",
+  "yahoo.co.uk", "yahoo.fr", "hotmail.co.uk", "hotmail.fr",
+  "live.com", "msn.com",
 ];
 
 function corsHeaders(origin: string | null) {
@@ -18,6 +25,11 @@ function corsHeaders(origin: string | null) {
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
   };
+}
+
+function isBusinessEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return domain ? !BLOCKED_EMAIL_DOMAINS.includes(domain) : false;
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -45,8 +57,6 @@ export async function POST(req: NextRequest) {
     answers?: Record<string, unknown>;
   };
 
-  const serviceInterest = answers?.service_interest ? String(answers.service_interest) : null;
-
   if (!name?.trim() || !email?.trim() || !answers) {
     return NextResponse.json(
       { success: false, error: "name, email, and answers are required" },
@@ -55,9 +65,42 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  if (!isBusinessEmail(normalizedEmail)) {
+    return NextResponse.json(
+      { success: false, error: "Please use your business email address" },
+      { status: 400, headers }
+    );
+  }
+
+  const serviceInterest = answers.service_interest ? String(answers.service_interest) : null;
   const supabase = createAdminClient();
 
-  // Duplicate + cooling period check
+  // Rate limiting: 3 requests per IP per 24 hours
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+
+  const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count: recentCount } = await supabase
+    .from("rate_limit_log")
+    .select("*", { count: "exact", head: true })
+    .eq("ip", ip)
+    .eq("endpoint", "/api/leads/submit")
+    .gte("created_at", windowStart);
+
+  if ((recentCount ?? 0) >= 3) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests. Please try again tomorrow." },
+      { status: 429, headers }
+    );
+  }
+
+  // Log this attempt (non-blocking)
+  supabase.from("rate_limit_log").insert({ ip, endpoint: "/api/leads/submit" }).then(() => {});
+
+  // Cooling period check
   const { data: existing } = await supabase
     .from("leads")
     .select("id, status, cooling_period_until, rejected_at")
@@ -69,47 +112,69 @@ export async function POST(req: NextRequest) {
   if (existing?.cooling_period_until) {
     const until = new Date(existing.cooling_period_until as string);
     if (until > new Date()) {
-      // Silent block — return success so the form doesn't reveal the rejection
       return NextResponse.json({ success: true, message: "Application received." }, { status: 200, headers });
     }
   }
 
   // Score
   const scoreResult = calculateLeadScore({
-    revenue:            String(answers.revenue ?? ""),
-    timeline:           String(answers.timeline ?? ""),
-    decision_authority: String(answers.decision_authority ?? ""),
-    service_interest:   serviceInterest ?? undefined,
-    services:           Array.isArray(answers.services) ? answers.services as string[] : [],
+    revenue:              String(answers.revenue ?? ""),
+    timeline:             String(answers.timeline ?? ""),
+    decision_authority:   String(answers.decision_authority ?? ""),
+    service_interest:     serviceInterest ?? undefined,
+    services:             Array.isArray(answers.services) ? (answers.services as string[]) : [],
     business_description: answers.business_description ? String(answers.business_description) : undefined,
     biggest_challenge:    answers.biggest_challenge    ? String(answers.biggest_challenge)    : undefined,
     website:              answers.website              ? String(answers.website)              : undefined,
   });
+
+  // Auto-routing by score
+  let initialStatus: "new" | "qualified" | "rejected";
+  let autoRejected = false;
+  let coolingUntil: Date | null = null;
+
+  if (scoreResult.total < 40) {
+    initialStatus = "rejected";
+    autoRejected = true;
+    coolingUntil = new Date();
+    coolingUntil.setMonth(coolingUntil.getMonth() + 6);
+  } else if (scoreResult.total >= 60) {
+    initialStatus = "qualified";
+  } else {
+    initialStatus = "new";
+  }
 
   const metadata = {
     score:            scoreResult.total,
     breakdown:        scoreResult.dimensions,
     questionnaire:    { ...answers },
     scored_at:        scoreResult.scored_at,
-    service_interest: serviceInterest ?? undefined,
+    ...(serviceInterest ? { service_interest: serviceInterest } : {}),
+  };
+
+  const baseData = {
+    name:             name.trim(),
+    phone:            phone?.trim() || null,
+    company:          company?.trim() || null,
+    source:           source || "website",
+    status:           initialStatus,
+    service_interest: serviceInterest,
+    metadata,
+    updated_at:       new Date().toISOString(),
+    ...(autoRejected
+      ? {
+          rejected_at:          new Date().toISOString(),
+          cooling_period_until: coolingUntil!.toISOString(),
+        }
+      : {}),
   };
 
   let leadId: string;
 
   if (existing && existing.status !== "rejected") {
-    // Update existing non-rejected lead
     const { data: updated, error } = await supabase
       .from("leads")
-      .update({
-        name:             name.trim(),
-        phone:            phone?.trim() || null,
-        company:          company?.trim() || null,
-        source:           source || "website",
-        status:           "new",
-        service_interest: serviceInterest,
-        metadata,
-        updated_at: new Date().toISOString(),
-      })
+      .update(baseData)
       .eq("id", existing.id)
       .select("id")
       .single();
@@ -120,20 +185,9 @@ export async function POST(req: NextRequest) {
     }
     leadId = updated.id;
   } else {
-    // Create new lead
     const { data: created, error } = await supabase
       .from("leads")
-      .insert({
-        name:             name.trim(),
-        email:            normalizedEmail,
-        phone:            phone?.trim() || null,
-        company:          company?.trim() || null,
-        source:           source || "website",
-        status:           "new",
-        service_interest: serviceInterest,
-        metadata,
-        converted_to_client_id: null,
-      })
+      .insert({ ...baseData, email: normalizedEmail, converted_to_client_id: null })
       .select("id")
       .single();
 
@@ -144,20 +198,27 @@ export async function POST(req: NextRequest) {
     leadId = created.id;
   }
 
-  // Fire emails — non-blocking, errors don't fail the submission
-  await Promise.allSettled([
-    sendLeadConfirmation({ name: name.trim(), email: normalizedEmail }),
-    sendLeadAdminNotification({
-      leadId,
-      name:         name.trim(),
-      email:        normalizedEmail,
-      phone:        phone?.trim() || null,
-      company:      company?.trim() || null,
-      score:        scoreResult.total,
-      breakdown:    scoreResult.dimensions,
-      questionnaire: { ...answers },
-    }),
-  ]);
+  // Emails
+  if (autoRejected) {
+    await Promise.allSettled([
+      sendLeadRejection({ name: name.trim(), email: normalizedEmail }),
+    ]);
+  } else {
+    await Promise.allSettled([
+      sendLeadConfirmation({ name: name.trim(), email: normalizedEmail }),
+      sendLeadAdminNotification({
+        leadId,
+        name:          name.trim(),
+        email:         normalizedEmail,
+        phone:         phone?.trim() || null,
+        company:       company?.trim() || null,
+        score:         scoreResult.total,
+        breakdown:     scoreResult.dimensions,
+        questionnaire: { ...answers },
+        highPriority:  scoreResult.total >= 60,
+      }),
+    ]);
+  }
 
   return NextResponse.json({ success: true, message: "Application received." }, { status: 200, headers });
 }

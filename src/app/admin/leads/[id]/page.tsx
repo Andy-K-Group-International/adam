@@ -4,13 +4,13 @@ import { useState, useEffect, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getLeadById, updateLead, convertLeadToClient } from "@/lib/supabase/queries/leads";
-import { qualifyLead, rejectLead } from "@/app/actions/leads";
+import { approveLeadWithToken, rejectLead } from "@/app/actions/leads";
 import { scoreTier } from "@/lib/lead-scoring";
 import type { Lead, LeadStatus, LeadSource } from "@/lib/supabase/types";
 import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, User, Mail, Phone, Building2,
-  Globe, CheckCircle2, XCircle, AlertTriangle, Clock,
+  Globe, XCircle, AlertTriangle, Clock, Send, Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
@@ -111,6 +111,7 @@ export default function LeadDetailPage() {
   const [status, setStatus] = useState<LeadStatus>("new");
   const [isSaving, setIsSaving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   // Reject modal state
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -140,9 +141,10 @@ export default function LeadDetailPage() {
   const meta = lead.metadata;
   const tier = meta ? scoreTier(meta.score) : null;
   const questionnaire = meta?.questionnaire ?? null;
-  const canQualify = !["qualified", "rejected", "converted"].includes(lead.status);
-  const canConvert = lead.status !== "converted" && lead.status !== "rejected";
-  const isRejected = lead.status === "rejected";
+  const canApprove = ["new", "contacted"].includes(lead.status);
+  const isQualified = lead.status === "qualified";
+  const isRejected  = lead.status === "rejected";
+  const isConverted = lead.status === "converted";
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -172,11 +174,25 @@ export default function LeadDetailPage() {
     }
   };
 
-  const handleQualify = () => {
+  const handleApprove = () => {
+    setIsApproving(true);
     startTransition(async () => {
-      await qualifyLead(leadId);
-      setLead((l) => l ? { ...l, status: "qualified" } : l);
-      setStatus("qualified");
+      try {
+        await approveLeadWithToken(leadId);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        setLead((l) => l ? {
+          ...l,
+          status: "qualified",
+          questionnaire_token: "sent",
+          token_sent_at: new Date().toISOString(),
+          token_expires_at: expiresAt,
+        } : l);
+        setStatus("qualified");
+      } catch (err) {
+        console.error("Failed to approve lead:", err);
+      } finally {
+        setIsApproving(false);
+      }
     });
   };
 
@@ -225,16 +241,17 @@ export default function LeadDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {canQualify && (
+          <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            {/* Approve & Invite — for new/contacted leads */}
+            {canApprove && (
               <>
                 <button
-                  onClick={handleQualify}
-                  disabled={isPending}
+                  onClick={handleApprove}
+                  disabled={isPending || isApproving}
                   className="inline-flex items-center gap-1.5 bg-success/10 text-success border border-success/20 px-4 py-2 rounded-lg text-sm font-medium hover:bg-success/20 transition-colors disabled:opacity-50"
                 >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Qualify
+                  <Send className="h-4 w-4" />
+                  {isApproving ? "Sending..." : "Approve & Invite"}
                 </button>
                 <button
                   onClick={() => setShowRejectModal(true)}
@@ -246,16 +263,29 @@ export default function LeadDetailPage() {
                 </button>
               </>
             )}
-            {canConvert && lead.status === "qualified" && (
-              <button
-                onClick={handleConvert}
-                disabled={isConverting}
-                className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
-              >
-                {isConverting ? "Converting..." : (<>Convert to Client <ArrowRight className="h-4 w-4" /></>)}
-              </button>
+
+            {/* Send / Resend invite — for qualified leads */}
+            {isQualified && (
+              <>
+                <button
+                  onClick={handleApprove}
+                  disabled={isPending || isApproving}
+                  className="inline-flex items-center gap-1.5 bg-info/10 text-info border border-info/20 px-4 py-2 rounded-lg text-sm font-medium hover:bg-info/20 transition-colors disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" />
+                  {isApproving ? "Sending..." : lead.questionnaire_token ? "Resend Invite" : "Send Invite"}
+                </button>
+                <button
+                  onClick={handleConvert}
+                  disabled={isConverting}
+                  className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+                >
+                  {isConverting ? "Converting..." : (<>Convert <ArrowRight className="h-4 w-4" /></>)}
+                </button>
+              </>
             )}
-            {lead.converted_to_client_id && (
+
+            {isConverted && lead.converted_to_client_id && (
               <Link
                 href={`/admin/clients/${lead.converted_to_client_id}`}
                 className="inline-flex items-center gap-2 bg-grid-300 text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-grid-500 transition-colors"
@@ -277,6 +307,21 @@ export default function LeadDetailPage() {
                   New submissions from {lead.email} are blocked until{" "}
                   <strong className="text-muted">{formatDate(lead.cooling_period_until)}</strong>
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Questionnaire invite banner */}
+          {lead.questionnaire_token && (
+            <div className="flex items-center gap-3 bg-info/5 border border-info/20 rounded-xl px-5 py-4">
+              <Link2 className="h-5 w-5 text-info shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-info">Questionnaire invite sent</p>
+                {lead.token_expires_at && (
+                  <p className="text-xs text-muted-2 mt-0.5">
+                    Link expires {formatDate(lead.token_expires_at)}
+                  </p>
+                )}
               </div>
             </div>
           )}

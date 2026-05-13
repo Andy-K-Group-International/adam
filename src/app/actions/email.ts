@@ -333,6 +333,7 @@ export async function sendLeadAdminNotification({
   score,
   breakdown,
   questionnaire,
+  highPriority = false,
 }: {
   leadId: string;
   name: string;
@@ -344,8 +345,10 @@ export async function sendLeadAdminNotification({
     revenue:            { label: string; score: number; max: number };
     timeline:           { label: string; score: number; max: number };
     decision_authority: { label: string; score: number; max: number };
+    service_interest?:  { label: string; score: number; max: number };
   };
   questionnaire: Record<string, unknown>;
+  highPriority?: boolean;
 }) {
   const services = Array.isArray(questionnaire.services)
     ? (questionnaire.services as string[]).join(", ")
@@ -420,7 +423,7 @@ export async function sendLeadAdminNotification({
   return await sendEmail({
     to: "ceo@andykgroup.com",
     from: "info@andykgroup.com",
-    subject: `New lead: ${company || name} — Score: ${score}/100`,
+    subject: `${highPriority ? "🔴 HIGH PRIORITY — " : ""}New lead: ${company || name} — Score: ${score}/100`,
     text: `New lead submitted via andykgroup.com\n\nCompany: ${company || "—"}\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "—"}\nScore: ${score}/100\n\nScore Breakdown:\n${breakdownText}\n\nServices: ${services}\nBusiness: ${questionnaire.business_description || "—"}\nChallenge: ${questionnaire.biggest_challenge || "—"}\n\nReview: ${reviewUrl}`,
     html,
   });
@@ -469,6 +472,129 @@ export async function sendLeadRejection({
     from: "info@andykgroup.com",
     subject: "Regarding your Andy'K Group application",
     text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group.\n\nAfter reviewing your application, we don't feel we're the right fit for your current needs.${reason ? " " + reason : ""}\n\nThis isn't permanent — we'd welcome the opportunity to reconnect in the future.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    html,
+  });
+}
+
+export async function sendQuestionnaireInvite({
+  name,
+  email,
+  company,
+  token,
+  expiresAt,
+}: {
+  name: string;
+  email: string;
+  company?: string | null;
+  token: string;
+  expiresAt: string;
+}) {
+  const link = `https://adam.andykgroup.com/questionnaire/full?token=${token}`;
+  const expiryDate = new Date(expiresAt).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:#01011b;padding:28px 40px;border-radius:12px 12px 0 0;">
+        <span style="color:#C9707D;font-weight:700;font-size:17px;letter-spacing:-0.3px;">Andy'K Group</span>
+        <span style="color:rgba(255,255,255,0.35);font-size:13px;margin-left:12px;">Strategic Assessment</span>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:40px;border:1px solid #e2e4ea;border-top:none;border-radius:0 0 12px 12px;">
+        <p style="color:#8b93a8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 16px;">You've been approved</p>
+        <h1 style="font-size:24px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.2;">Your Strategic Assessment<br>is ready to begin</h1>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">After reviewing your initial application${company ? ` from ${company}` : ""}, our team has determined there is genuine potential for alignment. You have been selected to proceed to the full Strategic Assessment.</p>
+        <div style="background:#faf9fb;border-left:3px solid #C9707D;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+          <p style="color:#01011b;font-size:14px;font-weight:600;margin:0 0 6px;">What this means</p>
+          <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">The Strategic Assessment is a comprehensive evaluation covering your company structure, strategic positioning, sales operations, financial readiness, and growth intent. It forms the foundation of our engagement.</p>
+        </div>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">Your personalised assessment link is below. It is valid until <strong style="color:#01011b;">${expiryDate}</strong> — please complete it before then.</p>
+        <div style="text-align:center;margin-bottom:28px;">
+          <a href="${link}" style="display:inline-block;background:#C9707D;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Begin Strategic Assessment →</a>
+        </div>
+        <div style="background:#faf9fb;border:1px solid #e2e4ea;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
+          <p style="color:#8b93a8;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Your private link</p>
+          <p style="font-family:monospace;font-size:12px;color:#525a70;word-break:break-all;margin:0;">${link}</p>
+        </div>
+        <hr style="border:none;border-top:1px solid #f5f5f7;margin:0 0 24px;">
+        <p style="color:#8b93a8;font-size:13px;line-height:1.6;margin:0;">
+          Warm regards,<br>
+          <strong style="color:#525a70;">The Andy'K Group Team</strong><br>
+          <a href="https://andykgroup.com" style="color:#C9707D;text-decoration:none;">andykgroup.com</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: "Your Andy'K Group Strategic Assessment is ready",
+    text: `Hi ${name},\n\nYou've been approved to proceed to the Andy'K Group Strategic Assessment.\n\nYour personalised link is valid until ${expiryDate}:\n${link}\n\nPlease complete the assessment before it expires.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    html,
+  });
+}
+
+export async function sendTokenReminder({
+  name,
+  email,
+  token,
+  tokenExpiresAt,
+}: {
+  name: string;
+  email: string;
+  token: string;
+  tokenExpiresAt: string;
+}) {
+  const link = `https://adam.andykgroup.com/questionnaire/full?token=${token}`;
+  const daysLeft = Math.max(1, Math.ceil((new Date(tokenExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:#01011b;padding:28px 40px;border-radius:12px 12px 0 0;">
+        <span style="color:#C9707D;font-weight:700;font-size:17px;letter-spacing:-0.3px;">Andy'K Group</span>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:40px;border:1px solid #e2e4ea;border-top:none;border-radius:0 0 12px 12px;">
+        <h1 style="font-size:20px;font-weight:700;color:#01011b;margin:0 0 20px;">Your assessment link expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}</h1>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">This is a reminder that your Andy'K Group Strategic Assessment link expires in <strong style="color:#01011b;">${daysLeft} day${daysLeft === 1 ? "" : "s"}</strong>. Please complete it before it expires.</p>
+        <div style="text-align:center;margin-bottom:28px;">
+          <a href="${link}" style="display:inline-block;background:#C9707D;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;">Complete Assessment →</a>
+        </div>
+        <hr style="border:none;border-top:1px solid #f5f5f7;margin:0 0 24px;">
+        <p style="color:#8b93a8;font-size:13px;line-height:1.6;margin:0;">
+          Warm regards,<br>
+          <strong style="color:#525a70;">The Andy'K Group Team</strong><br>
+          <a href="https://andykgroup.com" style="color:#C9707D;text-decoration:none;">andykgroup.com</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: `Reminder: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left to complete your Strategic Assessment`,
+    text: `Hi ${name},\n\nYour Andy'K Group Strategic Assessment link expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.\n\nComplete it here:\n${link}\n\nWarm regards,\nThe Andy'K Group Team`,
     html,
   });
 }

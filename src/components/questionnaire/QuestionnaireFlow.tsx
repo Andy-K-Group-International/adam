@@ -21,6 +21,7 @@ const SECTION_ORDER = [
   "b2b",
   "b2g",
   "adam",
+  "end-to-end",
   "proposal-readiness",
   "attachments",
 ];
@@ -178,6 +179,9 @@ export default function QuestionnaireFlow() {
     if (selectedSegments.includes("ADAM")) {
       segmentQuestions.push(...allQuestions.filter((q) => q.section === "adam"));
     }
+    if (selectedSegments.includes("END_TO_END")) {
+      segmentQuestions.push(...allQuestions.filter((q) => q.section === "end-to-end"));
+    }
 
     const combined = [...base, ...segmentQuestions];
 
@@ -193,6 +197,7 @@ export default function QuestionnaireFlow() {
       if (sectionId === "b2b") return selectedSegments.includes("B2B");
       if (sectionId === "b2g") return selectedSegments.includes("B2G");
       if (sectionId === "adam") return selectedSegments.includes("ADAM");
+      if (sectionId === "end-to-end") return selectedSegments.includes("END_TO_END");
       return true;
     });
   }, [selectedSegments]);
@@ -205,6 +210,7 @@ export default function QuestionnaireFlow() {
     b2b: "B2B",
     b2g: "B2G",
     adam: "A.D.A.M.",
+    "end-to-end": "End-to-End",
     "proposal-readiness": "Proposal",
     attachments: "Uploads",
   };

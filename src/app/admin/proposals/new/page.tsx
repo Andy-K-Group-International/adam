@@ -6,10 +6,12 @@ import { createClient } from "@/lib/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { listClients } from "@/lib/supabase/queries/clients";
 import { listTemplates, getTemplateById } from "@/lib/supabase/queries/proposal-templates";
+import { listQuestionnaires } from "@/lib/supabase/queries/questionnaires";
 import { createProposal } from "@/lib/supabase/queries/proposals";
-import type { Client, ProposalTemplate } from "@/lib/supabase/types";
+import type { Client, ProposalTemplate, Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 interface Section {
@@ -34,8 +36,10 @@ function NewProposalForm() {
 
   const [clients, setClients] = useState<Client[] | undefined>(undefined);
   const [templates, setTemplates] = useState<ProposalTemplate[]>([]);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
 
   const [clientId, setClientId] = useState("");
+  const [questionnaireId, setQuestionnaireId] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [title, setTitle] = useState("");
   const [proposalRef, setProposalRef] = useState("");
@@ -49,10 +53,12 @@ function NewProposalForm() {
     Promise.all([
       listClients(supabase),
       listTemplates(supabase, { activeOnly: true }),
+      listQuestionnaires(supabase, { status: "submitted" }).catch(() => []),
     ])
-      .then(([c, t]) => {
+      .then(([c, t, q]) => {
         setClients(c);
         setTemplates(t);
+        setQuestionnaires(q);
       })
       .catch(() => setClients([]));
   }, []);
@@ -119,7 +125,7 @@ function NewProposalForm() {
       const supabase = createClient();
       const proposal = await createProposal(supabase, {
         client_id: clientId,
-        questionnaire_id: "",
+        questionnaire_id: questionnaireId || "",
         template_id: templateId || null,
         title: title.trim(),
         proposal_ref: proposalRef.trim() || null,
@@ -185,6 +191,75 @@ function NewProposalForm() {
             ))}
           </select>
         </div>
+
+        {/* Questionnaire */}
+        {questionnaires.length > 0 && (
+          <div className="bg-white rounded-xl border border-grid-300 p-5 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-foreground mb-2">
+                Linked Questionnaire
+              </label>
+              <select
+                value={questionnaireId}
+                onChange={(e) => setQuestionnaireId(e.target.value)}
+                className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30"
+              >
+                <option value="">None — standalone proposal</option>
+                {questionnaires.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.company_name} · {q.contact_email}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-2 mt-2">
+                Optionally link this proposal to a submitted questionnaire.
+              </p>
+            </div>
+
+            {/* Show AI evaluation if the selected questionnaire has one */}
+            {questionnaireId && (() => {
+              const q = questionnaires.find((x) => x.id === questionnaireId);
+              const ev = q?.ai_evaluation;
+              if (!ev) return null;
+              const recStyle =
+                ev.recommendation === "proceed"
+                  ? "bg-success/10 text-success border-success/20"
+                  : ev.recommendation === "flag"
+                    ? "bg-warning/10 text-warning border-warning/20"
+                    : "bg-error/10 text-error border-error/20";
+              const recLabel =
+                ev.recommendation === "proceed" ? "Proceed" : ev.recommendation === "flag" ? "Flag" : "Reject";
+              return (
+                <div className="border-t border-grid-300 pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="h-3.5 w-3.5 text-info" />
+                    <p className="text-xs font-semibold text-muted uppercase tracking-wider">
+                      AI Qualification Score
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className={cn(
+                        "text-2xl font-bold",
+                        ev.qualityScore >= 80 ? "text-success" : ev.qualityScore >= 60 ? "text-warning" : "text-error"
+                      )}>
+                        {ev.qualityScore}
+                      </p>
+                      <p className="text-[10px] text-muted-2">/ 100</p>
+                    </div>
+                    <span className={cn(
+                      "inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border",
+                      recStyle
+                    )}>
+                      {recLabel}
+                    </span>
+                    <p className="text-xs text-muted flex-1">{ev.reasoning}</p>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Template */}
         <div className="bg-white rounded-xl border border-grid-300 p-5">

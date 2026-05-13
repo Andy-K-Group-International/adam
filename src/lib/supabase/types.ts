@@ -67,6 +67,10 @@ export type ActivityType =
   | "comment_added"
   | "client_created"
   | "questionnaire_submitted"
+  | "questionnaire_ai_evaluated"
+  | "questionnaire_proceed"
+  | "questionnaire_flag"
+  | "questionnaire_reject"
   | "client_stage_changed";
 
 // ── Row types ──
@@ -159,6 +163,12 @@ export interface Questionnaire {
   session_id: string;
   submitted_at: string | null;
   converted_to_client_id: string | null;
+  ai_evaluation: {
+    recommendation: "proceed" | "flag" | "reject";
+    reasoning: string;
+    qualityScore: number;
+    evaluatedAt: string;
+  } | null;
   created_at: string;
   updated_at: string;
 }

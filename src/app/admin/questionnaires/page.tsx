@@ -9,7 +9,7 @@ import type { Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
-import { ClipboardList, UserPlus } from "lucide-react";
+import { ClipboardList, UserPlus, Sparkles } from "lucide-react";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 const statusColors: Record<string, string> = {
@@ -24,10 +24,34 @@ const statusLabels: Record<string, string> = {
   converted: "Converted",
 };
 
+function AiScoreBadge({ evaluation }: { evaluation: Questionnaire["ai_evaluation"] }) {
+  if (!evaluation) return <span className="text-xs text-muted-2">—</span>;
+
+  const { recommendation, qualityScore } = evaluation;
+  const style =
+    recommendation === "proceed"
+      ? "bg-success/10 text-success"
+      : recommendation === "flag"
+        ? "bg-warning/10 text-warning"
+        : "bg-error/10 text-error";
+  const label =
+    recommendation === "proceed" ? "Proceed" : recommendation === "flag" ? "Flag" : "Reject";
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", style)}>
+        {label}
+      </span>
+      <span className="text-xs text-muted-2">{qualityScore}/100</span>
+    </div>
+  );
+}
+
 export default function QuestionnairesPage() {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
   const router = useRouter();
   const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -49,6 +73,28 @@ export default function QuestionnairesPage() {
     } catch (err) {
       console.error("Failed to convert questionnaire:", err);
       setConvertingId(null);
+    }
+  };
+
+  const handleEvaluate = async (questionnaireId: string) => {
+    setEvaluatingId(questionnaireId);
+    try {
+      const res = await fetch("/api/ai/evaluate-questionnaire", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionnaireId }),
+      });
+      if (!res.ok) throw new Error("Evaluation failed");
+      const { evaluation } = await res.json();
+      setQuestionnaires((prev) =>
+        prev?.map((q) =>
+          q.id === questionnaireId ? { ...q, ai_evaluation: evaluation } : q
+        )
+      );
+    } catch (err) {
+      console.error("Failed to evaluate questionnaire:", err);
+    } finally {
+      setEvaluatingId(null);
     }
   };
 
@@ -77,6 +123,9 @@ export default function QuestionnairesPage() {
                   Segments
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
+                  AI Score
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
                   Status
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
@@ -90,7 +139,7 @@ export default function QuestionnairesPage() {
             <tbody>
               {(questionnaires || []).length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-muted-2">
+                  <td colSpan={7} className="text-center py-12 text-muted-2">
                     <ClipboardList className="h-8 w-8 mx-auto mb-2 text-grid-500" />
                     No questionnaires submitted yet.
                   </td>
@@ -126,6 +175,9 @@ export default function QuestionnairesPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
+                      <AiScoreBadge evaluation={q.ai_evaluation} />
+                    </td>
+                    <td className="px-5 py-4">
                       <span
                         className={cn(
                           "text-xs font-medium px-2.5 py-1 rounded-full",
@@ -146,6 +198,16 @@ export default function QuestionnairesPage() {
                         >
                           View
                         </Link>
+                        {q.status === "submitted" && !q.ai_evaluation && (
+                          <button
+                            onClick={() => handleEvaluate(q.id)}
+                            disabled={evaluatingId === q.id}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-white bg-info hover:bg-info/90 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            {evaluatingId === q.id ? "Evaluating..." : "AI Evaluate"}
+                          </button>
+                        )}
                         {q.status === "submitted" && (
                           <button
                             onClick={() => handleConvert(q.id)}
@@ -153,9 +215,7 @@ export default function QuestionnairesPage() {
                             className="inline-flex items-center gap-1 text-xs font-medium text-white bg-highlight hover:bg-highlight/90 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                           >
                             <UserPlus className="h-3 w-3" />
-                            {convertingId === q.id
-                              ? "Converting..."
-                              : "Convert to Client"}
+                            {convertingId === q.id ? "Converting..." : "Convert"}
                           </button>
                         )}
                         {q.status === "converted" && q.converted_to_client_id && (

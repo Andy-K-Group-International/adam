@@ -225,6 +225,25 @@ export async function submitDraft(
   return submitted;
 }
 
+export async function updateQuestionnaire(
+  supabase: SupabaseClient,
+  id: string,
+  data: Partial<Questionnaire>
+): Promise<Questionnaire> {
+  const { data: questionnaire, error } = await supabase
+    .from('questionnaires')
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update questionnaire: ${error.message}`);
+  }
+
+  return questionnaire;
+}
+
 export async function linkToUser(
   supabase: SupabaseClient,
   email: string,

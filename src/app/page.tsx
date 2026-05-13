@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import Hero from "@/components/landing/Hero";
+
+export const metadata: Metadata = {
+  title: "ADAM — Automated Document & Account Manager | Andyk Group",
+  description:
+    "ADAM by Andyk Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.",
+  alternates: { canonical: "https://adam.andykgroup.com" },
+  openGraph: {
+    url: "https://adam.andykgroup.com",
+    title: "ADAM — Automated Document & Account Manager | Andyk Group",
+    description:
+      "ADAM by Andyk Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.",
+  },
+};
 import { HeroBackground } from "@/components/landing/BackgroundGrid";
 import TronDivider from "@/components/landing/TronDivider";
 import RoadmapSection from "@/components/landing/RoadmapSection";

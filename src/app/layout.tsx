@@ -16,10 +16,72 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const TITLE = "ADAM — Automated Document & Account Manager | Andyk Group";
+const DESCRIPTION =
+  "ADAM by Andyk Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
+const CANONICAL = "https://adam.andykgroup.com";
+
 export const metadata: Metadata = {
-  title: "A.D.A.M. — Automated Document & Account Manager",
+  metadataBase: new URL(CANONICAL),
+  title: {
+    default: TITLE,
+    template: "%s | ADAM by Andyk Group",
+  },
+  description: DESCRIPTION,
+  keywords: [
+    "automated document management",
+    "AI account manager",
+    "business document automation",
+    "AI document system",
+    "account management automation",
+    "Andyk Group ADAM",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "en_GB",
+    url: CANONICAL,
+    siteName: "ADAM by Andyk Group",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  alternates: {
+    canonical: CANONICAL,
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "ADAM — Automated Document & Account Manager",
   description:
-    "Business operating system by Andy'K Group International. Manage client lifecycle from intake to contract signing.",
+    "ADAM by Andyk Group — AI-powered system that automates document management, account handling, and client workflows for businesses.",
+  keywords:
+    "automated document management, AI account manager, business document automation, AI document system, account management automation, Andyk Group ADAM",
+  url: CANONICAL,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  provider: {
+    "@type": "Organization",
+    name: "Andyk Group",
+    url: "https://andykgroup.com",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "86-90 Paul Street",
+      addressLocality: "London",
+      postalCode: "EC2A 4NE",
+      addressCountry: "GB",
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: "info@andykgroup.com",
+      contactType: "customer support",
+    },
+  },
 };
 
 export default function RootLayout({
@@ -29,6 +91,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >

@@ -41,20 +41,20 @@ export default function Hero() {
         </span>
       </h1>
       <p className="text-xl leading-relaxed text-muted font-light max-w-[620px] mx-auto mb-3">
-        From understanding your clients needs, to <span className="italic font-normal">signed contracts</span>.
+        AI-powered business automation — from client intake to <span className="italic font-normal">signed contracts</span>, handled end-to-end.
       </p>
       <p className="text-base leading-relaxed text-muted-2 font-light max-w-[540px] mx-auto mb-9">
-        Powered by{" "}
+        By{" "}
         <a
           href="https://andykgroup.com/"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2 hover:text-foreground transition-colors"
         >
-          Andy&apos;K Group International.
+          Andyk Group.
         </a>
         <br/>
-        <span className="font-bold"> Want to work with us?</span>
+        <span className="font-bold"> Ready to automate your business?</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="inline w-4 h-4 ml-1 -mt-0.5 text-muted-2"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </p>
 

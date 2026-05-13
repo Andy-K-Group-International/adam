@@ -1,8 +1,10 @@
 import QuestionnaireFlow from "@/components/questionnaire/QuestionnaireFlow";
 
 export const metadata = {
-  title: "Questionnaire | A.D.A.M.",
-  description: "Complete your client onboarding questionnaire for A.D.A.M.",
+  title: "Start Your Questionnaire",
+  description:
+    "Tell us about your business in minutes. ADAM by Andyk Group will build a tailored automated document and account management workflow for you.",
+  robots: { index: false },
 };
 
 export default function QuestionnairePage() {

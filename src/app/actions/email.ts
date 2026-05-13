@@ -66,7 +66,7 @@ Please log in to your portal to view the contract details and take action.
 Contract ID: ${contractId}
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -97,7 +97,7 @@ Contract ID: ${contractId}
 Please log in to review the requested changes.
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -124,7 +124,7 @@ Contract ID: ${contractId}
 Please log in to review and countersign the contract.
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -151,7 +151,7 @@ Contract ID: ${contractId}
 You can view the finalized contract in your portal at any time.
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -182,7 +182,7 @@ Questionnaire ID: ${questionnaireId}
 Please log in to review the submission.
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -211,7 +211,7 @@ Message:
 ${message}
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -238,7 +238,7 @@ Please log in to your client portal to read the proposal and share your decision
 Proposal ID: ${proposalId}
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 
@@ -270,7 +270,7 @@ Proposal ID: ${proposalId}
 Please log in to review and take the next steps.
 
 Best regards,
-A.D.A.M. - AndyK Group International`,
+A.D.A.M. - Andy'K Group International LTD`,
   });
 }
 

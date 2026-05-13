@@ -16,16 +16,16 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const TITLE = "ADAM — Automated Document & Account Manager | Andyk Group";
+const TITLE = "ADAM — Automated Document & Account Manager | Andy'K Group";
 const DESCRIPTION =
-  "ADAM by Andyk Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
+  "ADAM by Andy'K Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
 const CANONICAL = "https://adam.andykgroup.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(CANONICAL),
   title: {
     default: TITLE,
-    template: "%s | ADAM by Andyk Group",
+    template: "%s | ADAM by Andy'K Group",
   },
   description: DESCRIPTION,
   keywords: [
@@ -34,13 +34,13 @@ export const metadata: Metadata = {
     "business document automation",
     "AI document system",
     "account management automation",
-    "Andyk Group ADAM",
+    "Andy'K Group ADAM",
   ],
   openGraph: {
     type: "website",
     locale: "en_GB",
     url: CANONICAL,
-    siteName: "ADAM by Andyk Group",
+    siteName: "ADAM by Andy'K Group",
     title: TITLE,
     description: DESCRIPTION,
   },
@@ -59,15 +59,15 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "ADAM — Automated Document & Account Manager",
   description:
-    "ADAM by Andyk Group — AI-powered system that automates document management, account handling, and client workflows for businesses.",
+    "ADAM by Andy'K Group — AI-powered system that automates document management, account handling, and client workflows for businesses.",
   keywords:
-    "automated document management, AI account manager, business document automation, AI document system, account management automation, Andyk Group ADAM",
+    "automated document management, AI account manager, business document automation, AI document system, account management automation, Andy'K Group ADAM",
   url: CANONICAL,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   provider: {
     "@type": "Organization",
-    name: "Andyk Group",
+    name: "Andy'K Group",
     url: "https://andykgroup.com",
     address: {
       "@type": "PostalAddress",

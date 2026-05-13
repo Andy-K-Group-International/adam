@@ -34,7 +34,7 @@ export default function ProposalDocument({
       {/* Cover Page */}
       <Page size="A4" style={styles.coverPage}>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Text style={styles.coverBrand}>ANDY'K GROUP INTERNATIONAL</Text>
+          <Text style={styles.coverBrand}>ANDY'K GROUP INTERNATIONAL LTD</Text>
           <Text style={{ fontSize: 10, color: colors.muted, marginBottom: 60, textAlign: "center" }}>
             Business Growth &amp; Digital Transformation
           </Text>

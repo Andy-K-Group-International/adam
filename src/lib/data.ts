@@ -77,7 +77,7 @@ export const founders = [
   {
     name: "Andrej Kneisl",
     role: "CEO & Founder",
-    bio: "Visionary entrepreneur with a passion for automating business processes. Founded Andy'K Group International to bridge the gap between businesses and their growth potential.",
+    bio: "Visionary entrepreneur with a passion for automating business processes. Founded Andy'K Group International LTD to bridge the gap between businesses and their growth potential.",
     image: "/images/ceo.jpeg",
     quote:
       "Every business deserves a system that works as hard as they do. A.D.A.M. is that system.",

@@ -9,7 +9,7 @@ export default function TestimonialPair() {
       <div className="max-w-[1200px] mx-auto">
         <SectionHeader
           label="ABOUT"
-          subtitle="The team behind Andy'K Group International and A.D.A.M."
+          subtitle="The team behind Andy'K Group International LTD and A.D.A.M."
         >
           Meet the Founders
         </SectionHeader>

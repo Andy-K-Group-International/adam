@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { listLeads, convertLeadToClient } from "@/lib/supabase/queries/leads";
 import type { Lead, LeadStatus } from "@/lib/supabase/types";
+import { scoreTier } from "@/lib/lead-scoring";
 import Link from "next/link";
 import { Plus, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -132,6 +133,7 @@ export default function LeadsPage() {
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Name</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Company</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Source</th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Score</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Status</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Created</th>
                 <th className="px-5 py-3" />
@@ -140,7 +142,7 @@ export default function LeadsPage() {
             <tbody>
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-muted-2">
+                  <td colSpan={7} className="text-center py-12 text-muted-2">
                     No leads found.
                   </td>
                 </tr>
@@ -171,6 +173,22 @@ export default function LeadsPage() {
                       >
                         {sourceLabel(lead.source)}
                       </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      {lead.metadata?.score != null ? (() => {
+                        const tier = scoreTier(lead.metadata.score);
+                        return (
+                          <span className={cn(
+                            "inline-flex items-center gap-1 text-xs font-semibold tabular-nums",
+                            tier.color === "success" && "text-success",
+                            tier.color === "warning" && "text-warning",
+                            tier.color === "error"   && "text-error",
+                          )}>
+                            {lead.metadata.score}
+                            <span className="font-normal text-muted-2">/100</span>
+                          </span>
+                        );
+                      })() : <span className="text-xs text-muted-2">—</span>}
                     </td>
                     <td className="px-5 py-4">
                       <span

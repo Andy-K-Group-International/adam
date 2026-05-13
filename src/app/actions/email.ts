@@ -2,12 +2,16 @@
 
 async function sendEmail({
   to,
+  from = "info@andykgroup.com",
   subject,
   text,
+  html,
 }: {
   to: string;
+  from?: string;
   subject: string;
   text: string;
+  html?: string;
 }) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
@@ -22,10 +26,11 @@ async function sendEmail({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "A.D.A.M. <adam@andykgroup.com>",
+      from: `Andy'K Group <${from}>`,
       to: [to],
       subject,
       text,
+      ...(html ? { html } : {}),
     }),
   });
 
@@ -266,5 +271,204 @@ Please log in to review and take the next steps.
 
 Best regards,
 A.D.A.M. - AndyK Group International`,
+  });
+}
+
+// ── Lead emails ───────────────────────────────────────────────────────────────
+
+export async function sendLeadConfirmation({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:#01011b;padding:28px 40px;border-radius:12px 12px 0 0;">
+        <span style="color:#C9707D;font-weight:700;font-size:17px;letter-spacing:-0.3px;">Andy'K Group</span>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:40px;border:1px solid #e2e4ea;border-top:none;border-radius:0 0 12px 12px;">
+        <h1 style="font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;">Your application has been received</h1>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for reaching out to Andy'K Group. We've received your application and our team will review it carefully.</p>
+        <div style="background:#faf9fb;border-left:3px solid #C9707D;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px;">
+          <p style="color:#01011b;font-size:14px;font-weight:600;margin:0 0 6px;">What happens next</p>
+          <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">Our team will review your details within 48 hours. If we're the right fit for each other, you'll hear from us directly with next steps.</p>
+        </div>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 32px;">In the meantime, feel free to explore our work at <a href="https://andykgroup.com" style="color:#C9707D;text-decoration:none;">andykgroup.com</a>.</p>
+        <hr style="border:none;border-top:1px solid #f5f5f7;margin:0 0 24px;">
+        <p style="color:#8b93a8;font-size:13px;line-height:1.6;margin:0;">
+          Warm regards,<br>
+          <strong style="color:#525a70;">The Andy'K Group Team</strong><br>
+          <a href="https://andykgroup.com" style="color:#C9707D;text-decoration:none;">andykgroup.com</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: "Your application has been received — Andy'K Group",
+    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group. We've received your application and our team will review it within 48 hours.\n\nIf we're the right fit, you'll hear from us directly with next steps.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    html,
+  });
+}
+
+export async function sendLeadAdminNotification({
+  leadId,
+  name,
+  email,
+  phone,
+  company,
+  score,
+  breakdown,
+  questionnaire,
+}: {
+  leadId: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  score: number;
+  breakdown: {
+    revenue:            { label: string; score: number; max: number };
+    timeline:           { label: string; score: number; max: number };
+    decision_authority: { label: string; score: number; max: number };
+  };
+  questionnaire: Record<string, unknown>;
+}) {
+  const services = Array.isArray(questionnaire.services)
+    ? (questionnaire.services as string[]).join(", ")
+    : "—";
+  const reviewUrl = `https://adam.andykgroup.com/admin/leads/${leadId}`;
+
+  const breakdownText = [
+    `  Revenue:            ${breakdown.revenue.score}/${breakdown.revenue.max} — ${breakdown.revenue.label}`,
+    `  Timeline:           ${breakdown.timeline.score}/${breakdown.timeline.max} — ${breakdown.timeline.label}`,
+    `  Decision authority: ${breakdown.decision_authority.score}/${breakdown.decision_authority.max} — ${breakdown.decision_authority.label}`,
+  ].join("\n");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:#01011b;padding:28px 40px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#C9707D;font-weight:700;font-size:17px;">Andy'K Group</span>
+        <span style="color:white;font-size:13px;opacity:0.5;">New Lead Alert</span>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:40px;border:1px solid #e2e4ea;border-top:none;border-radius:0 0 12px 12px;">
+        <h1 style="font-size:20px;font-weight:700;color:#01011b;margin:0 0 4px;">New lead: ${company || name}</h1>
+        <p style="color:#8b93a8;font-size:13px;margin:0 0 28px;">Submitted via andykgroup.com</p>
+
+        <div style="background:#faf9fb;border:1px solid #e2e4ea;border-radius:8px;padding:20px;margin-bottom:24px;text-align:center;">
+          <p style="color:#8b93a8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Lead Score</p>
+          <p style="color:#01011b;font-size:48px;font-weight:700;margin:0;line-height:1;">${score}</p>
+          <p style="color:#8b93a8;font-size:13px;margin:4px 0 0;">out of 100</p>
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          <tr style="border-bottom:1px solid #f5f5f7;">
+            <td style="padding:8px 0;color:#8b93a8;font-size:13px;width:140px;">Revenue</td>
+            <td style="padding:8px 0;color:#525a70;font-size:13px;">${breakdown.revenue.label}</td>
+            <td style="padding:8px 0;color:#01011b;font-size:13px;font-weight:600;text-align:right;">${breakdown.revenue.score}/${breakdown.revenue.max}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f5f5f7;">
+            <td style="padding:8px 0;color:#8b93a8;font-size:13px;">Timeline</td>
+            <td style="padding:8px 0;color:#525a70;font-size:13px;">${breakdown.timeline.label}</td>
+            <td style="padding:8px 0;color:#01011b;font-size:13px;font-weight:600;text-align:right;">${breakdown.timeline.score}/${breakdown.timeline.max}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#8b93a8;font-size:13px;">Authority</td>
+            <td style="padding:8px 0;color:#525a70;font-size:13px;">${breakdown.decision_authority.label}</td>
+            <td style="padding:8px 0;color:#01011b;font-size:13px;font-weight:600;text-align:right;">${breakdown.decision_authority.score}/${breakdown.decision_authority.max}</td>
+          </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          ${company ? `<tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;width:120px;">Company</td><td style="padding:6px 0;color:#525a70;font-size:13px;font-weight:500;">${company}</td></tr>` : ""}
+          <tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;">Name</td><td style="padding:6px 0;color:#525a70;font-size:13px;">${name}</td></tr>
+          <tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;">Email</td><td style="padding:6px 0;color:#C9707D;font-size:13px;"><a href="mailto:${email}" style="color:#C9707D;text-decoration:none;">${email}</a></td></tr>
+          ${phone ? `<tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;">Phone</td><td style="padding:6px 0;color:#525a70;font-size:13px;">${phone}</td></tr>` : ""}
+          <tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;">Services</td><td style="padding:6px 0;color:#525a70;font-size:13px;">${services}</td></tr>
+          ${questionnaire.website ? `<tr><td style="padding:6px 0;color:#8b93a8;font-size:13px;">Website</td><td style="padding:6px 0;font-size:13px;"><a href="${String(questionnaire.website)}" style="color:#C9707D;text-decoration:none;">${questionnaire.website}</a></td></tr>` : ""}
+        </table>
+
+        ${questionnaire.business_description ? `<div style="margin-bottom:16px;"><p style="color:#8b93a8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Business Description</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${questionnaire.business_description}</p></div>` : ""}
+        ${questionnaire.biggest_challenge ? `<div style="margin-bottom:28px;"><p style="color:#8b93a8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 6px;">Biggest Challenge</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${questionnaire.biggest_challenge}</p></div>` : ""}
+
+        <a href="${reviewUrl}" style="display:inline-block;background:#C9707D;color:white;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Review Lead →</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: "ceo@andykgroup.com",
+    from: "info@andykgroup.com",
+    subject: `New lead: ${company || name} — Score: ${score}/100`,
+    text: `New lead submitted via andykgroup.com\n\nCompany: ${company || "—"}\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "—"}\nScore: ${score}/100\n\nScore Breakdown:\n${breakdownText}\n\nServices: ${services}\nBusiness: ${questionnaire.business_description || "—"}\nChallenge: ${questionnaire.biggest_challenge || "—"}\n\nReview: ${reviewUrl}`,
+    html,
+  });
+}
+
+export async function sendLeadRejection({
+  name,
+  email,
+  reason,
+}: {
+  name: string;
+  email: string;
+  reason?: string;
+}) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:#01011b;padding:28px 40px;border-radius:12px 12px 0 0;">
+        <span style="color:#C9707D;font-weight:700;font-size:17px;letter-spacing:-0.3px;">Andy'K Group</span>
+      </td></tr>
+      <tr><td style="background:#ffffff;padding:40px;border:1px solid #e2e4ea;border-top:none;border-radius:0 0 12px 12px;">
+        <h1 style="font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;">Regarding your application</h1>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Thank you for taking the time to reach out to Andy'K Group and for the interest you've shown in working with us.</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">After carefully reviewing your application, we don't feel we're the right fit for your current needs.${reason ? ` ${reason}` : ""}</p>
+        <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 32px;">This isn't a permanent decision — circumstances change, and we'd genuinely welcome the opportunity to reconsider in the future. We wish you every success with your business in the meantime.</p>
+        <hr style="border:none;border-top:1px solid #f5f5f7;margin:0 0 24px;">
+        <p style="color:#8b93a8;font-size:13px;line-height:1.6;margin:0;">
+          Warm regards,<br>
+          <strong style="color:#525a70;">The Andy'K Group Team</strong><br>
+          <a href="https://andykgroup.com" style="color:#C9707D;text-decoration:none;">andykgroup.com</a>
+        </p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: "Regarding your Andy'K Group application",
+    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group.\n\nAfter reviewing your application, we don't feel we're the right fit for your current needs.${reason ? " " + reason : ""}\n\nThis isn't permanent — we'd welcome the opportunity to reconnect in the future.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    html,
   });
 }

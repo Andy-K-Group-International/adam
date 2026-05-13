@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Lead, Client } from '@/lib/supabase/types';
+import type { Lead, Client, LeadMetadata } from '@/lib/supabase/types';
 
 export async function listLeads(
   supabase: SupabaseClient,
@@ -40,6 +40,20 @@ export async function getLeadById(
   return data;
 }
 
+export async function findLeadByEmail(
+  supabase: SupabaseClient,
+  email: string
+): Promise<Lead | null> {
+  const { data } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('email', email.toLowerCase().trim())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
 export async function createLead(
   supabase: SupabaseClient,
   data: Omit<Lead, 'id' | 'created_at' | 'updated_at'>
@@ -59,6 +73,18 @@ export async function createLead(
   }
 
   return lead;
+}
+
+export async function updateLeadMetadata(
+  supabase: SupabaseClient,
+  id: string,
+  metadata: LeadMetadata
+): Promise<void> {
+  const { error } = await supabase
+    .from('leads')
+    .update({ metadata, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw new Error(`Failed to update lead metadata: ${error.message}`);
 }
 
 export async function updateLead(

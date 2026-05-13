@@ -48,6 +48,9 @@ export default function NewLeadPage() {
         status: "new",
         notes: notes.trim() || null,
         converted_to_client_id: null,
+        metadata: null,
+        rejected_at: null,
+        cooling_period_until: null,
       });
       router.push(`/admin/leads/${lead.id}`);
     } catch (err) {

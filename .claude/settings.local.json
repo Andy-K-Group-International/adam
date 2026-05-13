@@ -3,7 +3,26 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl *)",
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(./node_modules/.bin/next build *)",
+      "Bash(npm install *)",
+      "Bash(/Users/andrejkneisl/adam/node_modules/.bin/next build *)",
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "Bash(mkdir -p \"/Users/andrejkneisl/adam/src/app/admin/proposals/[id]\")",
+      "Bash(mkdir -p \"/Users/andrejkneisl/adam/src/app/dashboard/proposals/[id]\")",
+      "Bash(npx tsc *)",
+      "mcp__claude_ai_Vercel__get_project",
+      "Bash(vercel env *)",
+      "Bash(grep -E \"\\\\.\\(sql|ts\\)$\")",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(npx tsx *)",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "Bash(node *)"
     ]
   }
 }

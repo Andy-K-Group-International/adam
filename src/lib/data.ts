@@ -4,8 +4,8 @@ export const siteConfig = {
   company: "Andy'K Group International LTD",
   companyReg: "16453500",
   address: "86-90 Paul Street, London EC2A 4NE",
-  email: "info@andykgroupinternational.com",
-  website: "https://andykgroupinternational.com",
+  email: "info@andykgroup.com",
+  website: "https://andykgroup.com",
 };
 
 export const navLinks = [
@@ -357,6 +357,6 @@ export const footerLinks = {
   ],
   connect: [
     { label: "LinkedIn", href: "https://www.linkedin.com/company/80971657/" },
-    { label: "Email", href: "mailto:info@andykgroupinternational.com" },
+    { label: "Email", href: "mailto:info@andykgroup.com" },
   ],
 };

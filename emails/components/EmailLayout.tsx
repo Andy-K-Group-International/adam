@@ -31,7 +31,7 @@ export default function EmailLayout({ preview, children }: EmailLayoutProps) {
           <Section style={footer}>
             <Text style={footerText}>Andy&apos;K Group International LTD</Text>
             <Text style={footerText}>86-90 Paul Street, London EC2A 4NE</Text>
-            <Text style={footerText}>info@andykgroupinternational.com</Text>
+            <Text style={footerText}>info@andykgroup.com</Text>
           </Section>
         </Container>
       </Body>

@@ -46,7 +46,7 @@ export default function Hero() {
       <p className="text-base leading-relaxed text-muted-2 font-light max-w-[540px] mx-auto mb-9">
         Powered by{" "}
         <a
-          href="https://andykgroupinternational.com/"
+          href="https://andykgroup.com/"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2 hover:text-foreground transition-colors"

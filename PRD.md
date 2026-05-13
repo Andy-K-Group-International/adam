@@ -1543,7 +1543,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/api/auth/login", req.url));
   }
 
-  const role = session.user["https://adam.andykgroupinternational.com/role"];
+  const role = session.user["https://adam.andykgroup.com/role"];
 
   if (isAdminRoute(pathname) && role !== "admin" && role !== "staff") {
     return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -1644,7 +1644,7 @@ All emails follow a consistent design matching the ADAM brand:
 │                                         │
 │  Andy'K Group International LTD         │
 │  86-90 Paul Street, London EC2A 4NE     │
-│  info@andykgroupinternational.com       │
+│  info@andykgroup.com       │
 │                                         │
 └─────────────────────────────────────────┘
 ```
@@ -1676,7 +1676,7 @@ export const sendContractPublished = action({
   },
   handler: async (ctx, args) => {
     await resend.emails.send({
-      from: "A.D.A.M. <adam@andykgroupinternational.com>",
+      from: "A.D.A.M. <adam@andykgroup.com>",
       to: args.to,
       subject: "Your contract is ready for review",
       react: ContractPublishedEmail({
@@ -1906,7 +1906,7 @@ CONVEX_DEPLOY_KEY=...
 RESEND_API_KEY=re_...
 
 # App
-NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
+NEXT_PUBLIC_APP_URL=https://adam.andykgroup.com
 ```
 
 ---
@@ -1999,7 +1999,7 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 | Production deployment | Custom domain, DNS, SSL |
 | Documentation | CLAUDE.md with project rules |
 
-**Deliverable:** Production application at `adam.andykgroupinternational.com`.
+**Deliverable:** Production application at `adam.andykgroup.com`.
 
 ---
 
@@ -2103,7 +2103,7 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 | Database | Convex (Professional plan) |
 | Auth | Auth0 (Professional plan) |
 | Email | Resend (Pro plan) |
-| Domain | `adam.andykgroupinternational.com` |
+| Domain | `adam.andykgroup.com` |
 | SSL | Automatic via Vercel |
 | CDN | Automatic via Vercel Edge Network |
 | Monitoring | Vercel Analytics + Convex Dashboard |
@@ -2144,6 +2144,6 @@ NEXT_PUBLIC_APP_URL=https://adam.andykgroupinternational.com
 | Address | 86-90 Paul Street, London, EC2A 4NE, UK |
 | CEO | Andrej Kneisl |
 | CTO | Kobe Janssens |
-| Email | info@andykgroupinternational.com |
+| Email | info@andykgroup.com |
 | Product | A.D.A.M. (Automated Document & Account Manager) |
 | Tagline | "A.D.A.M. decides. E.V.A. executes. You grow." |

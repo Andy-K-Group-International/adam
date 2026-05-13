@@ -47,6 +47,7 @@ export default function NewLeadPage() {
         source,
         status: "new",
         notes: notes.trim() || null,
+        service_interest: null,
         converted_to_client_id: null,
         metadata: null,
         rejected_at: null,

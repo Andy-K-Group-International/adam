@@ -118,9 +118,10 @@ export interface Client {
 }
 
 export interface LeadScoreBreakdown {
-  revenue:            { value: string; label: string; score: number; max: number };
-  timeline:           { value: string; label: string; score: number; max: number };
-  decision_authority: { value: string; label: string; score: number; max: number };
+  revenue:             { value: string; label: string; score: number; max: number };
+  timeline:            { value: string; label: string; score: number; max: number };
+  decision_authority:  { value: string; label: string; score: number; max: number };
+  service_interest?:   { value: string; label: string; score: number; max: number };
 }
 
 export interface LeadMetadata {
@@ -128,6 +129,7 @@ export interface LeadMetadata {
   breakdown: LeadScoreBreakdown;
   questionnaire: Record<string, unknown>;
   scored_at: string;
+  service_interest?: string;
 }
 
 export interface Lead {
@@ -139,9 +141,13 @@ export interface Lead {
   source: LeadSource;
   status: LeadStatus;
   notes: string | null;
+  service_interest: string | null;
   metadata: LeadMetadata | null;
   rejected_at: string | null;
   cooling_period_until: string | null;
+  questionnaire_token: string | null;
+  token_expires_at: string | null;
+  token_sent_at: string | null;
   converted_to_client_id: string | null;
   created_at: string;
   updated_at: string;

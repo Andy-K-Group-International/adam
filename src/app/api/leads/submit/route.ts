@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
     answers?: Record<string, unknown>;
   };
 
+  const serviceInterest = answers?.service_interest ? String(answers.service_interest) : null;
+
   if (!name?.trim() || !email?.trim() || !answers) {
     return NextResponse.json(
       { success: false, error: "name, email, and answers are required" },
@@ -77,6 +79,7 @@ export async function POST(req: NextRequest) {
     revenue:            String(answers.revenue ?? ""),
     timeline:           String(answers.timeline ?? ""),
     decision_authority: String(answers.decision_authority ?? ""),
+    service_interest:   serviceInterest ?? undefined,
     services:           Array.isArray(answers.services) ? answers.services as string[] : [],
     business_description: answers.business_description ? String(answers.business_description) : undefined,
     biggest_challenge:    answers.biggest_challenge    ? String(answers.biggest_challenge)    : undefined,
@@ -84,10 +87,11 @@ export async function POST(req: NextRequest) {
   });
 
   const metadata = {
-    score:       scoreResult.total,
-    breakdown:   scoreResult.dimensions,
-    questionnaire: { ...answers },
-    scored_at:   scoreResult.scored_at,
+    score:            scoreResult.total,
+    breakdown:        scoreResult.dimensions,
+    questionnaire:    { ...answers },
+    scored_at:        scoreResult.scored_at,
+    service_interest: serviceInterest ?? undefined,
   };
 
   let leadId: string;
@@ -97,11 +101,12 @@ export async function POST(req: NextRequest) {
     const { data: updated, error } = await supabase
       .from("leads")
       .update({
-        name:     name.trim(),
-        phone:    phone?.trim() || null,
-        company:  company?.trim() || null,
-        source:   source || "website",
-        status:   "new",
+        name:             name.trim(),
+        phone:            phone?.trim() || null,
+        company:          company?.trim() || null,
+        source:           source || "website",
+        status:           "new",
+        service_interest: serviceInterest,
         metadata,
         updated_at: new Date().toISOString(),
       })
@@ -119,12 +124,13 @@ export async function POST(req: NextRequest) {
     const { data: created, error } = await supabase
       .from("leads")
       .insert({
-        name:     name.trim(),
-        email:    normalizedEmail,
-        phone:    phone?.trim() || null,
-        company:  company?.trim() || null,
-        source:   source || "website",
-        status:   "new",
+        name:             name.trim(),
+        email:            normalizedEmail,
+        phone:            phone?.trim() || null,
+        company:          company?.trim() || null,
+        source:           source || "website",
+        status:           "new",
+        service_interest: serviceInterest,
         metadata,
         converted_to_client_id: null,
       })

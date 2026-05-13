@@ -1,16 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendLeadRejection } from "./email";
-
-export async function qualifyLead(leadId: string): Promise<void> {
-  const supabase = createAdminClient();
-  const { error } = await supabase
-    .from("leads")
-    .update({ status: "qualified", updated_at: new Date().toISOString() })
-    .eq("id", leadId);
-  if (error) throw new Error(error.message);
-}
+import { sendLeadRejection, sendQuestionnaireInvite } from "./email";
 
 export async function rejectLead(leadId: string, reason: string): Promise<void> {
   const supabase = createAdminClient();
@@ -36,5 +27,36 @@ export async function rejectLead(leadId: string, reason: string): Promise<void> 
     name: lead.name,
     email: lead.email,
     reason: reason.trim() || undefined,
+  });
+}
+
+export async function approveLeadWithToken(leadId: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  const { data: lead, error } = await supabase
+    .from("leads")
+    .update({
+      status: "qualified",
+      questionnaire_token: token,
+      token_expires_at: expiresAt.toISOString(),
+      token_sent_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", leadId)
+    .select("name, email, company")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  await sendQuestionnaireInvite({
+    name: lead.name,
+    email: lead.email,
+    company: lead.company,
+    token,
+    expiresAt: expiresAt.toISOString(),
   });
 }

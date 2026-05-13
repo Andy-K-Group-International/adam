@@ -2,6 +2,7 @@ export interface ShortQuestionnaireAnswers {
   revenue: string;
   timeline: string;
   decision_authority: string;
+  service_interest?: string;
   services?: string[];
   business_description?: string;
   biggest_challenge?: string;
@@ -18,9 +19,10 @@ export interface ScoreDimension {
 export interface LeadScoreResult {
   total: number;
   dimensions: {
-    revenue: ScoreDimension;
-    timeline: ScoreDimension;
+    revenue:            ScoreDimension;
+    timeline:           ScoreDimension;
     decision_authority: ScoreDimension;
+    service_interest?:  ScoreDimension;
   };
   scored_at: string;
 }
@@ -45,20 +47,34 @@ const AUTHORITY: Record<string, { score: number; label: string }> = {
   "exploring":            { score: 4,  label: "Just exploring" },
 };
 
+const SERVICE_INTEREST: Record<string, { score: number; label: string }> = {
+  "end_to_end": { score: 10, label: "End-to-End Business Development" },
+  "b2b":        { score: 5,  label: "B2B Lead Generation" },
+  "b2g":        { score: 5,  label: "B2G Government Tenders" },
+  "adam":       { score: 5,  label: "A.D.A.M. System Licensing" },
+  "not_sure":   { score: 0,  label: "Not sure yet" },
+};
+
 export function calculateLeadScore(answers: ShortQuestionnaireAnswers): LeadScoreResult {
-  const rev  = REVENUE[answers.revenue]            ?? { score: 0, label: answers.revenue ?? "Unknown" };
-  const tim  = TIMELINE[answers.timeline]          ?? { score: 0, label: answers.timeline ?? "Unknown" };
+  const rev  = REVENUE[answers.revenue]              ?? { score: 0, label: answers.revenue ?? "Unknown" };
+  const tim  = TIMELINE[answers.timeline]            ?? { score: 0, label: answers.timeline ?? "Unknown" };
   const auth = AUTHORITY[answers.decision_authority] ?? { score: 0, label: answers.decision_authority ?? "Unknown" };
 
-  return {
-    total: rev.score + tim.score + auth.score,
-    dimensions: {
-      revenue:            { value: answers.revenue,            label: rev.label,  score: rev.score,  max: 60 },
-      timeline:           { value: answers.timeline,           label: tim.label,  score: tim.score,  max: 20 },
-      decision_authority: { value: answers.decision_authority, label: auth.label, score: auth.score, max: 20 },
-    },
-    scored_at: new Date().toISOString(),
+  const dimensions: LeadScoreResult["dimensions"] = {
+    revenue:            { value: answers.revenue,            label: rev.label,  score: rev.score,  max: 60 },
+    timeline:           { value: answers.timeline,           label: tim.label,  score: tim.score,  max: 20 },
+    decision_authority: { value: answers.decision_authority, label: auth.label, score: auth.score, max: 20 },
   };
+
+  let total = rev.score + tim.score + auth.score;
+
+  if (answers.service_interest) {
+    const svc = SERVICE_INTEREST[answers.service_interest] ?? { score: 0, label: answers.service_interest };
+    dimensions.service_interest = { value: answers.service_interest, label: svc.label, score: svc.score, max: 10 };
+    total += svc.score;
+  }
+
+  return { total, dimensions, scored_at: new Date().toISOString() };
 }
 
 export function scoreTier(total: number): { label: string; color: string } {

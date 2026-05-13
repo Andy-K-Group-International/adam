@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { getContractById, updateContract, publishContract, countersign } from "@/lib/supabase/queries/contracts";
+import { getContractById, updateContract, publishContract, countersign, verifyAppendix, rejectAppendix } from "@/lib/supabase/queries/contracts";
 import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
 import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
 import type { Contract, ContractComment, ContractVersion } from "@/lib/supabase/types";
@@ -30,6 +30,8 @@ export default function AdminContractDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isCountersigning, setIsCountersigning] = useState(false);
+  const [appendixAction, setAppendixAction] = useState<{ slot: string; type: "verify" | "reject" } | null>(null);
+  const [rejectionNote, setRejectionNote] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -103,6 +105,33 @@ export default function AdminContractDetailPage() {
       console.error("Failed to publish contract:", err);
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  const handleVerifyAppendix = async (slot: string) => {
+    setAppendixAction({ slot, type: "verify" });
+    try {
+      const supabase = createClient();
+      const updated = await verifyAppendix(supabase, contractId, slot);
+      setContract(updated);
+    } catch (err) {
+      console.error("Failed to verify appendix:", err);
+    } finally {
+      setAppendixAction(null);
+    }
+  };
+
+  const handleRejectAppendix = async (slot: string) => {
+    setAppendixAction({ slot, type: "reject" });
+    try {
+      const supabase = createClient();
+      const updated = await rejectAppendix(supabase, contractId, slot, rejectionNote || undefined);
+      setContract(updated);
+      setRejectionNote("");
+    } catch (err) {
+      console.error("Failed to reject appendix:", err);
+    } finally {
+      setAppendixAction(null);
     }
   };
 
@@ -250,43 +279,48 @@ export default function AdminContractDetailPage() {
             <div className="space-y-2">
               {contract.appendices
                 .filter((a) => a.status === "uploaded")
-                .map((appendix) => (
-                  <div
-                    key={appendix.slot}
-                    className="flex items-center justify-between bg-grid-300/30 rounded-lg px-4 py-2.5"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {appendix.label}
-                      </p>
-                      <p className="text-xs text-muted-2">
-                        Uploaded &middot; Awaiting verification
-                      </p>
+                .map((appendix) => {
+                  const isActing = appendixAction?.slot === appendix.slot;
+                  return (
+                    <div key={appendix.slot} className="space-y-2">
+                      <div className="flex items-center justify-between bg-grid-300/30 rounded-lg px-4 py-2.5">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {appendix.label}
+                          </p>
+                          <p className="text-xs text-muted-2">
+                            Uploaded &middot; Awaiting verification
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={isActing}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-white bg-success hover:bg-success/90 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            onClick={() => handleVerifyAppendix(appendix.slot)}
+                          >
+                            <Check className="h-3 w-3" />
+                            {isActing && appendixAction?.type === "verify" ? "Verifying..." : "Verify"}
+                          </button>
+                          <button
+                            disabled={isActing}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-white bg-error hover:bg-error/90 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            onClick={() => handleRejectAppendix(appendix.slot)}
+                          >
+                            <X className="h-3 w-3" />
+                            {isActing && appendixAction?.type === "reject" ? "Rejecting..." : "Reject"}
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Rejection note (optional)"
+                        value={appendixAction?.slot === appendix.slot ? rejectionNote : ""}
+                        onChange={(e) => setRejectionNote(e.target.value)}
+                        className="w-full text-xs border border-grid-500 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-highlight/30"
+                      />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="inline-flex items-center gap-1 text-xs font-medium text-white bg-success hover:bg-success/90 px-2.5 py-1.5 rounded-lg transition-colors"
-                        onClick={() => {
-                          // TODO: Call appendix verify mutation when available
-                          console.log("Verify appendix:", appendix.slot);
-                        }}
-                      >
-                        <Check className="h-3 w-3" />
-                        Verify
-                      </button>
-                      <button
-                        className="inline-flex items-center gap-1 text-xs font-medium text-white bg-red-500 hover:bg-red-600 px-2.5 py-1.5 rounded-lg transition-colors"
-                        onClick={() => {
-                          // TODO: Call appendix reject mutation when available
-                          console.log("Reject appendix:", appendix.slot);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         )}

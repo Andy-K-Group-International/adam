@@ -11,6 +11,7 @@ import {
   FileText,
   ClipboardList,
   MessageSquareText,
+  Lightbulb,
   LogOut,
 } from "lucide-react";
 
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
   { label: "Clients", href: "/admin/clients", icon: Users },
+  { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },
   { label: "Questionnaires", href: "/admin/questionnaires", icon: ClipboardList },
   { label: "Questions", href: "/admin/questions", icon: MessageSquareText },

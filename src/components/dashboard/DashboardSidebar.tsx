@@ -9,11 +9,13 @@ import {
   FileText,
   FolderOpen,
   User,
+  Lightbulb,
   LogOut,
 } from "lucide-react";
 
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Proposals", href: "/dashboard/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/dashboard/contracts", icon: FileText },
   { label: "Documents", href: "/dashboard/documents", icon: FolderOpen },
   { label: "Profile", href: "/dashboard/profile", icon: User },

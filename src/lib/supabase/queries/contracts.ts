@@ -318,6 +318,73 @@ export async function clientSign(
   return contract;
 }
 
+export async function verifyAppendix(
+  supabase: SupabaseClient,
+  contractId: string,
+  slot: string
+): Promise<Contract> {
+  const { data: existing, error: fetchError } = await supabase
+    .from('contracts')
+    .select('appendices')
+    .eq('id', contractId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch contract: ${fetchError.message}`);
+  }
+
+  const updatedAppendices = (existing.appendices || []).map((a: { slot: string }) =>
+    a.slot === slot ? { ...a, status: 'verified', rejectionNote: undefined } : a
+  );
+
+  const { data: contract, error } = await supabase
+    .from('contracts')
+    .update({ appendices: updatedAppendices, updated_at: new Date().toISOString() })
+    .eq('id', contractId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to verify appendix: ${error.message}`);
+  }
+
+  return contract;
+}
+
+export async function rejectAppendix(
+  supabase: SupabaseClient,
+  contractId: string,
+  slot: string,
+  rejectionNote?: string
+): Promise<Contract> {
+  const { data: existing, error: fetchError } = await supabase
+    .from('contracts')
+    .select('appendices')
+    .eq('id', contractId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch contract: ${fetchError.message}`);
+  }
+
+  const updatedAppendices = (existing.appendices || []).map((a: { slot: string }) =>
+    a.slot === slot ? { ...a, status: 'rejected', rejectionNote: rejectionNote || '' } : a
+  );
+
+  const { data: contract, error } = await supabase
+    .from('contracts')
+    .update({ appendices: updatedAppendices, updated_at: new Date().toISOString() })
+    .eq('id', contractId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to reject appendix: ${error.message}`);
+  }
+
+  return contract;
+}
+
 export async function countersign(
   supabase: SupabaseClient,
   id: string,

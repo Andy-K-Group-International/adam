@@ -209,3 +209,62 @@ Best regards,
 A.D.A.M. - AndyK Group International`,
   });
 }
+
+export async function sendProposalSent({
+  clientEmail,
+  clientName,
+  proposalTitle,
+  proposalId,
+}: {
+  clientEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalId: string;
+}) {
+  return await sendEmail({
+    to: clientEmail,
+    subject: `Proposal Ready for Review: ${proposalTitle}`,
+    text: `Hi ${clientName},
+
+A proposal "${proposalTitle}" is ready for your review.
+
+Please log in to your client portal to read the proposal and share your decision.
+
+Proposal ID: ${proposalId}
+
+Best regards,
+A.D.A.M. - AndyK Group International`,
+  });
+}
+
+export async function sendProposalResponse({
+  staffEmail,
+  clientName,
+  proposalTitle,
+  proposalId,
+  decision,
+  comment,
+}: {
+  staffEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalId: string;
+  decision: "approved" | "declined";
+  comment?: string;
+}) {
+  const verb = decision === "approved" ? "approved" : "declined";
+  return await sendEmail({
+    to: staffEmail,
+    subject: `Proposal ${decision === "approved" ? "Approved" : "Declined"}: ${proposalTitle}`,
+    text: `Hi,
+
+${clientName} has ${verb} the proposal "${proposalTitle}".
+${comment ? `\nClient comment: ${comment}\n` : ""}
+Proposal ID: ${proposalId}
+
+Please log in to review and take the next steps.
+
+Best regards,
+A.D.A.M. - AndyK Group International`,
+  });
+}

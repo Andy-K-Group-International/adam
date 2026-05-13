@@ -4,13 +4,33 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listAllContracts } from "@/lib/supabase/queries/contracts";
 import { listClients } from "@/lib/supabase/queries/clients";
-import type { Contract, Client } from "@/lib/supabase/types";
+import type { Contract, Client, ContractType } from "@/lib/supabase/types";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import StatusBadge from "@/components/contracts/StatusBadge";
+
+function contractTypeStyle(type: ContractType | undefined): string {
+  switch (type) {
+    case "nda":               return "bg-error/10 text-error";
+    case "service_agreement": return "bg-info/10 text-info";
+    case "retainer":          return "bg-success/10 text-success";
+    case "amendment":         return "bg-warning/10 text-warning";
+    default:                  return "bg-info/10 text-info";
+  }
+}
+
+function contractTypeLabel(type: ContractType | undefined): string {
+  switch (type) {
+    case "nda":               return "NDA";
+    case "service_agreement": return "Service Agreement";
+    case "retainer":          return "Retainer";
+    case "amendment":         return "Amendment";
+    default:                  return "Service Agreement";
+  }
+}
 
 type StatusFilter = "" | "draft" | "published" | "viewed" | "changes_requested" | "client_signed" | "countersigned" | "final";
 
@@ -107,6 +127,9 @@ export default function ContractsPage() {
                   Client
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
+                  Type
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
                   Status
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
@@ -120,7 +143,7 @@ export default function ContractsPage() {
             <tbody>
               {(contracts || []).length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-muted-2">
+                  <td colSpan={6} className="text-center py-12 text-muted-2">
                     No contracts found.
                   </td>
                 </tr>
@@ -140,6 +163,14 @@ export default function ContractsPage() {
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
                       {clientMap.get(contract.client_id) || "Unknown Client"}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                        contractTypeStyle(contract.contract_type)
+                      )}>
+                        {contractTypeLabel(contract.contract_type)}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge status={contract.status} />

@@ -35,6 +35,11 @@ export type ProposalStatus =
 export type FileCategory = "appendix" | "signature" | "attachment";
 export type AppendixStatus = "empty" | "uploaded" | "verified" | "rejected";
 
+export type LeadSource = "website" | "referral" | "outreach" | "direct" | "social" | "partnership";
+export type LeadStatus = "new" | "contacted" | "qualified" | "rejected" | "converted";
+export type ContractType = "nda" | "service_agreement" | "retainer" | "amendment";
+export type StrategyType = "b2b" | "b2g" | "adam_license" | "end_to_end";
+
 export type QuestionType =
   | "text"
   | "url"
@@ -102,6 +107,22 @@ export interface Client {
   assigned_to: string | null;
   questionnaire_id: string | null;
   notes: string | null;
+  strategy_notes: string | null;
+  strategy_type: StrategyType | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  company: string | null;
+  source: LeadSource;
+  status: LeadStatus;
+  notes: string | null;
+  converted_to_client_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -149,6 +170,7 @@ export interface Contract {
   title: string;
   content: string;
   status: ContractStatus;
+  contract_type: ContractType;
   version: number;
   sections: { id: string; title: string; content: string }[] | null;
   client_signature: string | null;

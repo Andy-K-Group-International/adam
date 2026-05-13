@@ -7,6 +7,7 @@ import { signOut } from "@/app/actions/auth-signout";
 import {
   LayoutDashboard,
   GitBranch,
+  Target,
   Users,
   FileText,
   ClipboardList,
@@ -18,6 +19,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
+  { label: "Leads", href: "/admin/leads", icon: Target },
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },

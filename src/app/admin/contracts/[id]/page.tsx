@@ -7,7 +7,27 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getContractById, updateContract, publishContract, countersign, verifyAppendix, rejectAppendix } from "@/lib/supabase/queries/contracts";
 import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
 import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
-import type { Contract, ContractComment, ContractVersion } from "@/lib/supabase/types";
+import type { Contract, ContractComment, ContractVersion, ContractType } from "@/lib/supabase/types";
+
+function contractTypeStyle(type: ContractType | undefined): string {
+  switch (type) {
+    case "nda":               return "bg-error/10 text-error";
+    case "service_agreement": return "bg-info/10 text-info";
+    case "retainer":          return "bg-success/10 text-success";
+    case "amendment":         return "bg-warning/10 text-warning";
+    default:                  return "bg-info/10 text-info";
+  }
+}
+
+function contractTypeLabel(type: ContractType | undefined): string {
+  switch (type) {
+    case "nda":               return "NDA";
+    case "service_agreement": return "Service Agreement";
+    case "retainer":          return "Retainer";
+    case "amendment":         return "Amendment";
+    default:                  return "Service Agreement";
+  }
+}
 import Link from "next/link";
 import { ArrowLeft, Check, X, Send, PenTool, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -231,6 +251,12 @@ export default function AdminContractDetailPage() {
             <h3 className="text-sm font-semibold text-foreground">
               Admin Actions
             </h3>
+            <span className={cn(
+              "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+              contractTypeStyle(contract.contract_type)
+            )}>
+              {contractTypeLabel(contract.contract_type)}
+            </span>
             <StatusBadge status={contract.status} />
           </div>
           <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { listClients } from "@/lib/supabase/queries/clients";
 import { createContract } from "@/lib/supabase/queries/contracts";
-import type { Client } from "@/lib/supabase/types";
+import type { Client, ContractType } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -28,12 +28,14 @@ function NewContractForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clientId") || "";
+  const preselectedType = (searchParams.get("type") || "service_agreement") as ContractType;
   const { user } = useCurrentUser();
 
   const [clients, setClients] = useState<Client[] | undefined>(undefined);
 
   const [clientId, setClientId] = useState(preselectedClientId);
-  const [title, setTitle] = useState("");
+  const [contractType, setContractType] = useState<ContractType>(preselectedType);
+  const [title, setTitle] = useState(preselectedType === "nda" ? "Non-Disclosure Agreement" : "");
   const [content, setContent] = useState("");
   const [appendixSlots, setAppendixSlots] = useState<AppendixSlot[]>([
     { label: "Appendix A", required: true },
@@ -89,6 +91,7 @@ function NewContractForm() {
         client_id: clientId,
         title: title.trim(),
         content: content.trim(),
+        contract_type: contractType,
         version: 1,
         appendices: appendices.length > 0 ? appendices : null,
         created_by: user?.id || "",
@@ -168,6 +171,39 @@ function NewContractForm() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Contract Type */}
+        <div className="bg-white rounded-xl border border-grid-300 p-5">
+          <label className="block text-sm font-semibold text-foreground mb-3">
+            Contract Type
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { value: "service_agreement", label: "Service Agreement" },
+              { value: "nda", label: "NDA" },
+              { value: "retainer", label: "Retainer" },
+              { value: "amendment", label: "Amendment" },
+            ] as { value: ContractType; label: string }[]).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setContractType(opt.value);
+                  if (opt.value === "nda" && !title.trim()) {
+                    setTitle("Non-Disclosure Agreement");
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                  contractType === opt.value
+                    ? "bg-highlight text-white border-highlight"
+                    : "bg-white text-muted border-grid-500 hover:bg-grid-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Title */}

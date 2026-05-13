@@ -184,6 +184,7 @@ export default function AdminProposalDetailPage() {
         proposal_id: proposal.id,
         title: `${proposal.title} — Contract`,
         content,
+        contract_type: "service_agreement",
         version: 1,
         sections: null,
         client_signature: null,

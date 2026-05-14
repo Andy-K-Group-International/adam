@@ -201,30 +201,48 @@ export default function AdminQuestionsPage() {
                   )}
                 >
                   <div className="border-t border-grid-300">
-                    {section.subsections.map((sub) => {
-                      const subQuestions = sectionQuestions.filter(
-                        (q) => q.subsection === sub.id
-                      );
-                      if (subQuestions.length === 0) return null;
+                    {(() => {
+                      // Build subsection list: prefer DB-defined subsections, then
+                      // fall back to deriving from the questions themselves so a
+                      // missing/empty subsections array never produces a blank panel.
+                      const definedIds = new Set(section.subsections.map((s) => s.id));
+                      const extraIds = [
+                        ...new Set(
+                          sectionQuestions
+                            .map((q) => q.subsection)
+                            .filter((id) => !definedIds.has(id))
+                        ),
+                      ];
+                      const allSubs = [
+                        ...section.subsections,
+                        ...extraIds.map((id) => ({ id, title: id })),
+                      ];
 
-                      return (
-                        <div key={sub.id}>
-                          <div className="px-5 py-2 bg-grid-300/30">
-                            <p className="text-xs font-medium text-muted-2 uppercase tracking-wider">
-                              {sub.title}
-                            </p>
+                      return allSubs.map((sub) => {
+                        const subQuestions = sectionQuestions.filter(
+                          (q) => q.subsection === sub.id
+                        );
+                        if (subQuestions.length === 0) return null;
+
+                        return (
+                          <div key={sub.id}>
+                            <div className="px-5 py-2 bg-grid-300/30">
+                              <p className="text-xs font-medium text-muted-2 uppercase tracking-wider">
+                                {sub.title}
+                              </p>
+                            </div>
+                            {subQuestions.map((q) => (
+                              <QuestionRow
+                                key={q.question_id}
+                                question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
+                                onEdit={() => setEditingQuestion(q.question_id)}
+                                onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
+                              />
+                            ))}
                           </div>
-                          {subQuestions.map((q) => (
-                            <QuestionRow
-                              key={q.question_id}
-                              question={{ id: q.question_id, number: q.number, question: q.question, type: q.type, required: q.required, is_active: q.is_active }}
-                              onEdit={() => setEditingQuestion(q.question_id)}
-                              onToggleActive={() => handleToggleActive(q.question_id, q.is_active)}
-                            />
-                          ))}
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>

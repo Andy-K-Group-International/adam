@@ -627,3 +627,189 @@ export async function sendTokenReminder({
     html,
   });
 }
+
+// ─── Invoice emails ───────────────────────────────────────────────────────────
+
+export async function sendInvoiceSent({
+  clientEmail,
+  clientName,
+  companyName,
+  invoiceNumber,
+  invoiceId,
+  totalAmount,
+  currency,
+  dueDate,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  invoiceNumber: string;
+  invoiceId: string;
+  totalAmount: number;
+  currency: string;
+  dueDate: string | null;
+}) {
+  const url = `https://adam.andykgroup.com/dashboard/invoices/${invoiceId}`;
+  const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(totalAmount);
+  const formattedDue = dueDate
+    ? new Date(dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">You have a new invoice to review</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">An invoice has been issued for ${companyName}. Please log in to your client portal to view and download it.</p>
+    <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;padding-bottom:4px;width:50%;">Invoice</td>
+          <td style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;padding-bottom:4px;">Amount Due</td>
+        </tr>
+        <tr>
+          <td style="color:#01011b;font-size:15px;font-weight:600;">${invoiceNumber}</td>
+          <td style="color:#01011b;font-size:15px;font-weight:600;">${formattedAmount}</td>
+        </tr>
+        ${formattedDue ? `<tr><td colspan="2" style="color:#525a70;font-size:13px;padding-top:8px;">Due ${formattedDue}</td></tr>` : ""}
+      </table>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View Invoice &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Invoice ${invoiceNumber} — ${formattedAmount}${formattedDue ? ` due ${formattedDue}` : ""}`,
+    text: `Hi ${clientName},\n\nInvoice ${invoiceNumber} for ${formattedAmount} has been issued for ${companyName}.${formattedDue ? `\nDue: ${formattedDue}` : ""}\n\nView your invoice: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+export async function sendInvoiceOverdue({
+  clientEmail,
+  clientName,
+  invoiceNumber,
+  invoiceId,
+  totalAmount,
+  currency,
+  dueDate,
+}: {
+  clientEmail: string;
+  clientName: string;
+  invoiceNumber: string;
+  invoiceId: string;
+  totalAmount: number;
+  currency: string;
+  dueDate: string | null;
+}) {
+  const url = `https://adam.andykgroup.com/dashboard/invoices/${invoiceId}`;
+  const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(totalAmount);
+  const formattedDue = dueDate
+    ? new Date(dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Invoice payment overdue</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">This is a reminder that the following invoice is now overdue. Please arrange payment at your earliest convenience.</p>
+    <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;padding-bottom:4px;width:50%;">Invoice</td>
+          <td style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;padding-bottom:4px;">Amount Due</td>
+        </tr>
+        <tr>
+          <td style="color:#01011b;font-size:15px;font-weight:600;">${invoiceNumber}</td>
+          <td style="color:#01011b;font-size:15px;font-weight:600;">${formattedAmount}</td>
+        </tr>
+        ${formattedDue ? `<tr><td colspan="2" style="color:#c9707d;font-size:13px;font-weight:600;padding-top:8px;font-family:'Courier New',Courier,monospace;">Was due ${formattedDue}</td></tr>` : ""}
+      </table>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View Invoice &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Overdue: Invoice ${invoiceNumber} — ${formattedAmount}`,
+    text: `Hi ${clientName},\n\nInvoice ${invoiceNumber} for ${formattedAmount} is now overdue.${formattedDue ? `\nIt was due on ${formattedDue}.` : ""}\n\nView your invoice: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Kickoff email ────────────────────────────────────────────────────────────
+
+export async function sendKickoffConfirmed({
+  clientEmail,
+  clientName,
+  companyName,
+  kickoffDate,
+  checklist,
+  kickoffNotes,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  kickoffDate: string | null;
+  checklist: string[];
+  kickoffNotes: string;
+}) {
+  const formattedDate = kickoffDate
+    ? new Date(kickoffDate).toLocaleDateString("en-GB", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+      })
+    : null;
+
+  const checklistHtml = checklist.length > 0
+    ? `<div style="margin-bottom:28px;">
+        <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">What&#8217;s Included</p>
+        ${checklist.map((item) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="display:inline-block;width:16px;height:16px;background:#c9707d;border-radius:50%;color:#fff;font-size:10px;text-align:center;line-height:16px;flex-shrink:0;">&#10003;</span>
+          <span style="color:#525a70;font-size:14px;">${item}</span>
+        </div>`).join("")}
+      </div>`
+    : "";
+
+  const notesHtml = kickoffNotes
+    ? `<div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+        <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px;">Agenda &amp; Notes</p>
+        <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;white-space:pre-line;">${kickoffNotes}</p>
+      </div>`
+    : "";
+
+  const html = emailHtml("Project Kickoff", `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your project with Andy&#8217;K Group International LTD is now live</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">We&#8217;re excited to confirm that ${companyName}&#8217;s engagement with Andy&#8217;K Group International LTD is officially underway. Everything is in place and we&#8217;re ready to begin.</p>
+    ${formattedDate ? `<div style="background:#faf6f3;border:1px solid #ede8e2;border-radius:10px;padding:20px;margin-bottom:28px;text-align:center;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 6px;">Kickoff Date</p>
+      <p style="font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;color:#01011b;margin:0;">${formattedDate}</p>
+    </div>` : ""}
+    ${checklistHtml}
+    ${notesHtml}
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">If you have any questions before we begin, don&#8217;t hesitate to reach out. We look forward to working with you.</p>
+    <div style="margin-bottom:32px;">
+      <a href="https://adam.andykgroup.com/dashboard" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Access Your Portal &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Your project with Andy'K Group International LTD is now live`,
+    text: `Hi ${clientName},\n\nYour engagement with Andy'K Group International LTD is officially underway.${formattedDate ? `\n\nKickoff date: ${formattedDate}` : ""}${checklist.length > 0 ? `\n\nWhat's included:\n${checklist.map((i) => `• ${i}`).join("\n")}` : ""}${kickoffNotes ? `\n\nAgenda:\n${kickoffNotes}` : ""}\n\nAccess your portal: https://adam.andykgroup.com/dashboard\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}

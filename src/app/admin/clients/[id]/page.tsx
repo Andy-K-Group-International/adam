@@ -9,10 +9,11 @@ import { getQuestionnaireById } from "@/lib/supabase/queries/questionnaires";
 import { createProposal } from "@/lib/supabase/queries/proposals";
 import type { Client, Questionnaire, ActivityLog, StrategyType } from "@/lib/supabase/types";
 import Link from "next/link";
-import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
+import { confirmKickoffAction } from "@/app/actions/invoices";
 import ContractCard from "@/components/dashboard/ContractCard";
 import QuestionnairePreview from "@/components/admin/QuestionnairePreview";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
@@ -36,7 +37,8 @@ const stageLabels: Record<string, string> = {
   kickoff: "Kick-off",
 };
 
-type Tab = "overview" | "contracts" | "questionnaire" | "activity" | "strategy";
+type Tab = "overview" | "contracts" | "questionnaire" | "activity" | "strategy" | "kickoff";
+type ChecklistItem = { id: string; label: string; checked: boolean };
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -54,6 +56,14 @@ export default function ClientDetailPage() {
   const [isSavingStrategy, setIsSavingStrategy] = useState(false);
   const [isCreatingProposal, setIsCreatingProposal] = useState(false);
 
+  // Kickoff state
+  const [kickoffDate, setKickoffDate] = useState("");
+  const [kickoffNotes, setKickoffNotes] = useState("");
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState("");
+  const [isConfirmingKickoff, setIsConfirmingKickoff] = useState(false);
+  const [kickoffMsg, setKickoffMsg] = useState("");
+
   useEffect(() => {
     const supabase = createClient();
 
@@ -63,6 +73,9 @@ export default function ClientDetailPage() {
         setClient(clientData);
         setStrategyType(clientData.strategy_type ?? null);
         setStrategyNotes(clientData.strategy_notes ?? "");
+        setKickoffDate(clientData.kickoff_date ? clientData.kickoff_date.slice(0, 16) : "");
+        setKickoffNotes(clientData.kickoff_notes ?? "");
+        setChecklist(clientData.kickoff_checklist ?? []);
 
         // Fetch activities
         const activitiesData = await listActivitiesForClient(supabase, clientId).catch(() => []);
@@ -98,8 +111,40 @@ export default function ClientDetailPage() {
     { key: "strategy", label: "Strategy" },
     { key: "contracts", label: `Contracts (${client.contracts?.length || 0})` },
     { key: "questionnaire", label: "Questionnaire" },
+    { key: "kickoff", label: "Kickoff" },
     { key: "activity", label: "Activity" },
   ];
+
+  const handleConfirmKickoff = async () => {
+    setIsConfirmingKickoff(true);
+    setKickoffMsg("");
+    const result = await confirmKickoffAction(
+      clientId,
+      kickoffDate ? new Date(kickoffDate).toISOString() : null,
+      kickoffNotes,
+      checklist
+    );
+    if (result.error) { setKickoffMsg(result.error); }
+    else {
+      setClient((prev) => prev ? { ...prev, kickoff_confirmed_at: new Date().toISOString(), stage: "kickoff" as const } : prev);
+      setKickoffMsg("Kickoff confirmed. Email sent to client.");
+    }
+    setIsConfirmingKickoff(false);
+  };
+
+  const addChecklistItem = () => {
+    if (!newChecklistItem.trim()) return;
+    setChecklist((prev) => [...prev, { id: crypto.randomUUID(), label: newChecklistItem.trim(), checked: false }]);
+    setNewChecklistItem("");
+  };
+
+  const removeChecklistItem = (id: string) =>
+    setChecklist((prev) => prev.filter((item) => item.id !== id));
+
+  const toggleChecklistItem = (id: string) =>
+    setChecklist((prev) =>
+      prev.map((item) => item.id === id ? { ...item, checked: !item.checked } : item)
+    );
 
   const handleSaveStrategy = async () => {
     setIsSavingStrategy(true);
@@ -482,6 +527,108 @@ export default function ClientDetailPage() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "kickoff" && (
+        <div className="space-y-6 max-w-2xl">
+          {client.kickoff_confirmed_at && (
+            <div className="rounded-lg bg-success/8 border border-success/20 px-4 py-3 text-sm text-success">
+              Kickoff confirmed on {formatDate(client.kickoff_confirmed_at)} — client notified by email.
+            </div>
+          )}
+
+          {kickoffMsg && (
+            <div className={cn(
+              "rounded-lg border px-4 py-3 text-sm",
+              kickoffMsg.includes("failed") || kickoffMsg.toLowerCase().includes("error")
+                ? "bg-error/8 border-error/20 text-error"
+                : "bg-success/8 border-success/20 text-success"
+            )}>
+              {kickoffMsg}
+            </div>
+          )}
+
+          {/* Date/time */}
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <label className="label-mono block mb-2">Kickoff Date & Time</label>
+            <input
+              type="datetime-local"
+              value={kickoffDate}
+              onChange={(e) => setKickoffDate(e.target.value)}
+              className="w-full h-10 rounded-lg border border-grid-500 bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
+            />
+          </div>
+
+          {/* Checklist */}
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <p className="label-mono mb-3">Kickoff Checklist</p>
+            <div className="space-y-2 mb-4">
+              {checklist.length === 0 && (
+                <p className="text-sm text-muted-2">No items yet. Add checklist items below.</p>
+              )}
+              {checklist.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={() => toggleChecklistItem(item.id)}
+                    className="h-4 w-4 rounded border-grid-500 accent-highlight"
+                  />
+                  <span className={cn("flex-1 text-sm", item.checked ? "line-through text-muted-2" : "text-foreground")}>
+                    {item.label}
+                  </span>
+                  <button
+                    onClick={() => removeChecklistItem(item.id)}
+                    className="text-muted-2 hover:text-error transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newChecklistItem}
+                onChange={(e) => setNewChecklistItem(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addChecklistItem()}
+                placeholder="e.g. Intro call scheduled"
+                className="flex-1 h-9 rounded-lg border border-grid-500 bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
+              />
+              <button
+                onClick={addChecklistItem}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-grid-300 text-foreground text-sm hover:bg-grid-500 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Agenda / Notes */}
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <label className="label-mono block mb-2">Agenda & Notes</label>
+            <textarea
+              value={kickoffNotes}
+              onChange={(e) => setKickoffNotes(e.target.value)}
+              rows={6}
+              placeholder="Kickoff agenda, next steps, access details, key contacts…"
+              className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2.5 resize-y focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
+            />
+          </div>
+
+          {/* Confirm button */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleConfirmKickoff}
+              disabled={isConfirmingKickoff}
+              className="relative inline-flex items-center justify-center gap-2 h-10 px-5 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" />
+              {isConfirmingKickoff ? "Confirming…" : "Confirm Kickoff & Notify Client"}
+            </button>
+          </div>
         </div>
       )}
 

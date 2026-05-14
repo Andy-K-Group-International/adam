@@ -53,6 +53,14 @@ export type QuestionType =
   | "file"
   | "group";
 
+export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
+
+export interface InvoiceLineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
+
 export type ActivityType =
   | "contract_created"
   | "contract_published"
@@ -113,6 +121,29 @@ export interface Client {
   notes: string | null;
   strategy_notes: string | null;
   strategy_type: StrategyType | null;
+  kickoff_date: string | null;
+  kickoff_notes: string | null;
+  kickoff_checklist: { id: string; label: string; checked: boolean }[];
+  kickoff_confirmed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  client_id: string;
+  contract_id: string | null;
+  invoice_number: string;
+  status: InvoiceStatus;
+  currency: string;
+  amount: number;
+  tax_amount: number;
+  total_amount: number;
+  due_date: string | null;
+  paid_at: string | null;
+  notes: string | null;
+  line_items: InvoiceLineItem[];
+  created_by: string;
   created_at: string;
   updated_at: string;
 }

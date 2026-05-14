@@ -14,6 +14,7 @@ import {
   ClipboardList,
   MessageSquareText,
   Lightbulb,
+  Receipt,
   LogOut,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ const navItems = [
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },
+  { label: "Invoices", href: "/admin/invoices", icon: Receipt },
   { label: "Questionnaires", href: "/admin/questionnaires", icon: ClipboardList },
   { label: "Questions", href: "/admin/questions", icon: MessageSquareText },
 ];

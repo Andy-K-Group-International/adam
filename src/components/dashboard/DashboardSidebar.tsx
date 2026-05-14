@@ -11,6 +11,7 @@ import {
   FolderOpen,
   User,
   Lightbulb,
+  Receipt,
   LogOut,
 } from "lucide-react";
 
@@ -18,6 +19,7 @@ const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Proposals", href: "/dashboard/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/dashboard/contracts", icon: FileText },
+  { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },
   { label: "Documents", href: "/dashboard/documents", icon: FolderOpen },
   { label: "Profile", href: "/dashboard/profile", icon: User },
 ];

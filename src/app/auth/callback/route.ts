@@ -11,7 +11,12 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // After login, check user role to redirect appropriately
+      // Password reset flow: skip role-based redirect, go directly to reset page
+      if (next === "/reset-password") {
+        return NextResponse.redirect(`${origin}/reset-password`);
+      }
+
+      // Normal login: role-based redirect
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
@@ -32,6 +37,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Auth code error — redirect to error page or sign-in
+  // Auth code error — redirect to sign-in
   return NextResponse.redirect(`${origin}/sign-in?error=auth_callback_error`);
 }

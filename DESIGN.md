@@ -8,7 +8,7 @@
 
 ## 1. Brand Identity
 
-A.D.A.M. is a professional business-operations platform built by Andy'K Group International. The visual language communicates **precision**, **trust**, and **modern sophistication** — sharp geometry balanced by warm rose/eggplant accents.
+A.D.A.M. is a professional business-operations platform built by Andy'K Group International LTD. The visual language communicates **precision**, **trust**, and **modern sophistication** — sharp geometry balanced by warm rose/eggplant accents.
 
 Key traits:
 

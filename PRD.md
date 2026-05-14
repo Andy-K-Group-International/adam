@@ -38,13 +38,13 @@
 
 ### What is A.D.A.M.?
 
-A.D.A.M. (Automated Document & Account Manager) is a business operating system built by Andy'K Group International. It manages the full client lifecycle — from initial intake questionnaire through proposal, contract negotiation, signing, and onboarding. Each client gets a self-contained workspace with their own documents, workflows, and status tracking.
+A.D.A.M. (Automated Document & Account Manager) is a business operating system built by Andy'K Group International LTD. It manages the full client lifecycle — from initial intake questionnaire through proposal, contract negotiation, signing, and onboarding. Each client gets a self-contained workspace with their own documents, workflows, and status tracking.
 
 A.D.A.M. is the brain and workflow engine. E.V.A. (Efficient Virtual Assistant) is the automation layer that executes tasks like sending emails, generating proposals, and triggering notifications. This MVP focuses on A.D.A.M. core workflows; E.V.A. automation is out of scope.
 
 ### What We're Building
 
-A modern serverless web application for managing the full client lifecycle at Andy'K Group International. Built on Next.js, Convex, and Auth0, A.D.A.M. eliminates backend devops overhead and ships fast with real-time capabilities out of the box.
+A modern serverless web application for managing the full client lifecycle at Andy'K Group International LTD. Built on Next.js, Convex, and Auth0, A.D.A.M. eliminates backend devops overhead and ships fast with real-time capabilities out of the box.
 
 ### Scope
 
@@ -81,7 +81,7 @@ A modern serverless web application for managing the full client lifecycle at An
 
 ## 2. Problem Statement
 
-Andy'K Group International currently manages client onboarding through a fragmented process:
+Andy'K Group International LTD currently manages client onboarding through a fragmented process:
 
 1. **Manual questionnaire intake** — Prospects fill out documents or answer questions via email. There is no self-service intake form. Responses are scattered across email threads, PDFs, and notes.
 
@@ -1484,7 +1484,7 @@ For external services that send webhooks:
 | Setting | Value |
 |---------|-------|
 | **Auth methods** | Google OAuth, Email/Password |
-| **Tenant** | Single tenant (Andy'K Group International) |
+| **Tenant** | Single tenant (Andy'K Group International LTD) |
 | **Roles** | `admin`, `staff`, `client` |
 | **Webhook events** | `user.created`, `user.updated`, `user.deleted` |
 | **Access token claims** | `role`, `userId` |

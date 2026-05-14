@@ -269,7 +269,7 @@ export const commitmentOptions = [
 ];
 
 export const lovedByQuote = {
-  text: "Andy'K Group didn't just deliver leads — they delivered results. A.D.A.M. changed how we onboard clients entirely.",
+  text: "Andy'K Group International LTD didn't just deliver leads — they delivered results. A.D.A.M. changed how we onboard clients entirely.",
   author: "Enterprise Client",
   role: "CEO",
 };

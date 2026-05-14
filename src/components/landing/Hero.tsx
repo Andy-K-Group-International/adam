@@ -51,7 +51,7 @@ export default function Hero() {
           rel="noopener noreferrer"
           className="underline underline-offset-2 hover:text-foreground transition-colors"
         >
-          Andy'K Group.
+          Andy'K Group International LTD.
         </a>
         <br/>
         <span className="font-bold"> Ready to automate your business?</span>

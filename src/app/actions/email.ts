@@ -28,7 +28,7 @@ async function sendEmail({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `Andy'K Group <${from}>`,
+      from: `Andy'K Group International LTD <${from}>`,
       to: [to],
       subject,
       text,
@@ -110,13 +110,13 @@ export async function sendContractPublished({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Contract &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: clientEmail,
     subject: `New Contract Available: ${contractTitle}`,
-    text: `Hi ${clientName},\n\nA new contract "${contractTitle}" has been published for your review.\n\nLog in to your portal to view and take action: ${url}\n\nWarm regards,\nThe Andy'K Group Team`,
+    text: `Hi ${clientName},\n\nA new contract "${contractTitle}" has been published for your review.\n\nLog in to your portal to view and take action: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
   });
 }
@@ -146,7 +146,7 @@ export async function sendChangesRequested({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review in Admin &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group</p>
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
     </div>
   `);
   return await sendEmail({
@@ -180,7 +180,7 @@ export async function sendContractSigned({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review &amp; Countersign &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group</p>
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
     </div>
   `);
   return await sendEmail({
@@ -211,13 +211,13 @@ export async function sendContractFinalized({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View Contract &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: clientEmail,
     subject: `Contract Finalized: ${contractTitle}`,
-    text: `Hi ${clientName},\n\nGreat news! "${contractTitle}" has been fully executed and is now finalized.\n\nView it in your portal: ${url}\n\nWarm regards,\nThe Andy'K Group Team`,
+    text: `Hi ${clientName},\n\nGreat news! "${contractTitle}" has been fully executed and is now finalized.\n\nView it in your portal: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
   });
 }
@@ -259,7 +259,7 @@ export async function sendQuestionnaireReceived({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Questionnaire &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group</p>
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
     </div>
   `);
   return await sendEmail({
@@ -300,7 +300,7 @@ export async function sendContactForm({
       <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${message}</p>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group</p>
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
     </div>
   `);
   return await sendEmail({
@@ -337,13 +337,13 @@ export async function sendProposalSent({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Proposal &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: clientEmail,
     subject: `Proposal Ready for Review: ${proposalTitle}`,
-    text: `Hi ${clientName},\n\nA proposal "${proposalTitle}" is ready for your review.\n\nLog in to read and respond: ${url}\n\nWarm regards,\nThe Andy'K Group Team`,
+    text: `Hi ${clientName},\n\nA proposal "${proposalTitle}" is ready for your review.\n\nLog in to read and respond: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
   });
 }
@@ -378,7 +378,7 @@ export async function sendProposalResponse({
       <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View in Admin &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group</p>
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
     </div>
   `);
   return await sendEmail({
@@ -401,21 +401,21 @@ export async function sendLeadConfirmation({
   const html = emailHtml(undefined, `
     <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your application has been received</h1>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for reaching out to Andy&#8217;K Group. We&#8217;ve received your application and our team will review it carefully.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for reaching out to Andy&#8217;K Group International LTD. We&#8217;ve received your application and our team will review it carefully.</p>
     <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px;">
       <p style="color:#01011b;font-size:13px;font-weight:600;margin:0 0 6px;">What happens next</p>
       <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">Our team will review your details within 48 hours. If we&#8217;re the right fit for each other, you&#8217;ll hear from us directly with next steps.</p>
     </div>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 32px;">In the meantime, feel free to explore our work at <a href="https://andykgroup.com" style="color:#c9707d;text-decoration:none;">andykgroup.com</a>.</p>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: email,
     from: "info@andykgroup.com",
-    subject: "Your application has been received — Andy'K Group",
-    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group. We've received your application and our team will review it within 48 hours.\n\nIf we're the right fit, you'll hear from us directly with next steps.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    subject: "Your application has been received — Andy'K Group International LTD",
+    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group International LTD. We've received your application and our team will review it within 48 hours.\n\nIf we're the right fit, you'll hear from us directly with next steps.\n\nWarm regards,\nThe Andy'K Group International LTD Team\nhttps://andykgroup.com`,
     html,
   });
 }
@@ -530,18 +530,18 @@ export async function sendLeadRejection({
   const html = emailHtml(undefined, `
     <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Regarding your application</h1>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Thank you for taking the time to reach out to Andy&#8217;K Group and for the interest you&#8217;ve shown in working with us.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Thank you for taking the time to reach out to Andy&#8217;K Group International LTD and for the interest you&#8217;ve shown in working with us.</p>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">After carefully reviewing your application, we don&#8217;t feel we&#8217;re the right fit for your current needs.${reason ? ` ${reason}` : ""}</p>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 32px;">This isn&#8217;t a permanent decision &mdash; circumstances change, and we&#8217;d genuinely welcome the opportunity to reconsider in the future. We wish you every success with your business in the meantime.</p>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: email,
     from: "info@andykgroup.com",
-    subject: "Regarding your Andy'K Group application",
-    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group.\n\nAfter reviewing your application, we don't feel we're the right fit for your current needs.${reason ? " " + reason : ""}\n\nThis isn't permanent — we'd welcome the opportunity to reconnect in the future.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    subject: "Regarding your Andy'K Group International LTD application",
+    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group International LTD.\n\nAfter reviewing your application, we don't feel we're the right fit for your current needs.${reason ? " " + reason : ""}\n\nThis isn't permanent — we'd welcome the opportunity to reconnect in the future.\n\nWarm regards,\nThe Andy'K Group International LTD Team\nhttps://andykgroup.com`,
     html,
   });
 }
@@ -583,14 +583,14 @@ export async function sendQuestionnaireInvite({
       <p style="font-family:'Courier New',Courier,monospace;font-size:12px;color:#525a70;word-break:break-all;margin:0;">${link}</p>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: email,
     from: "info@andykgroup.com",
-    subject: "Your Andy'K Group Strategic Assessment is ready",
-    text: `Hi ${name},\n\nYou've been approved to proceed to the Andy'K Group Strategic Assessment.\n\nYour personalised link is valid until ${expiryDate}:\n${link}\n\nPlease complete the assessment before it expires.\n\nWarm regards,\nThe Andy'K Group Team\nhttps://andykgroup.com`,
+    subject: "Your Andy'K Group International LTD Strategic Assessment is ready",
+    text: `Hi ${name},\n\nYou've been approved to proceed to the Andy'K Group International LTD Strategic Assessment.\n\nYour personalised link is valid until ${expiryDate}:\n${link}\n\nPlease complete the assessment before it expires.\n\nWarm regards,\nThe Andy'K Group International LTD Team\nhttps://andykgroup.com`,
     html,
   });
 }
@@ -611,19 +611,19 @@ export async function sendTokenReminder({
   const html = emailHtml("Reminder", `
     <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your assessment link expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}</h1>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">This is a reminder that your Andy&#8217;K Group Strategic Assessment link expires in <strong style="color:#01011b;">${daysLeft} day${daysLeft === 1 ? "" : "s"}</strong>. Please complete it before it expires.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">This is a reminder that your Andy&#8217;K Group International LTD Strategic Assessment link expires in <strong style="color:#01011b;">${daysLeft} day${daysLeft === 1 ? "" : "s"}</strong>. Please complete it before it expires.</p>
     <div style="text-align:center;margin-bottom:28px;">
       <a href="${link}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;">Complete Assessment &#8594;</a>
     </div>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
-      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group Team</strong></p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   return await sendEmail({
     to: email,
     from: "info@andykgroup.com",
     subject: `Reminder: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left to complete your Strategic Assessment`,
-    text: `Hi ${name},\n\nYour Andy'K Group Strategic Assessment link expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.\n\nComplete it here:\n${link}\n\nWarm regards,\nThe Andy'K Group Team`,
+    text: `Hi ${name},\n\nYour Andy'K Group International LTD Strategic Assessment link expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.\n\nComplete it here:\n${link}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
   });
 }

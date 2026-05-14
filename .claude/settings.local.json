@@ -26,7 +26,10 @@
       "mcp__claude_ai_Supabase__apply_migration",
       "WebFetch(domain:adam.andykgroup.com)",
       "Bash(grep -oE '--color-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)",
-      "Bash(grep -oE '--font-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)"
+      "Bash(grep -oE '--font-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)",
+      "Bash(perl -i -pe 's/Andy'\\\\''K Group\\(?! International\\)/Andy'\\\\''K Group International LTD/g' src/app/layout.tsx src/app/page.tsx src/app/admin/page.tsx src/app/questionnaire/full/page.tsx src/components/landing/Hero.tsx src/lib/data.ts)",
+      "Bash(perl -i -pe 's/Andy'\\\\''K Group\\(?! International\\)/Andy'\\\\''K Group International LTD/g; s/Andy&#8217;K Group\\(?! International\\)/Andy&#8217;K Group International LTD/g' src/app/actions/email.ts)",
+      "Bash(perl -i -pe 's/Andy'\\\\''K Group International\\(?! LTD\\)/Andy'\\\\''K Group International LTD/g' /Users/andrejkneisl/adam/DESIGN.md /Users/andrejkneisl/adam/PRD.md)"
     ]
   }
 }

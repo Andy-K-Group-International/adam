@@ -24,16 +24,16 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
-const TITLE = "ADAM — Automated Document & Account Manager | Andy'K Group";
+const TITLE = "ADAM — Automated Document & Account Manager | Andy'K Group International LTD";
 const DESCRIPTION =
-  "ADAM by Andy'K Group — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
+  "ADAM by Andy'K Group International LTD — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
 const CANONICAL = "https://adam.andykgroup.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(CANONICAL),
   title: {
     default: TITLE,
-    template: "%s | ADAM by Andy'K Group",
+    template: "%s | ADAM by Andy'K Group International LTD",
   },
   description: DESCRIPTION,
   keywords: [
@@ -42,13 +42,13 @@ export const metadata: Metadata = {
     "business document automation",
     "AI document system",
     "account management automation",
-    "Andy'K Group ADAM",
+    "Andy'K Group International LTD ADAM",
   ],
   openGraph: {
     type: "website",
     locale: "en_GB",
     url: CANONICAL,
-    siteName: "ADAM by Andy'K Group",
+    siteName: "ADAM by Andy'K Group International LTD",
     title: TITLE,
     description: DESCRIPTION,
   },
@@ -67,15 +67,15 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "ADAM — Automated Document & Account Manager",
   description:
-    "ADAM by Andy'K Group — AI-powered system that automates document management, account handling, and client workflows for businesses.",
+    "ADAM by Andy'K Group International LTD — AI-powered system that automates document management, account handling, and client workflows for businesses.",
   keywords:
-    "automated document management, AI account manager, business document automation, AI document system, account management automation, Andy'K Group ADAM",
+    "automated document management, AI account manager, business document automation, AI document system, account management automation, Andy'K Group International LTD ADAM",
   url: CANONICAL,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   provider: {
     "@type": "Organization",
-    name: "Andy'K Group",
+    name: "Andy'K Group International LTD",
     url: "https://andykgroup.com",
     address: {
       "@type": "PostalAddress",

@@ -4,7 +4,7 @@ import QuestionnaireFlow from "@/components/questionnaire/QuestionnaireFlow";
 import { Lock } from "lucide-react";
 
 export const metadata = {
-  title: "Strategic Assessment — Andy'K Group",
+  title: "Strategic Assessment — Andy'K Group International LTD",
   robots: { index: false, follow: false },
 };
 
@@ -53,7 +53,7 @@ export default async function FullQuestionnairePage({
             </div>
             <h1 className="text-xl font-serif font-semibold text-foreground mb-3">Access Restricted</h1>
             <p className="text-sm text-muted leading-relaxed">
-              This link is invalid or has expired. Please contact Andy'K Group to request a new assessment invitation.
+              This link is invalid or has expired. Please contact Andy'K Group International LTD to request a new assessment invitation.
             </p>
             <div className="mt-8 pt-6 border-t border-grid-300">
               <a href="https://andykgroup.com" className="text-sm text-highlight hover:underline">

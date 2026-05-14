@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <p className="label-mono mb-2">Andy'K Group — A.D.A.M.</p>
+        <p className="label-mono mb-2">Andy'K Group International LTD — A.D.A.M.</p>
         <h1 className="text-2xl font-serif font-semibold text-foreground">Admin Dashboard</h1>
         <p className="text-muted text-sm mt-1">Overview of all operations.</p>
       </div>

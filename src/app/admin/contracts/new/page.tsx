@@ -92,6 +92,8 @@ function NewContractForm() {
         title: title.trim(),
         content: content.trim(),
         contract_type: contractType,
+        service_type: null,
+        commercials_snapshot: null,
         version: 1,
         appendices: appendices.length > 0 ? appendices : null,
         created_by: user?.id || "",

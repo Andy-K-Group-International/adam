@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import ContractDocument from "@/lib/pdf/ContractDocument";
+import { serviceTypeLabel } from "@/lib/contract-templates";
 import { createElement } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -35,11 +36,18 @@ export async function GET(
       if (client) clientName = client.contact_name;
     }
 
+    const appendixD = (contract.appendices ?? []).find((a: { slot: string }) => a.slot === "appendix_d");
+    const appendixDContact = appendixD?.formData ?? undefined;
+
     const pdfBuffer = await renderToBuffer(
       createElement(ContractDocument, {
         title: contract.title,
+        serviceTypeLabel: contract.service_type
+          ? serviceTypeLabel(contract.service_type)
+          : undefined,
         sections: contract.sections || [],
         clientName,
+        appendixDContact,
         clientSignature: contract.client_signature,
         clientSignedAt: contract.client_signed_at
           ? new Date(contract.client_signed_at).getTime()

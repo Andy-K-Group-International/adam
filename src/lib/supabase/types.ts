@@ -33,7 +33,7 @@ export type ProposalStatus =
   | "declined";
 
 export type FileCategory = "appendix" | "signature" | "attachment";
-export type AppendixStatus = "empty" | "uploaded" | "verified" | "rejected";
+export type AppendixStatus = "empty" | "uploaded" | "verified" | "rejected" | "completed";
 
 export type LeadSource = "website" | "referral" | "outreach" | "direct" | "social" | "partnership";
 export type LeadStatus = "new" | "contacted" | "qualified" | "rejected" | "converted";
@@ -227,6 +227,31 @@ export interface Questionnaire {
   updated_at: string;
 }
 
+export interface AppendixDFormData {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  preferredChannel: string;
+}
+
+export interface ContractAppendix {
+  slot: string;
+  label: string;
+  required: boolean;
+  fileId?: string;
+  status: AppendixStatus;
+  rejectionNote?: string;
+  formData?: AppendixDFormData;
+}
+
+export interface CommercialsSnapshot {
+  proposalRef: string | null;
+  proposalTitle: string;
+  snapshotAt: string;
+  sections: { title: string; content: string }[];
+}
+
 export interface Contract {
   id: string;
   client_id: string;
@@ -235,6 +260,8 @@ export interface Contract {
   content: string;
   status: ContractStatus;
   contract_type: ContractType;
+  service_type: StrategyType | null;
+  commercials_snapshot: CommercialsSnapshot | null;
   version: number;
   sections: { id: string; title: string; content: string }[] | null;
   client_signature: string | null;
@@ -243,14 +270,7 @@ export interface Contract {
   admin_signature: string | null;
   admin_signed_at: string | null;
   admin_signed_by: string | null;
-  appendices: {
-    slot: string;
-    label: string;
-    required: boolean;
-    fileId?: string;
-    status: AppendixStatus;
-    rejectionNote?: string;
-  }[] | null;
+  appendices: ContractAppendix[] | null;
   created_by: string;
   published_at: string | null;
   viewed_at: string | null;

@@ -8,10 +8,20 @@ interface ContractSection {
   content: string;
 }
 
+interface AppendixDContact {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  preferredChannel: string;
+}
+
 interface ContractDocProps {
   title: string;
+  serviceTypeLabel?: string;
   sections: ContractSection[];
   clientName: string;
+  appendixDContact?: AppendixDContact;
   clientSignature?: string;
   clientSignedAt?: number;
   adminSignature?: string;
@@ -21,8 +31,10 @@ interface ContractDocProps {
 
 export default function ContractDocument({
   title,
+  serviceTypeLabel,
   sections,
   clientName,
+  appendixDContact,
   clientSignature,
   clientSignedAt,
   adminSignature,
@@ -36,7 +48,7 @@ export default function ContractDocument({
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Text style={styles.coverBrand}>ANDY'K GROUP INTERNATIONAL LTD</Text>
           <Text style={{ fontSize: 10, color: colors.muted, marginBottom: 60, textAlign: "center" }}>
-            Service Agreement
+            {serviceTypeLabel ?? "Service Agreement"}
           </Text>
           <Text style={styles.coverTitle}>{title}</Text>
           <Text style={styles.coverSubtitle}>{clientName}</Text>
@@ -57,6 +69,33 @@ export default function ContractDocument({
           <PdfFooter />
         </Page>
       ))}
+
+      {/* Appendix D — Contact Person (if provided) */}
+      {appendixDContact && (
+        <Page size="A4" style={styles.page}>
+          <Text style={styles.sectionTitle}>Appendix D — Primary Contact Person</Text>
+          <Text style={styles.body}>
+            The following individual is designated as the primary contact for all communications relating to this Agreement.
+          </Text>
+          <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: colors.gridBorder, paddingTop: 12 }}>
+            {[
+              { label: "Full Name", value: appendixDContact.name },
+              { label: "Role / Title", value: appendixDContact.role },
+              { label: "Email", value: appendixDContact.email },
+              { label: "Phone", value: appendixDContact.phone },
+              { label: "Preferred Channel", value: appendixDContact.preferredChannel },
+            ].map(({ label, value }) => (
+              <View key={label} style={{ flexDirection: "row", marginBottom: 8 }}>
+                <Text style={{ ...styles.body, ...styles.boldText, width: 140, color: colors.muted }}>
+                  {label}:
+                </Text>
+                <Text style={{ ...styles.body, flex: 1 }}>{value}</Text>
+              </View>
+            ))}
+          </View>
+          <PdfFooter />
+        </Page>
+      )}
 
       {/* Signature Page */}
       <Page size="A4" style={styles.page}>

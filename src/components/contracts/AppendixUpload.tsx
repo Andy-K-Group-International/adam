@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createFile } from "@/lib/supabase/queries/contract-files";
 import { uploadContractFile } from "@/lib/supabase/storage";
@@ -12,7 +12,7 @@ interface Appendix {
   label: string;
   required: boolean;
   fileId?: string;
-  status: "empty" | "uploaded" | "verified" | "rejected";
+  status: "empty" | "uploaded" | "verified" | "rejected" | "completed";
   rejectionNote?: string;
 }
 
@@ -23,18 +23,20 @@ interface AppendixUploadProps {
   onUploadComplete?: () => void;
 }
 
-const statusIcons = {
+const statusIcons: Record<string, React.ReactNode> = {
   empty: null,
   uploaded: <FileText className="h-4 w-4 text-info" />,
   verified: <CheckCircle className="h-4 w-4 text-success" />,
   rejected: <XCircle className="h-4 w-4 text-error" />,
+  completed: <CheckCircle className="h-4 w-4 text-success" />,
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   empty: "Not uploaded",
   uploaded: "Uploaded",
   verified: "Verified",
   rejected: "Rejected",
+  completed: "Completed",
 };
 
 export default function AppendixUpload({
@@ -108,7 +110,7 @@ export default function AppendixUpload({
               </p>
             )}
           </div>
-          {canUpload && appendix.status !== "verified" && (
+          {canUpload && appendix.status !== "verified" && appendix.status !== "completed" && (
             <label className="cursor-pointer">
               <input
                 type="file"

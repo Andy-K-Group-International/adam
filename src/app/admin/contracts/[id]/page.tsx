@@ -8,7 +8,8 @@ import { getContractById, updateContract, publishContract, countersign, verifyAp
 import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
 import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
 import { getClientById } from "@/lib/supabase/queries/clients";
-import type { Contract, ContractComment, ContractVersion, ContractType, Client } from "@/lib/supabase/types";
+import { serviceTypeLabel, serviceTypeStyle } from "@/lib/contract-templates";
+import type { Contract, ContractComment, ContractVersion, ContractType, Client, AppendixDFormData } from "@/lib/supabase/types";
 
 function contractTypeStyle(type: ContractType | undefined): string {
   switch (type) {
@@ -30,7 +31,7 @@ function contractTypeLabel(type: ContractType | undefined): string {
   }
 }
 import Link from "next/link";
-import { ArrowLeft, Check, X, Send, PenTool, Save } from "lucide-react";
+import { ArrowLeft, Check, X, Send, PenTool, Save, AlertCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import StatusBadge from "@/components/contracts/StatusBadge";
@@ -54,6 +55,10 @@ export default function AdminContractDetailPage() {
   const [isCountersigning, setIsCountersigning] = useState(false);
   const [appendixAction, setAppendixAction] = useState<{ slot: string; type: "verify" | "reject" } | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
+  const [appendixDForm, setAppendixDForm] = useState<AppendixDFormData>({
+    name: "", role: "", email: "", phone: "", preferredChannel: "",
+  });
+  const [isSavingAppendixD, setIsSavingAppendixD] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -70,6 +75,11 @@ export default function AdminContractDetailPage() {
         setVersions(versionsData);
         if (contractData.client_id) {
           getClientById(supabase, contractData.client_id).then(setClient).catch(() => null);
+        }
+        // Pre-fill Appendix D form if already saved
+        const appendixD = contractData.appendices?.find((a) => a.slot === "appendix_d");
+        if (appendixD?.formData) {
+          setAppendixDForm(appendixD.formData);
         }
       } catch {
         setContract(null);
@@ -93,9 +103,34 @@ export default function AdminContractDetailPage() {
 
   const canEdit =
     contract.status === "draft" || contract.status === "changes_requested";
+  const appendixD = contract.appendices?.find((a) => a.slot === "appendix_d") ?? null;
+  const appendixDComplete = !appendixD || appendixD.status === "completed";
   const canPublish =
-    contract.status === "draft" || contract.status === "changes_requested";
+    (contract.status === "draft" || contract.status === "changes_requested") &&
+    appendixDComplete;
   const canCountersign = contract.status === "client_signed";
+
+  const handleSaveAppendixD = async () => {
+    if (!appendixD) return;
+    const { name, role, email, phone, preferredChannel } = appendixDForm;
+    if (!name || !role || !email || !phone || !preferredChannel) return;
+
+    setIsSavingAppendixD(true);
+    try {
+      const supabase = createClient();
+      const updatedAppendices = (contract.appendices || []).map((a) =>
+        a.slot === "appendix_d"
+          ? { ...a, status: "completed" as const, formData: appendixDForm }
+          : a
+      );
+      const updated = await updateContract(supabase, contractId, { appendices: updatedAppendices });
+      setContract(updated);
+    } catch (err) {
+      console.error("Failed to save Appendix D:", err);
+    } finally {
+      setIsSavingAppendixD(false);
+    }
+  };
 
   const startEditing = () => {
     setEditTitle(contract.title);
@@ -252,10 +287,18 @@ export default function AdminContractDetailPage() {
       {/* Admin Action Bar */}
       <div className="bg-white rounded-xl border border-grid-300 p-4 mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-sm font-semibold text-foreground">
               Admin Actions
             </h3>
+            {contract.service_type && (
+              <span className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                serviceTypeStyle(contract.service_type)
+              )}>
+                {serviceTypeLabel(contract.service_type)}
+              </span>
+            )}
             <span className={cn(
               "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
               contractTypeStyle(contract.contract_type)
@@ -285,11 +328,12 @@ export default function AdminContractDetailPage() {
                 Edit
               </button>
             )}
-            {canPublish && (
+            {(contract.status === "draft" || contract.status === "changes_requested") && (
               <button
                 onClick={handlePublish}
-                disabled={isPublishing}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-info hover:bg-info/90 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                disabled={isPublishing || !appendixDComplete}
+                title={!appendixDComplete ? "Complete Appendix D before publishing" : undefined}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-info hover:bg-info/90 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-3.5 w-3.5" />
                 {isPublishing
@@ -311,6 +355,104 @@ export default function AdminContractDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Appendix D — Contact Person Form (mandatory before publish) */}
+        {appendixD && (
+          <div className={cn(
+            "mt-4 pt-4 border-t border-grid-300",
+          )}>
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-muted-2" />
+              <h4 className="text-sm font-semibold text-foreground">
+                Appendix D — Primary Contact Person
+              </h4>
+              {appendixD.status === "completed" ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded">
+                  <Check className="h-3 w-3" /> Completed
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 px-2 py-0.5 rounded">
+                  <AlertCircle className="h-3 w-3" /> Required before publish
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-muted-2 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={appendixDForm.name}
+                  onChange={(e) => setAppendixDForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Contact full name"
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-highlight/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-2 mb-1">Role / Title</label>
+                <input
+                  type="text"
+                  value={appendixDForm.role}
+                  onChange={(e) => setAppendixDForm((f) => ({ ...f, role: e.target.value }))}
+                  placeholder="e.g. CEO, Project Lead"
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-highlight/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-2 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={appendixDForm.email}
+                  onChange={(e) => setAppendixDForm((f) => ({ ...f, email: e.target.value }))}
+                  placeholder="contact@company.com"
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-highlight/30"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-2 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={appendixDForm.phone}
+                  onChange={(e) => setAppendixDForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="+44 7700 900000"
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-highlight/30"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-muted-2 mb-1">Preferred Communication Channel</label>
+                <select
+                  value={appendixDForm.preferredChannel}
+                  onChange={(e) => setAppendixDForm((f) => ({ ...f, preferredChannel: e.target.value }))}
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-highlight/30 bg-white"
+                >
+                  <option value="">Select a channel…</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="teams">Microsoft Teams</option>
+                  <option value="slack">Slack</option>
+                  <option value="zoom">Zoom</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <button
+                onClick={handleSaveAppendixD}
+                disabled={
+                  isSavingAppendixD ||
+                  !appendixDForm.name ||
+                  !appendixDForm.role ||
+                  !appendixDForm.email ||
+                  !appendixDForm.phone ||
+                  !appendixDForm.preferredChannel
+                }
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-highlight hover:bg-highlight/90 px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Check className="h-3.5 w-3.5" />
+                {isSavingAppendixD ? "Saving..." : "Save Appendix D"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Appendix Verification Controls */}
         {contract.appendices && contract.appendices.some((a) => a.status === "uploaded") && (
@@ -367,6 +509,31 @@ export default function AdminContractDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Commercials Snapshot (locked from proposal) */}
+      {contract.commercials_snapshot && (
+        <div className="bg-white rounded-xl border border-grid-300 p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Locked Commercial Terms</h3>
+            {contract.commercials_snapshot.proposalRef && (
+              <span className="font-mono text-xs text-muted-2">
+                {contract.commercials_snapshot.proposalRef}
+              </span>
+            )}
+            <span className="ml-auto text-xs text-muted-2">
+              Snapshot taken {new Date(contract.commercials_snapshot.snapshotAt).toLocaleDateString("en-GB")}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {contract.commercials_snapshot.sections.map((s, i) => (
+              <div key={i}>
+                <p className="text-xs font-semibold text-muted-2 uppercase tracking-wider mb-0.5">{s.title}</p>
+                <p className="text-sm text-muted whitespace-pre-wrap">{s.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Contract Viewer */}
       <ContractViewer

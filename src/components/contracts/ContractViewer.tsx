@@ -24,7 +24,7 @@ interface ContractViewerProps {
       label: string;
       required: boolean;
       fileId?: string;
-      status: "empty" | "uploaded" | "verified" | "rejected";
+      status: "empty" | "uploaded" | "verified" | "rejected" | "completed";
       rejectionNote?: string;
     }[] | null;
 

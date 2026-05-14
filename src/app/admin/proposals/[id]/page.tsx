@@ -8,6 +8,7 @@ import { getProposalById, updateProposal } from "@/lib/supabase/queries/proposal
 import { getClientById } from "@/lib/supabase/queries/clients";
 import { createContract } from "@/lib/supabase/queries/contracts";
 import { sendProposalSent } from "@/app/actions/email";
+import { getContractTemplate } from "@/lib/contract-templates";
 import type { Proposal, Client, ProposalStatus } from "@/lib/supabase/types";
 import Link from "next/link";
 import {
@@ -169,31 +170,51 @@ export default function AdminProposalDetailPage() {
   };
 
   const handleCreateContract = async () => {
-    if (!proposal.client_id || !user) return;
+    if (!proposal.client_id || !user || !client) return;
     setIsCreatingContract(true);
     try {
       const supabase = createClient();
-      const content = proposal.sections
+
+      const serviceType = client.strategy_type ?? "b2b";
+      const date = new Date().toLocaleDateString("en-GB", {
+        day: "numeric", month: "long", year: "numeric",
+      });
+
+      const template = getContractTemplate(
+        serviceType,
+        client.contact_name,
+        client.company_name,
+        date
+      );
+
+      const visibleSections = proposal.sections
         .filter((s) => s.isVisible)
-        .sort((a, b) => a.order - b.order)
-        .map((s) => `## ${s.title}\n\n${s.content}`)
-        .join("\n\n---\n\n");
+        .sort((a, b) => a.order - b.order);
+
+      const commercialsSnapshot = {
+        proposalRef: proposal.proposal_ref ?? null,
+        proposalTitle: proposal.title,
+        snapshotAt: new Date().toISOString(),
+        sections: visibleSections.map((s) => ({ title: s.title, content: s.content })),
+      };
 
       const contract = await createContract(supabase, {
         client_id: proposal.client_id,
         proposal_id: proposal.id,
-        title: `${proposal.title} — Contract`,
-        content,
+        title: template.title,
+        content: "",
         contract_type: "service_agreement",
+        service_type: serviceType,
+        commercials_snapshot: commercialsSnapshot,
         version: 1,
-        sections: null,
+        sections: template.sections,
         client_signature: null,
         client_signed_at: null,
         client_signed_by: null,
         admin_signature: null,
         admin_signed_at: null,
         admin_signed_by: null,
-        appendices: null,
+        appendices: template.appendices,
         created_by: user.id,
         published_at: null,
         viewed_at: null,

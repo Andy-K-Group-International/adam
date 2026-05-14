@@ -354,17 +354,21 @@ export default function AdminProposalDetailPage() {
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-serif font-semibold text-foreground truncate">{proposal.title}</h1>
           <div className="flex items-center gap-2 mt-0.5">
-            {proposal.proposal_ref && (
-              <span className="text-xs text-muted-2">{proposal.proposal_ref}</span>
+            {(client?.client_ref || proposal.proposal_ref) && (
+              <span className="font-mono text-xs font-semibold text-highlight tracking-wider">
+                {[client?.client_ref, proposal.proposal_ref].filter(Boolean).join(" / ")}
+              </span>
             )}
-            {proposal.proposal_ref && <span className="text-muted-2 text-xs">·</span>}
             {client && (
-              <Link
-                href={`/admin/clients/${client.id}`}
-                className="text-xs text-muted-2 hover:text-highlight transition-colors"
-              >
-                {client.company_name}
-              </Link>
+              <>
+                {(client.client_ref || proposal.proposal_ref) && <span className="text-muted-2 text-xs">·</span>}
+                <Link
+                  href={`/admin/clients/${client.id}`}
+                  className="text-xs text-muted-2 hover:text-highlight transition-colors"
+                >
+                  {client.company_name}
+                </Link>
+              </>
             )}
           </div>
         </div>

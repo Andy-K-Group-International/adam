@@ -107,6 +107,7 @@ export interface User {
 
 export interface Client {
   id: string;
+  client_ref: string | null;
   company_name: string;
   contact_name: string;
   contact_email: string;

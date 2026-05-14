@@ -243,9 +243,14 @@ export default function ClientDetailPage() {
                 {stageLabels[client.stage] || client.stage}
               </span>
             </div>
-            <p className="text-sm text-muted-2 mt-0.5">
-              Created {formatDate(client.created_at)}
-            </p>
+            <div className="flex items-center gap-3 mt-0.5">
+              {client.client_ref && (
+                <span className="font-mono text-xs font-semibold text-highlight tracking-wider">
+                  {client.client_ref}
+                </span>
+              )}
+              <span className="text-sm text-muted-2">Created {formatDate(client.created_at)}</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -77,13 +77,33 @@ export async function updateInvoice(
   return invoice;
 }
 
-export async function generateInvoiceNumber(supabase: SupabaseClient): Promise<string> {
+export async function generateInvoiceNumber(
+  supabase: SupabaseClient,
+  clientId?: string
+): Promise<string> {
+  if (clientId) {
+    const { data: clientRow } = await supabase
+      .from("clients")
+      .select("client_ref")
+      .eq("id", clientId)
+      .single();
+
+    const ref = clientRow?.client_ref;
+    if (ref) {
+      const { count } = await supabase
+        .from("invoices")
+        .select("*", { count: "exact", head: true })
+        .eq("client_id", clientId);
+      const seq = String((count ?? 0) + 1).padStart(3, "0");
+      return `${ref}-INV-${seq}`;
+    }
+  }
+
   const year = new Date().getFullYear();
   const { count } = await supabase
     .from("invoices")
     .select("*", { count: "exact", head: true })
     .gte("created_at", `${year}-01-01T00:00:00Z`);
-
   const seq = String((count ?? 0) + 1).padStart(4, "0");
   return `INV-${year}-${seq}`;
 }

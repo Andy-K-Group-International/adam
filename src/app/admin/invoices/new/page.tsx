@@ -46,17 +46,13 @@ export default function NewInvoicePage() {
 
   useEffect(() => {
     const supabase = createClient();
-    Promise.all([listClients(supabase), generateInvoiceNumber(supabase)]).then(
-      ([c, num]) => {
-        setClients(c);
-        setInvoiceNumber(num);
-      }
-    );
+    listClients(supabase).then(setClients);
   }, []);
 
   useEffect(() => {
-    if (!clientId) { setContracts([]); return; }
     const supabase = createClient();
+    generateInvoiceNumber(supabase, clientId || undefined).then(setInvoiceNumber);
+    if (!clientId) { setContracts([]); return; }
     listContractsForClient(supabase, clientId).then(setContracts).catch(() => setContracts([]));
   }, [clientId]);
 

@@ -746,6 +746,65 @@ export async function sendInvoiceOverdue({
   });
 }
 
+// ─── Welcome email ───────────────────────────────────────────────────────────
+
+export async function sendWelcomeEmail({
+  clientEmail,
+  clientName,
+  companyName,
+  clientRef,
+  tempPassword,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  clientRef: string;
+  tempPassword: string;
+}) {
+  const loginUrl = "https://adam.andykgroup.com/sign-in";
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Welcome to A.D.A.M. &mdash; Your account is ready</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">We&#8217;re pleased to welcome ${companyName} as a client of Andy&#8217;K Group International LTD. Your client portal has been set up and is ready for you to access.</p>
+    <div style="background:#faf6f3;border:1px solid #ede8e2;border-radius:10px;padding:24px;margin-bottom:28px;">
+      <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Your Account Details</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;width:120px;border-bottom:1px solid #ede8e2;">Client ID</td>
+          <td style="padding:7px 0;color:#01011b;font-size:13px;font-weight:600;border-bottom:1px solid #ede8e2;font-family:'Courier New',Courier,monospace;">${clientRef}</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #ede8e2;">Email</td>
+          <td style="padding:7px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${clientEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;">Temp Password</td>
+          <td style="padding:7px 0;font-family:'Courier New',Courier,monospace;font-size:14px;font-weight:700;color:#01011b;letter-spacing:0.05em;">${tempPassword}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#01011b;font-size:13px;font-weight:600;margin:0 0 4px;">Important</p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Please change your password after your first login. Go to your profile settings once you&#8217;re signed in.</p>
+    </div>
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="${loginUrl}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Login to your dashboard &#8594;</a>
+    </div>
+    <p style="color:#8b93a8;font-size:12px;font-family:'Courier New',Courier,monospace;text-align:center;margin:0 0 24px;">or visit: <a href="${loginUrl}" style="color:#c9707d;text-decoration:none;">${loginUrl}</a></p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: "Welcome to A.D.A.M. — Your account is ready",
+    text: `Hi ${clientName},\n\nWelcome to A.D.A.M. — your client portal is ready.\n\nClient ID: ${clientRef}\nLogin: ${loginUrl}\nEmail: ${clientEmail}\nTemporary password: ${tempPassword}\n\nPlease change your password after first login.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
 // ─── Kickoff email ────────────────────────────────────────────────────────────
 
 export async function sendKickoffConfirmed({

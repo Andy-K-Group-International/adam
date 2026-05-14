@@ -7,7 +7,8 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getContractById, updateContract, publishContract, countersign, verifyAppendix, rejectAppendix } from "@/lib/supabase/queries/contracts";
 import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
 import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
-import type { Contract, ContractComment, ContractVersion, ContractType } from "@/lib/supabase/types";
+import { getClientById } from "@/lib/supabase/queries/clients";
+import type { Contract, ContractComment, ContractVersion, ContractType, Client } from "@/lib/supabase/types";
 
 function contractTypeStyle(type: ContractType | undefined): string {
   switch (type) {
@@ -41,6 +42,7 @@ export default function AdminContractDetailPage() {
   const { user } = useCurrentUser();
 
   const [contract, setContract] = useState<Contract | null | undefined>(undefined);
+  const [client, setClient] = useState<(Client & { contracts: any[] }) | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [versions, setVersions] = useState<ContractVersion[]>([]);
 
@@ -66,6 +68,9 @@ export default function AdminContractDetailPage() {
         setContract(contractData);
         setComments(commentsData);
         setVersions(versionsData);
+        if (contractData.client_id) {
+          getClientById(supabase, contractData.client_id).then(setClient).catch(() => null);
+        }
       } catch {
         setContract(null);
       }
@@ -258,6 +263,17 @@ export default function AdminContractDetailPage() {
               {contractTypeLabel(contract.contract_type)}
             </span>
             <StatusBadge status={contract.status} />
+            {client?.client_ref && (
+              <span className="font-mono text-xs font-semibold text-highlight tracking-wider">
+                {(() => {
+                  const pos = (client.contracts ?? [])
+                    .sort((a: any, b: any) => a.created_at.localeCompare(b.created_at))
+                    .findIndex((c: any) => c.id === contractId);
+                  const contNum = String(pos >= 0 ? pos + 1 : 1).padStart(3, "0");
+                  return `${client.client_ref} / CONT-${contNum}`;
+                })()}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (

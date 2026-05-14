@@ -1,6 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Client } from '@/lib/supabase/types';
 
+async function generateClientRef(supabase: SupabaseClient): Promise<string> {
+  const year = new Date().getFullYear();
+  const { count } = await supabase
+    .from('clients')
+    .select('*', { count: 'exact', head: true });
+  const seq = String((count ?? 0) + 1).padStart(4, '0');
+  return `AK-${year}-${seq}`;
+}
+
 export async function listClients(
   supabase: SupabaseClient,
   options: { stage?: string; search?: string } = {}
@@ -45,10 +54,12 @@ export async function createClient(
   supabase: SupabaseClient,
   data: Omit<Client, 'id' | 'created_at' | 'updated_at'>
 ): Promise<Client> {
+  const client_ref = data.client_ref ?? await generateClientRef(supabase);
   const { data: client, error } = await supabase
     .from('clients')
     .insert({
       ...data,
+      client_ref,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -145,18 +156,19 @@ export async function convertFromQuestionnaire(
     throw new Error(`Failed to get questionnaire: ${qError.message}`);
   }
 
+  const client_ref = await generateClientRef(supabase);
+
   // Create client from questionnaire data
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .insert({
+      client_ref,
       company_name: questionnaire.company_name,
       contact_name: questionnaire.contact_name,
       contact_email: questionnaire.contact_email,
       contact_phone: questionnaire.contact_phone,
-      stage: 'new',
+      stage: 'questionnaire',
       questionnaire_id: questionnaireId,
-      answers: questionnaire.answers,
-      selected_segments: questionnaire.selected_segments,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })

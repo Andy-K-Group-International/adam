@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getQuestionnaireById } from "@/lib/supabase/queries/questionnaires";
-import { convertFromQuestionnaire } from "@/lib/supabase/queries/clients";
 import { createActivity } from "@/lib/supabase/queries/activity-log";
+import { convertToClientAction } from "@/app/actions/questionnaires";
 import type { Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, Sparkles, Check, Flag, X } from "lucide-react";
@@ -79,9 +79,9 @@ export default function QuestionnaireDetailPage() {
   const handleConvert = async () => {
     setIsConverting(true);
     try {
-      const supabase = createClient();
-      const client = await convertFromQuestionnaire(supabase, questionnaire.id);
-      router.push(`/admin/clients/${client.id}`);
+      const result = await convertToClientAction(questionnaire.id);
+      if (result.error) throw new Error(result.error);
+      router.push(`/admin/clients/${result.clientId}`);
     } catch (err) {
       console.error("Failed to convert questionnaire:", err);
       setIsConverting(false);

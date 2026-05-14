@@ -24,7 +24,9 @@
       "mcp__claude_ai_Supabase__get_project_url",
       "Bash(node *)",
       "mcp__claude_ai_Supabase__apply_migration",
-      "WebFetch(domain:adam.andykgroup.com)"
+      "WebFetch(domain:adam.andykgroup.com)",
+      "Bash(grep -oE '--color-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)",
+      "Bash(grep -oE '--font-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)"
     ]
   }
 }

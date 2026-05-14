@@ -32,10 +32,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-foreground flex flex-col">
-      {/* Top accent */}
-      <div className="h-px bg-gradient-to-r from-transparent via-highlight/60 to-transparent shrink-0" />
-
+    <aside className="w-64 h-screen sticky top-0 flex flex-col bg-background border-r border-grid-300">
       {/* Logo */}
       <div className="px-6 py-5 shrink-0">
         <Link href="/admin" className="flex items-center gap-3">
@@ -44,20 +41,19 @@ export default function AdminSidebar() {
             alt="A.D.A.M."
             width={34}
             height={34}
-            className="opacity-90"
           />
           <div>
-            <p className="text-white font-bold text-base tracking-tight leading-none">A.D.A.M.</p>
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/35 mt-0.5">Admin Panel</p>
+            <p className="text-foreground font-bold text-base tracking-tight leading-none">A.D.A.M.</p>
+            <p className="label-mono mt-0.5">Admin Panel</p>
           </div>
         </Link>
       </div>
 
-      <div className="mx-4 h-px bg-white/6 shrink-0" />
+      <div className="mx-4 h-px bg-grid-300 shrink-0" />
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-3 overflow-y-auto">
-        <p className="label-mono px-3 mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Navigation</p>
+        <p className="label-mono px-3 mb-2">Navigation</p>
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -67,26 +63,31 @@ export default function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5",
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all mb-0.5 rounded-lg border-l-2",
                 isActive
-                  ? "bg-highlight/15 text-highlight border border-highlight/20"
-                  : "text-white/55 hover:text-white/85 hover:bg-white/6 border border-transparent"
+                  ? "bg-[rgba(201,112,125,0.08)] text-highlight border-l-highlight"
+                  : "text-foreground border-l-transparent hover:bg-[rgba(201,112,125,0.05)]"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <item.icon
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  isActive ? "text-highlight" : "text-[#525a70]"
+                )}
+              />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mx-4 h-px bg-white/6 shrink-0" />
+      <div className="mx-4 h-px bg-grid-300 shrink-0" />
 
       {/* Sign out */}
       <div className="p-3 shrink-0">
         <button
           onClick={() => signOut()}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/45 hover:text-white/70 hover:bg-white/6 transition-all border border-transparent"
+          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#525a70] hover:text-highlight transition-all"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Sign Out

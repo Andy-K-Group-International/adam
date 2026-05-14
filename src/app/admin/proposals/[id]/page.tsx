@@ -245,7 +245,7 @@ export default function AdminProposalDetailPage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Edit Proposal</h1>
+              <h1 className="text-xl font-serif font-semibold text-foreground">Edit Proposal</h1>
               <p className="text-sm text-muted-2">{proposal.title}</p>
             </div>
           </div>
@@ -259,7 +259,7 @@ export default function AdminProposalDetailPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+              className="relative inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               {isSaving ? "Saving..." : "Save Changes"}
@@ -352,7 +352,7 @@ export default function AdminProposalDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-foreground truncate">{proposal.title}</h1>
+          <h1 className="text-xl font-serif font-semibold text-foreground truncate">{proposal.title}</h1>
           <div className="flex items-center gap-2 mt-0.5">
             {proposal.proposal_ref && (
               <span className="text-xs text-muted-2">{proposal.proposal_ref}</span>

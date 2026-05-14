@@ -140,7 +140,7 @@ function NewContractForm() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Create Contract</h1>
+          <h1 className="text-xl font-serif font-semibold text-foreground">Create Contract</h1>
           <p className="text-sm text-muted-2 mt-0.5">
             Draft a new contract for a client.
           </p>
@@ -280,7 +280,7 @@ function NewContractForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-highlight text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+            className="relative inline-flex items-center justify-center h-10 px-6 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
           >
             {isSubmitting ? "Creating..." : "Create Contract"}
           </button>

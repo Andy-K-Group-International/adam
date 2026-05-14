@@ -23,7 +23,8 @@
       "Bash(npx tsx *)",
       "mcp__claude_ai_Supabase__get_project_url",
       "Bash(node *)",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "WebFetch(domain:adam.andykgroup.com)"
     ]
   }
 }

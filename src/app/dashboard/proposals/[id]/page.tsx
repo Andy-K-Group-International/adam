@@ -147,7 +147,7 @@ export default function ClientProposalPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-foreground truncate">{proposal.title}</h1>
+          <h1 className="text-xl font-serif font-semibold text-foreground truncate">{proposal.title}</h1>
           <div className="flex items-center gap-3 mt-1">
             {proposal.proposal_ref && (
               <span className="text-xs text-muted-2">{proposal.proposal_ref}</span>

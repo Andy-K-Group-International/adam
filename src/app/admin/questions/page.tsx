@@ -111,7 +111,7 @@ export default function AdminQuestionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Questions</h1>
+          <h1 className="text-xl font-serif font-semibold text-foreground">Questions</h1>
           <p className="text-sm text-muted-2 mt-0.5">
             {allQuestions.length} questions across {allSections.length} sections
           </p>

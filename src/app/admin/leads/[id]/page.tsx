@@ -226,7 +226,7 @@ export default function LeadDetailPage() {
             </Link>
             <div>
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl font-bold text-foreground">{lead.name}</h1>
+                <h1 className="text-xl font-serif font-semibold text-foreground">{lead.name}</h1>
                 <span className={cn(
                   "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
                   statusStyle(lead.status)
@@ -278,7 +278,7 @@ export default function LeadDetailPage() {
                 <button
                   onClick={handleConvert}
                   disabled={isConverting}
-                  className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+                  className="relative inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
                 >
                   {isConverting ? "Converting..." : (<>Convert <ArrowRight className="h-4 w-4" /></>)}
                 </button>
@@ -499,7 +499,7 @@ export default function LeadDetailPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 bg-highlight text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+              className="relative inline-flex items-center justify-center gap-2 h-10 px-5 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>

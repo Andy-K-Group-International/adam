@@ -45,7 +45,7 @@ export default function StatusCards({
       {cards.map((card) => (
         <div
           key={card.key}
-          className="bg-white rounded-xl border border-grid-300 p-5"
+          className="bg-white rounded-xl border border-grid-300 p-5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-shadow"
         >
           <div className="flex items-center gap-3">
             <div className={cn("p-2 rounded-lg", card.bgColor)}>

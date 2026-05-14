@@ -99,12 +99,12 @@ export default function LeadsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Leads</h1>
-          <p className="text-muted mt-1">Track and qualify inbound leads.</p>
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Leads</h1>
+          <p className="text-muted text-sm mt-1">Track and qualify inbound leads.</p>
         </div>
         <Link
           href="/admin/leads/new"
-          className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors"
+          className="relative inline-flex items-center justify-center gap-2 h-10 px-5 text-sm font-medium text-foreground btn-primary-gradient"
         >
           <Plus className="h-4 w-4" />
           Add Lead
@@ -115,7 +115,7 @@ export default function LeadsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="text-sm border border-grid-500 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30"
+          className="text-sm border border-grid-500 rounded-lg px-3 h-10 bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
         >
           {statusOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>

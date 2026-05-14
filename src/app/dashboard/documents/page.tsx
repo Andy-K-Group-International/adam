@@ -35,8 +35,8 @@ export default function DocumentsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Documents</h1>
-        <p className="text-muted mt-1">Access your finalized documents.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Documents</h1>
+        <p className="text-muted text-sm mt-1">Access your finalized documents.</p>
       </div>
 
       {finalContracts.length === 0 ? (

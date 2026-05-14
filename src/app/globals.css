@@ -8,17 +8,18 @@
   --color-rose-dark: #cda0a5;
   --color-muted: #525a70;
   --color-muted-2: #8b93a8;
-  --color-grid-300: #f5f5f7;
-  --color-grid-500: #e2e4ea;
-  --color-grid-700: #c4c8d4;
-  --color-bg-light: #faf9fb;
-  --color-background: #ffffff;
+  --color-grid-300: #ede8e2;
+  --color-grid-500: #ddd6ce;
+  --color-grid-700: #c4b9af;
+  --color-bg-light: #f0ebe5;
+  --color-background: #faf6f3;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
 }
 
 body {
@@ -105,9 +106,24 @@ body {
 .section-bg-grid {
   background-color: var(--color-bg-light);
   background-image:
-    linear-gradient(var(--color-grid-300) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-grid-300) 1px, transparent 1px);
+    linear-gradient(rgba(196, 185, 175, 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 185, 175, 0.4) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* App card — consistent card surface */
+.app-card {
+  background: #ffffff;
+  border: 1px solid var(--color-grid-300);
+  border-radius: 0.75rem;
+}
+
+/* App table — white table on warm bg */
+.app-table {
+  background: #ffffff;
+  border: 1px solid var(--color-grid-300);
+  border-radius: 0.75rem;
+  overflow: hidden;
 }
 
 /* Full-width line grid (Hex-style) */

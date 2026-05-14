@@ -66,8 +66,8 @@ export default function ProposalsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Proposals</h1>
-        <p className="text-muted mt-1">Review proposals from Andy&apos;K Group.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Proposals</h1>
+        <p className="text-muted text-sm mt-1">Review proposals from Andy&apos;K Group.</p>
       </div>
 
       {proposals.length === 0 ? (

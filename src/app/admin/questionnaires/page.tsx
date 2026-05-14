@@ -101,8 +101,8 @@ export default function QuestionnairesPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Questionnaires</h1>
-        <p className="text-muted mt-1">
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Questionnaires</h1>
+        <p className="text-muted text-sm mt-1">
           Review submitted questionnaires and convert them to clients.
         </p>
       </div>

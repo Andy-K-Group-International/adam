@@ -117,8 +117,9 @@ export default function AdminDashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted mt-1">Overview of all operations.</p>
+        <p className="label-mono mb-2">Andy'K Group — A.D.A.M.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Admin Dashboard</h1>
+        <p className="text-muted text-sm mt-1">Overview of all operations.</p>
       </div>
 
       <StatsCards
@@ -130,14 +131,14 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="text-base font-semibold text-foreground mb-4">
             Action Items
           </h2>
           <ActionItems items={actionItems} />
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="text-base font-semibold text-foreground mb-4">
             Recent Activity
           </h2>
           <div className="bg-white rounded-xl border border-grid-300 p-4">

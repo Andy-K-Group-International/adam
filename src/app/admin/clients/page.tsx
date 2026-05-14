@@ -57,14 +57,14 @@ export default function ClientsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-          <p className="text-muted mt-1">
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Clients</h1>
+          <p className="text-muted text-sm mt-1">
             Manage all clients and their accounts.
           </p>
         </div>
         <Link
           href="/admin/clients/new"
-          className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors"
+          className="relative inline-flex items-center justify-center gap-2 h-10 px-5 text-sm font-medium text-foreground btn-primary-gradient"
         >
           <Plus className="h-4 w-4" />
           Create Client
@@ -74,13 +74,13 @@ export default function ClientsPage() {
       {/* Search */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-2" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-2" />
           <input
             type="text"
-            placeholder="Search by company name..."
+            placeholder="Search by company name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-grid-500 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30"
+            className="w-full pl-10 pr-4 h-10 text-sm border border-grid-500 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
           />
         </div>
       </div>

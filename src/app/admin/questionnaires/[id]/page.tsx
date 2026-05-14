@@ -151,7 +151,7 @@ export default function QuestionnaireDetailPage() {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-foreground">
+              <h1 className="text-xl font-serif font-semibold text-foreground">
                 {questionnaire.company_name || "Untitled"}
               </h1>
               <span
@@ -197,7 +197,7 @@ export default function QuestionnaireDetailPage() {
               <button
                 onClick={handleConvert}
                 disabled={isConverting}
-                className="inline-flex items-center gap-2 bg-highlight text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors disabled:opacity-50"
+                className="relative inline-flex items-center justify-center gap-2 h-10 px-5 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
               >
                 <UserPlus className="h-4 w-4" />
                 {isConverting ? "Converting…" : "Convert to Client"}

@@ -30,8 +30,8 @@ export default function ContractsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Contracts</h1>
-        <p className="text-muted mt-1">View and manage your contracts.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Contracts</h1>
+        <p className="text-muted text-sm mt-1">View and manage your contracts.</p>
       </div>
 
       {(contracts || []).length === 0 ? (

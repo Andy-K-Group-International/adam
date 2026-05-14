@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { CheckCircle2 } from "lucide-react";
 
@@ -204,13 +205,13 @@ export default function QuestionnairePage() {
   if (submitted) {
     return (
       <main className="min-h-screen bg-bg-light relative flex items-center justify-center px-6 py-16">
-        <div className="absolute inset-0 cartesian-grid opacity-40 pointer-events-none" />
+        <div className="absolute inset-0 cartesian-grid opacity-30 pointer-events-none" />
         <div className="relative max-w-lg w-full">
-          <div className="bg-white rounded-2xl border border-grid-300 p-10 text-center">
+          <div className="glass-card rounded-2xl border border-grid-300 p-10 text-center">
             <div className="w-14 h-14 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-7 w-7 text-success" />
             </div>
-            <h1 className="text-xl font-bold text-foreground mb-3">Application Received</h1>
+            <h1 className="text-xl font-serif font-semibold text-foreground mb-3">Application Received</h1>
             <p className="text-sm text-muted leading-relaxed">
               Thank you. Due to limited project capacity, all applications are reviewed manually.
               If there is alignment, we will contact you within 48 hours.
@@ -231,19 +232,28 @@ export default function QuestionnairePage() {
 
   return (
     <main className="min-h-screen bg-bg-light relative">
-      <div className="absolute inset-0 cartesian-grid opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 cartesian-grid opacity-30 pointer-events-none" />
 
-      {/* Header */}
-      <div className="relative bg-foreground border-b border-grid-500/30">
-        <div className="max-w-2xl mx-auto px-6 py-6">
-          <span className="text-highlight font-bold text-base tracking-tight">Andy'K Group</span>
-          <p className="text-white/50 text-sm mt-0.5">Partnership Application</p>
+      {/* Header — matches landing page navbar */}
+      <div className="sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b border-grid-300 relative">
+        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center gap-4">
+          <Image
+            src="/adam-logo-simple-no-bg.png"
+            alt="A.D.A.M."
+            width={32}
+            height={32}
+          />
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-foreground text-sm tracking-tight">A.D.A.M.</span>
+            <span className="text-grid-700 text-xs">/</span>
+            <span className="label-mono">Partnership Application</span>
+          </div>
         </div>
       </div>
 
       <div className="relative max-w-2xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Tell us about your business</h1>
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Tell us about your business</h1>
           <p className="text-muted text-sm mt-1.5">
             All applications are reviewed manually. We respond within 48 hours if there's alignment.
           </p>
@@ -453,9 +463,9 @@ export default function QuestionnairePage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-highlight text-white py-3.5 rounded-xl text-sm font-semibold hover:bg-highlight/90 transition-colors disabled:opacity-50"
+              className="relative inline-flex w-full items-center justify-center h-12 text-sm font-medium text-foreground btn-primary-gradient rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? "Submitting..." : "Submit Application"}
+              <span className="relative z-10">{submitting ? "Submitting…" : "Submit Application"}</span>
             </button>
             <p className="text-xs text-muted-2 text-center mt-3">
               All applications are reviewed manually. We do not share your information.

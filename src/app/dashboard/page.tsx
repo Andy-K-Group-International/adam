@@ -49,8 +49,9 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted mt-1">Welcome back. Here&apos;s your overview.</p>
+        <p className="label-mono mb-2">A.D.A.M. Client Portal</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Your Dashboard</h1>
+        <p className="text-muted text-sm mt-1">Welcome back. Here&apos;s your overview.</p>
       </div>
 
       <StatusCards
@@ -61,7 +62,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="text-base font-semibold text-foreground mb-4">
             Your Contracts
           </h2>
           {(contracts || []).length === 0 ? (
@@ -85,7 +86,7 @@ export default function DashboardPage() {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">
+          <h2 className="text-base font-semibold text-foreground mb-4">
             Recent Activity
           </h2>
           <div className="bg-white rounded-xl border border-grid-300 p-4">

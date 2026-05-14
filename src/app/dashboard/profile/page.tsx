@@ -35,8 +35,8 @@ export default function ProfilePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-        <p className="text-muted mt-1">Your account information.</p>
+        <h1 className="text-2xl font-serif font-semibold text-foreground">Profile</h1>
+        <p className="text-muted text-sm mt-1">Your account information.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-grid-300 p-6 max-w-xl">

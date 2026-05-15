@@ -18,14 +18,19 @@ function statusStyle(status: ProposalStatus): string {
       return "bg-grid-300 text-muted";
     case "flagged":
       return "bg-warning/10 text-warning";
+    case "published":
     case "sent":
       return "bg-info/10 text-info";
     case "changes_requested":
       return "bg-warning/10 text-warning";
+    case "confirmed":
     case "approved":
+    case "unlocked":
       return "bg-success/10 text-success";
     case "declined":
       return "bg-error/10 text-error";
+    default:
+      return "bg-grid-300 text-muted";
   }
 }
 
@@ -36,14 +41,20 @@ function statusLabel(status: ProposalStatus): string {
       return "Under Review";
     case "flagged":
       return "Flagged";
+    case "published":
     case "sent":
       return "Awaiting Response";
     case "changes_requested":
       return "Changes Requested";
+    case "confirmed":
     case "approved":
       return "Approved";
+    case "unlocked":
+      return "Unlocked";
     case "declined":
       return "Declined";
+    default:
+      return "Under Review";
   }
 }
 

@@ -1,6 +1,27 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Proposal } from '@/lib/supabase/types';
 
+export async function generateProposalRef(
+  supabase: SupabaseClient,
+  clientId: string
+): Promise<string | null> {
+  const { data: client } = await supabase
+    .from('clients')
+    .select('client_ref')
+    .eq('id', clientId)
+    .single();
+
+  if (!client?.client_ref) return null;
+
+  const { count } = await supabase
+    .from('proposals')
+    .select('*', { count: 'exact', head: true })
+    .eq('client_id', clientId);
+
+  const seq = String((count ?? 0) + 1).padStart(3, '0');
+  return `${client.client_ref}-PROP-${seq}`;
+}
+
 export async function listProposals(
   supabase: SupabaseClient,
   options: { status?: string; clientId?: string; questionnaireId?: string } = {}

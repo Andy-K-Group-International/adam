@@ -7,6 +7,7 @@ import { getClientById, updateClient } from "@/lib/supabase/queries/clients";
 import { listForClient as listActivitiesForClient } from "@/lib/supabase/queries/activity-log";
 import { getQuestionnaireById } from "@/lib/supabase/queries/questionnaires";
 import { createProposal } from "@/lib/supabase/queries/proposals";
+import { defaultInvestment } from "@/lib/proposal-content";
 import type { Client, Questionnaire, ActivityLog, StrategyType } from "@/lib/supabase/types";
 import Link from "next/link";
 import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2 } from "lucide-react";
@@ -173,6 +174,10 @@ export default function ClientDetailPage() {
         template_id: null,
         title: `Proposal — ${client.company_name}`,
         proposal_ref: null,
+        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        service_type: (client.strategy_type ?? "b2b") as StrategyType,
+        commercials_locked: false,
+        addons: defaultInvestment(),
         status: "draft" as const,
         sections: [
           {

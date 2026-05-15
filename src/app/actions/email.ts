@@ -334,6 +334,151 @@ export async function sendContactForm({
 
 // ─── Proposal emails ──────────────────────────────────────────────────────────
 
+export async function sendProposalPublished({
+  clientEmail,
+  clientName,
+  proposalTitle,
+  proposalRef,
+  proposalId,
+  validUntil,
+}: {
+  clientEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalRef: string | null;
+  proposalId: string;
+  validUntil: string | null;
+}) {
+  const url = `https://adam.andykgroup.com/dashboard/proposals/${proposalId}`;
+  const validStr = validUntil
+    ? new Date(validUntil).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your proposal is ready to review</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">We have prepared a proposal for your review. Please log in to your client portal to read through the details and share your decision.</p>
+    <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      ${proposalRef ? `<p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 4px;">Ref: ${proposalRef}</p>` : ""}
+      <p style="color:#01011b;font-size:15px;font-weight:600;margin:0 0 8px;">${proposalTitle}</p>
+      ${validStr ? `<p style="color:#525a70;font-size:13px;margin:0;">Valid until <strong style="color:#01011b;">${validStr}</strong></p>` : ""}
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Proposal &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    subject: `Your Proposal is Ready: ${proposalTitle}`,
+    text: `Hi ${clientName},\n\nYour proposal "${proposalTitle}" is ready for review.${validStr ? `\nValid until: ${validStr}` : ""}\n\nLog in to read and respond: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+export async function sendProposalChangesRequestedByClient({
+  staffEmail,
+  clientName,
+  proposalTitle,
+  proposalId,
+  comment,
+}: {
+  staffEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalId: string;
+  comment: string;
+}) {
+  const url = `https://adam.andykgroup.com/admin/proposals/${proposalId}`;
+  const html = emailHtml("Proposal Update", `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Changes requested on a proposal</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;"><strong style="color:#01011b;">${clientName}</strong> has requested changes to &ldquo;${proposalTitle}&rdquo;.</p>
+    <div style="background:#faf6f3;border-left:2px solid #c9707d;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px;">Client Comment</p>
+      <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${comment || "No comment provided."}</p>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review in Admin &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
+    </div>
+  `);
+  return await sendEmail({
+    to: staffEmail,
+    subject: `Changes Requested on Proposal: ${proposalTitle}`,
+    text: `${clientName} has requested changes to "${proposalTitle}".\n\nComment: ${comment || "None"}\n\nReview: ${url}`,
+    html,
+  });
+}
+
+export async function sendProposalConfirmed({
+  staffEmail,
+  clientEmail,
+  clientName,
+  proposalTitle,
+  proposalRef,
+  proposalId,
+}: {
+  staffEmail: string;
+  clientEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalRef: string | null;
+  proposalId: string;
+}) {
+  const adminUrl = `https://adam.andykgroup.com/admin/proposals/${proposalId}`;
+  const dashUrl = `https://adam.andykgroup.com/dashboard/proposals/${proposalId}`;
+
+  const adminHtml = emailHtml("Proposal Confirmed", `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">${clientName} has confirmed a proposal</h1>
+    <div style="background:#faf6f3;border-left:2px solid #2e7d5e;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      ${proposalRef ? `<p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 4px;">Ref: ${proposalRef}</p>` : ""}
+      <p style="color:#01011b;font-size:15px;font-weight:600;margin:0 0 6px;">${proposalTitle}</p>
+      <p style="color:#2e7d5e;font-size:13px;font-weight:600;margin:0;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;">CONFIRMED &mdash; Commercial terms locked</p>
+    </div>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 28px;">The commercial terms are now locked. You can proceed to create and publish the contract.</p>
+    <div style="margin-bottom:32px;">
+      <a href="${adminUrl}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Create Contract &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Andy&#8217;K Group International LTD</p>
+    </div>
+  `);
+
+  const clientHtml = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your proposal has been confirmed</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for confirming your proposal. The commercial terms are now locked and our team will proceed to prepare the formal Service Agreement within 5 business days.</p>
+    <div style="background:#faf6f3;border-left:2px solid #2e7d5e;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      ${proposalRef ? `<p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 4px;">Ref: ${proposalRef}</p>` : ""}
+      <p style="color:#01011b;font-size:15px;font-weight:600;margin:0;">${proposalTitle}</p>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${dashUrl}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View in Portal &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  await Promise.all([
+    sendEmail({
+      to: staffEmail,
+      subject: `Proposal Confirmed: ${proposalTitle}`,
+      text: `${clientName} has confirmed proposal "${proposalTitle}". Commercial terms are now locked.\n\nCreate contract: ${adminUrl}`,
+      html: adminHtml,
+    }),
+    sendEmail({
+      to: clientEmail,
+      subject: `Proposal Confirmed: ${proposalTitle}`,
+      text: `Hi ${clientName},\n\nThank you for confirming your proposal "${proposalTitle}". Our team will prepare the service agreement within 5 business days.\n\nView your portal: ${dashUrl}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+      html: clientHtml,
+    }),
+  ]);
+}
+
 export async function sendProposalSent({
   clientEmail,
   clientName,

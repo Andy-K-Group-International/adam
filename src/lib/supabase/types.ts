@@ -24,11 +24,15 @@ export type ContractStatus =
   | "final";
 
 export type ProposalStatus =
+  | "draft"
+  | "published"
+  | "changes_requested"
+  | "confirmed"
+  | "unlocked"
+  // Legacy values kept for backward compat with existing data:
   | "evaluating"
   | "flagged"
-  | "draft"
   | "sent"
-  | "changes_requested"
   | "approved"
   | "declined";
 
@@ -314,6 +318,25 @@ export interface ContractComment {
   updated_at: string;
 }
 
+export interface ProposalRecurringItem {
+  name: string;
+  monthly: number;
+}
+
+export interface ProposalOneTimeItem {
+  name: string;
+  amount: number;
+}
+
+export interface ProposalInvestment {
+  currency: string;
+  billingCycle: "monthly" | "quarterly" | "yearly" | "one-time";
+  paymentTerms: 7 | 15 | 21 | 30;
+  paymentMethod: string;
+  recurringItems: ProposalRecurringItem[];
+  oneTimeItems: ProposalOneTimeItem[];
+}
+
 export interface Proposal {
   id: string;
   questionnaire_id: string;
@@ -321,6 +344,10 @@ export interface Proposal {
   template_id: string | null;
   title: string;
   proposal_ref: string | null;
+  valid_until: string | null;
+  service_type: StrategyType | null;
+  commercials_locked: boolean;
+  addons: ProposalInvestment | null;
   status: ProposalStatus;
   sections: { key: string; title: string; content: string; order: number; isVisible: boolean }[];
   ai_evaluation: {

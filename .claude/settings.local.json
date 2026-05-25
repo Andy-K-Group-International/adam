@@ -29,7 +29,17 @@
       "Bash(grep -oE '--font-[a-zA-Z0-9-]+:[^;]+' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27/tool-results/br0mw9u81.txt)",
       "Bash(perl -i -pe 's/Andy'\\\\''K Group\\(?! International\\)/Andy'\\\\''K Group International LTD/g' src/app/layout.tsx src/app/page.tsx src/app/admin/page.tsx src/app/questionnaire/full/page.tsx src/components/landing/Hero.tsx src/lib/data.ts)",
       "Bash(perl -i -pe 's/Andy'\\\\''K Group\\(?! International\\)/Andy'\\\\''K Group International LTD/g; s/Andy&#8217;K Group\\(?! International\\)/Andy&#8217;K Group International LTD/g' src/app/actions/email.ts)",
-      "Bash(perl -i -pe 's/Andy'\\\\''K Group International\\(?! LTD\\)/Andy'\\\\''K Group International LTD/g' /Users/andrejkneisl/adam/DESIGN.md /Users/andrejkneisl/adam/PRD.md)"
+      "Bash(perl -i -pe 's/Andy'\\\\''K Group International\\(?! LTD\\)/Andy'\\\\''K Group International LTD/g' /Users/andrejkneisl/adam/DESIGN.md /Users/andrejkneisl/adam/PRD.md)",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -o '\"role\":\"[^\"]*\",\"content\":\\\\[{\"type\":\"text\",\"text\":\"[^\"]*' /Users/andrejkneisl/.claude/projects/-Users-andrejkneisl-adam/b9ab3f0b-9113-46c5-8025-8b4fee701f27.jsonl)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,':',v\\) for k,v in {**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}.items\\(\\) if 'dnd' in k.lower\\(\\) or 'drag' in k.lower\\(\\) or 'kanban' in k.lower\\(\\)]\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('dependencies',{}\\), indent=2\\)\\)\")",
+      "Bash(npm list *)",
+      "Bash(vercel link *)",
+      "Bash(tsx --version)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://kbdvsqdctgeirakpctoz.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjIwNjQsImV4cCI6MjA5NTI5ODA2NH0.d3hISkhDVv4wOovH6zJZMhld-QhhmYE9Adi6x_N6Nzs SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTcyMjA2NCwiZXhwIjoyMDk1Mjk4MDY0fQ.8imZYuqWyxS1g_9vjOgBlNwsnc30zDjANyvFcmx2uJk npx tsx scripts/seed-questions.ts)",
+      "Bash(vercel --version)"
     ]
   }
 }

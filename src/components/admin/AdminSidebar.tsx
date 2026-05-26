@@ -15,6 +15,7 @@ import {
   MessageSquareText,
   Lightbulb,
   Receipt,
+  BarChart2,
   LogOut,
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ const navItems = [
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },
   { label: "Invoices", href: "/admin/invoices", icon: Receipt },
+  { label: "Reports", href: "/admin/reports", icon: BarChart2 },
   { label: "Questionnaires", href: "/admin/questionnaires", icon: ClipboardList },
   { label: "Questions", href: "/admin/questions", icon: MessageSquareText },
 ];

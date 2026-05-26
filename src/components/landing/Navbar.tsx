@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import CompanyLogo from "./CompanyLogo";
+import LogoIcon from "./LogoIcon";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { CURRENCIES } from "@/lib/currency";
@@ -22,6 +22,15 @@ function CloseIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6">
       <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function AdamLogo() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <LogoIcon className="w-7 h-7 text-foreground" />
+      <span className="text-sm font-bold tracking-tight text-foreground">A.D.A.M.</span>
+    </div>
   );
 }
 
@@ -51,14 +60,16 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-grid-300">
       <div className="relative max-w-[1200px] mx-auto flex items-center justify-between px-6 sm:px-8 h-[60px]">
         {/* Logo */}
-        <a href="#hero" className="shrink-0 text-foreground">
-          <CompanyLogo size="md" />
+        <a href="#hero" className="shrink-0">
+          <AdamLogo />
         </a>
 
         {/* Desktop nav — centered */}
         <div className="hidden md:flex items-center gap-7 text-sm text-muted absolute left-1/2 -translate-x-1/2">
-          <a href="#process" className="hover:text-foreground transition-colors">{t.nav.process}</a>
+          <a href="#process" className="hover:text-foreground transition-colors">{t.nav.features}</a>
           <a href="#pricing" className="hover:text-foreground transition-colors">{t.nav.pricing}</a>
+          <Link href="/demo" className="hover:text-foreground transition-colors">{t.nav.demo}</Link>
+          <a href="#contact" className="hover:text-foreground transition-colors">{t.nav.contact}</a>
         </div>
 
         {/* Desktop right: language + currency + CTA */}
@@ -94,7 +105,7 @@ export default function Navbar() {
             href="/questionnaire"
             className="relative inline-flex items-center justify-center h-9 px-5 ml-1 text-sm font-medium text-foreground btn-primary-gradient"
           >
-            <span className="relative z-10">{t.nav.getStarted}</span>
+            <span className="relative z-10">{t.nav.applyForAccess}</span>
           </Link>
         </div>
 
@@ -113,10 +124,16 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 top-[60px] z-40 bg-white overflow-y-auto">
           <div className="px-6 py-6 space-y-1">
             <a href="#process" onClick={closeMobile} className="block py-3 text-base font-medium text-foreground border-b border-grid-300">
-              {t.nav.process}
+              {t.nav.features}
             </a>
             <a href="#pricing" onClick={closeMobile} className="block py-3 text-base font-medium text-foreground border-b border-grid-300">
               {t.nav.pricing}
+            </a>
+            <Link href="/demo" onClick={closeMobile} className="block py-3 text-base font-medium text-foreground border-b border-grid-300">
+              {t.nav.demo}
+            </Link>
+            <a href="#contact" onClick={closeMobile} className="block py-3 text-base font-medium text-foreground border-b border-grid-300">
+              {t.nav.contact}
             </a>
 
             {/* Mobile language + currency */}
@@ -153,7 +170,7 @@ export default function Navbar() {
                 onClick={closeMobile}
                 className="relative inline-flex items-center justify-center w-full h-12 text-sm font-medium text-foreground btn-primary-gradient"
               >
-                <span className="relative z-10">{t.nav.getStarted}</span>
+                <span className="relative z-10">{t.nav.applyForAccess}</span>
               </Link>
             </div>
           </div>

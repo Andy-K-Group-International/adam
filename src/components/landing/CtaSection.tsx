@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/data";
 
 export default function CtaSection() {
   return (
-    <section className="bg-foreground py-20 px-8">
+    <section id="contact" className="bg-foreground py-20 px-8">
       <div className="max-w-[800px] mx-auto text-center">
         <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-white mb-4">
           Ready to transform your operations?

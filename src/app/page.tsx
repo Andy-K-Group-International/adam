@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ import Footer from "@/components/landing/Footer";
 export default function Home() {
   return (
     <main className="overflow-x-hidden">
+      <Navbar />
       {/* Hero area with background layers */}
       <div className="relative overflow-clip">
         <HeroBackground />

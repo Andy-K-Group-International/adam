@@ -2,9 +2,11 @@ export type Locale = "en" | "sk" | "de" | "es" | "nl" | "pt";
 
 const en = {
   nav: {
-    process: "Process",
+    features: "Features",
     pricing: "Pricing",
-    getStarted: "Get Started",
+    demo: "Demo",
+    contact: "Contact",
+    applyForAccess: "Apply for Access",
   },
   hero: {
     headline: "Your Business, Automated.",
@@ -44,7 +46,7 @@ const en = {
 };
 
 const sk: typeof en = {
-  nav: { process: "Proces", pricing: "Cenník", getStarted: "Začať" },
+  nav: { features: "Funkcie", pricing: "Cenník", demo: "Demo", contact: "Kontakt", applyForAccess: "Požiadať o prístup" },
   hero: {
     headline: "Vaše podnikanie, automatizované.",
     subheadline: "A.D.A.M. spravuje celý životný cyklus vašich klientov — od prvého kontaktu až po podpísanú zmluvu. Žiadne manuálne procesy, žiadne stratené e-maily, žiadne zmeškané termíny.",
@@ -82,7 +84,7 @@ const sk: typeof en = {
 };
 
 const de: typeof en = {
-  nav: { process: "Prozess", pricing: "Preise", getStarted: "Loslegen" },
+  nav: { features: "Funktionen", pricing: "Preise", demo: "Demo", contact: "Kontakt", applyForAccess: "Zugang beantragen" },
   hero: {
     headline: "Ihr Unternehmen, automatisiert.",
     subheadline: "A.D.A.M. verwaltet Ihren gesamten Kunden-Lebenszyklus — vom ersten Kontakt bis zum unterschriebenen Vertrag. Keine manuellen Prozesse, keine verlorenen E-Mails, keine verpassten Fristen.",
@@ -120,7 +122,7 @@ const de: typeof en = {
 };
 
 const es: typeof en = {
-  nav: { process: "Proceso", pricing: "Precios", getStarted: "Comenzar" },
+  nav: { features: "Funciones", pricing: "Precios", demo: "Demo", contact: "Contacto", applyForAccess: "Solicitar acceso" },
   hero: {
     headline: "Su negocio, automatizado.",
     subheadline: "A.D.A.M. gestiona todo el ciclo de vida de sus clientes — desde el primer contacto hasta el contrato firmado. Sin procesos manuales, sin correos perdidos, sin plazos incumplidos.",
@@ -158,7 +160,7 @@ const es: typeof en = {
 };
 
 const nl: typeof en = {
-  nav: { process: "Proces", pricing: "Prijzen", getStarted: "Aan de slag" },
+  nav: { features: "Functies", pricing: "Prijzen", demo: "Demo", contact: "Contact", applyForAccess: "Toegang aanvragen" },
   hero: {
     headline: "Uw bedrijf, geautomatiseerd.",
     subheadline: "A.D.A.M. beheert de volledige levenscyclus van uw klanten — van het eerste contact tot het ondertekende contract. Geen handmatige processen, geen verloren e-mails, geen gemiste deadlines.",
@@ -196,7 +198,7 @@ const nl: typeof en = {
 };
 
 const pt: typeof en = {
-  nav: { process: "Processo", pricing: "Preços", getStarted: "Começar" },
+  nav: { features: "Funcionalidades", pricing: "Preços", demo: "Demo", contact: "Contacto", applyForAccess: "Pedir acesso" },
   hero: {
     headline: "O seu negócio, automatizado.",
     subheadline: "A.D.A.M. gere todo o ciclo de vida dos seus clientes — do primeiro contacto ao contrato assinado. Sem processos manuais, sem e-mails perdidos, sem prazos ultrapassados.",

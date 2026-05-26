@@ -10,6 +10,7 @@ import { Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 function statusStyle(status: ProposalStatus): string {
   switch (status) {
@@ -77,7 +78,15 @@ export default function ProposalsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-serif font-semibold text-foreground">Proposals</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Proposals</h1>
+          <ContextualHelp
+            id="client-proposals"
+            title="Proposals"
+            description="Your proposal defines the agreed scope and investment for your engagement. Review it carefully before confirming."
+            position="right"
+          />
+        </div>
         <p className="text-muted text-sm mt-1">Review proposals from Andy&apos;K Group.</p>
       </div>
 

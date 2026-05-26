@@ -9,6 +9,7 @@ import type { KycVerification, KycDocumentType, KycDocument } from "@/lib/supaba
 import { User, Mail, ShieldCheck, ShieldX, Clock, Upload, FileText, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 const DOC_SLOTS: { type: KycDocumentType; label: string; required: boolean }[] = [
   { type: "registry_extract",  label: "Company Registry Extract", required: true },
@@ -196,7 +197,15 @@ export default function ProfilePage() {
       {user.role === "client" && (
         <div>
           <div className="mb-4">
-            <h2 className="text-lg font-serif font-semibold text-foreground">KYC Verification</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-serif font-semibold text-foreground">KYC Verification</h2>
+              <ContextualHelp
+                id="client-kyc"
+                title="KYC Verification"
+                description="KYC verification is required before your contract can be activated. Please upload the requested documents."
+                position="right"
+              />
+            </div>
             <p className="text-sm text-muted-2 mt-0.5">
               Required before contract signing. All documents are stored securely.
             </p>

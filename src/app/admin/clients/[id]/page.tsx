@@ -33,6 +33,7 @@ import KycTab from "@/components/admin/KycTab";
 import { buildStrategyTemplate } from "@/lib/strategy-templates";
 import type { StrategyTemplateKey } from "@/lib/strategy-templates";
 import InternalNotes from "@/components/admin/InternalNotes";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -343,6 +344,12 @@ export default function ClientDetailPage() {
                 >
                   <RefreshCw className={cn("h-3 w-3", healthScoreLoading && "animate-spin")} />
                 </button>
+                <ContextualHelp
+                  id="client-health-score"
+                  title="Health Score"
+                  description="Health Score reflects this client's operational engagement, payment behaviour and implementation participation."
+                  position="bottom"
+                />
               </div>
             </div>
             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
@@ -686,7 +693,19 @@ export default function ClientDetailPage() {
       )}
 
       {activeTab === "kyc" && (
-        <KycTab clientId={clientId} />
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-sm font-semibold text-foreground">KYC Verification</h3>
+            <ContextualHelp
+              id="admin-client-kyc"
+              title="KYC Verification"
+              description="KYC verifies the client's legal identity and company registration before contract activation."
+              why="KYC exists to ensure regulatory compliance and protect Andy'K Group from fraudulent engagements."
+              position="right"
+            />
+          </div>
+          <KycTab clientId={clientId} />
+        </div>
       )}
 
       {activeTab === "reports" && (

@@ -7,6 +7,7 @@ import type { Milestone, MilestoneStatus } from "@/lib/supabase/types";
 import { Calendar, CheckCircle2, Circle, Clock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 const STATUS_CONFIG: Record<MilestoneStatus, { label: string; icon: React.ElementType; dot: string; text: string; bg: string }> = {
   pending:     { label: "Pending",     icon: Circle,       dot: "bg-muted-2",  text: "text-muted",   bg: "bg-grid-300/60" },
@@ -52,7 +53,15 @@ export default function DashboardMilestonesPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-serif font-semibold text-foreground">Project Milestones</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Project Milestones</h1>
+          <ContextualHelp
+            id="client-milestones"
+            title="Milestones"
+            description="Milestones track the progress of your implementation. Each milestone represents a key delivery checkpoint."
+            position="right"
+          />
+        </div>
         <p className="text-muted text-sm mt-1">Track your project progress with Andy&#8217;K Group.</p>
       </div>
 

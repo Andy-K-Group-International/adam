@@ -10,6 +10,7 @@ import type { Client, StrategyType } from "@/lib/supabase/types";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Search, FileText, ArrowRight, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 type FilterType = "all" | StrategyType;
 
@@ -62,7 +63,16 @@ export default function StrategyPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-serif font-semibold text-foreground">Strategy</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-serif font-semibold text-foreground">Strategy</h1>
+            <ContextualHelp
+              id="admin-strategy"
+              title="Strategy"
+              description="Strategies are implementation-focused operational blueprints. They define HOW each client engagement will be executed."
+              why="Strategies exist to reduce implementation chaos and align operational direction before contract activation."
+              position="right"
+            />
+          </div>
           <p className="text-sm text-muted-2 mt-0.5">
             Strategic plans and templates for all active clients
           </p>

@@ -10,6 +10,7 @@ import { Plus, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 function statusStyle(status: InvoiceStatus): string {
   switch (status) {
@@ -89,7 +90,15 @@ export default function AdminInvoicesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-serif font-semibold text-foreground">Invoices</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-serif font-semibold text-foreground">Invoices</h1>
+            <ContextualHelp
+              id="admin-invoices"
+              title="Invoices"
+              description="Invoices track all financial transactions. Implementation begins only after initial payment is confirmed."
+              position="right"
+            />
+          </div>
           <p className="text-muted text-sm mt-1">Manage billing and payments.</p>
         </div>
         <Link

@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
 
 type StatusFilter = "" | ProposalStatus;
 
@@ -67,7 +68,16 @@ export default function ProposalsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-serif font-semibold text-foreground">Proposals</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-serif font-semibold text-foreground">Proposals</h1>
+            <ContextualHelp
+              id="admin-proposals"
+              title="Proposals"
+              description="Proposals define the recommended operational scope and investment before implementation begins."
+              why="Proposals exist to align expectations and lock commercial terms before any implementation work starts."
+              position="right"
+            />
+          </div>
           <p className="text-muted text-sm mt-1">{proposals.length} proposal{proposals.length !== 1 ? "s" : ""}</p>
         </div>
         <Link

@@ -8,6 +8,8 @@ import StatusCards from "@/components/dashboard/StatusCards";
 import ContractCard from "@/components/dashboard/ContractCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContextualHelp from "@/components/ui/ContextualHelp";
+import WelcomePopover from "@/components/dashboard/WelcomePopover";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function DashboardPage() {
@@ -48,9 +50,18 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <WelcomePopover />
       <div className="mb-8">
         <p className="label-mono mb-2">A.D.A.M. Client Portal</p>
-        <h1 className="text-2xl font-serif font-semibold text-foreground">Your Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-serif font-semibold text-foreground">Your Dashboard</h1>
+          <ContextualHelp
+            id="client-dashboard"
+            title="Your Dashboard"
+            description="Welcome to your A.D.A.M. client portal. Here you can track your onboarding progress and access your documents."
+            position="right"
+          />
+        </div>
         <p className="text-muted text-sm mt-1">Welcome back. Here&apos;s your overview.</p>
       </div>
 
@@ -62,9 +73,15 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2">
-          <h2 className="text-base font-semibold text-foreground mb-4">
-            Your Contracts
-          </h2>
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-base font-semibold text-foreground">Your Contracts</h2>
+            <ContextualHelp
+              id="client-contracts"
+              title="Contracts"
+              description="Your contract formalises the agreed terms. Please read all sections before signing."
+              position="right"
+            />
+          </div>
           {(contracts || []).length === 0 ? (
             <div className="bg-white rounded-xl border border-grid-300 p-8 text-center">
               <p className="text-muted-2">No contracts yet</p>

@@ -41,7 +41,7 @@ export default function ContactForm() {
   };
 
   return (
-    <section id="contact" className="py-20 px-8 section-radial-bg">
+    <section className="py-20 px-8 section-radial-bg">
       <div className="max-w-[600px] mx-auto">
         <SectionHeader
           label="CONTACT"

@@ -9,8 +9,10 @@ export const siteConfig = {
 };
 
 export const navLinks = [
-  { label: "Process", href: "#process" },
+  { label: "Features", href: "#process" },
   { label: "Pricing", href: "#pricing" },
+  { label: "Demo", href: "/demo" },
+  { label: "Contact", href: "#contact" },
 ];
 
 export const heroData = {

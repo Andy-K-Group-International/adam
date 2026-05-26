@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getClientById, updateClient } from "@/lib/supabase/queries/clients";
 import { listForClient as listActivitiesForClient } from "@/lib/supabase/queries/activity-log";
@@ -54,20 +54,23 @@ const stageLabels: Record<string, string> = {
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "kyc" | "activity";
+  | "kickoff" | "kyc" | "reports" | "activity";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
 export default function ClientDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const clientId = params.id as string;
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const initialTab = (searchParams.get("tab") as Tab) || "overview";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   const [client, setClient] = useState<(Client & { contracts: any[] }) | null | undefined>(undefined);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [reports, setReports] = useState<import("@/lib/supabase/types").ClientReport[]>([]);
   const [reportCount, setReportCount] = useState(0);
 
   // Strategy state
@@ -133,6 +136,7 @@ export default function ClientDetailPage() {
         ]);
         setActivities(activitiesData);
         setContacts(contactsData);
+        setReports(reportsData);
         setReportCount(reportsData.length);
 
         if (clientData.questionnaire_id) {
@@ -164,6 +168,7 @@ export default function ClientDetailPage() {
     { key: "questionnaire", label: "Questionnaire" },
     { key: "kickoff",       label: "Kickoff" },
     { key: "kyc",           label: "KYC" },
+    { key: "reports",       label: `Reports${reportCount > 0 ? ` (${reportCount})` : ""}` },
     { key: "activity",      label: "Activity" },
   ];
 
@@ -680,6 +685,48 @@ export default function ClientDetailPage() {
 
       {activeTab === "kyc" && (
         <KycTab clientId={clientId} />
+      )}
+
+      {activeTab === "reports" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Client Reports</h3>
+            <Link
+              href={`/admin/reports/client/${clientId}/new`}
+              className="inline-flex items-center gap-2 bg-highlight text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-highlight/90 transition-colors"
+            >
+              <BarChart2 className="h-4 w-4" />
+              New Report
+            </Link>
+          </div>
+          {reports.length === 0 ? (
+            <div className="bg-white rounded-xl border border-grid-300 p-8 text-center">
+              <BarChart2 className="h-8 w-8 text-muted-2 mx-auto mb-2" />
+              <p className="text-sm text-muted-2">No reports yet for this client.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reports.map((r) => (
+                <div key={r.id} className="bg-white rounded-xl border border-grid-300 p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{r.title}</p>
+                    <p className="text-xs text-muted-2 mt-0.5">
+                      {r.period === "monthly" ? "Monthly" : "Quarterly"} · {formatDate(r.created_at)}
+                      {r.status === "sent" && <span className="ml-2 text-success">· Sent</span>}
+                      {r.status === "draft" && <span className="ml-2 text-warning">· Draft</span>}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/admin/reports/client/${clientId}/new?reportId=${r.id}`}
+                    className="text-xs text-highlight hover:underline"
+                  >
+                    View
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {activeTab === "activity" && (

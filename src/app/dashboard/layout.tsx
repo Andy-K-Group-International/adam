@@ -14,6 +14,16 @@ export default async function DashboardLayout({
     redirect("/sign-in");
   }
 
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "client") {
+    redirect("/admin");
+  }
+
   return (
     <div className="flex min-h-screen">
       <DashboardSidebar />

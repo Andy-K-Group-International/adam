@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { footerLinks, siteConfig } from "@/lib/data";
 
 export default function Footer() {
@@ -10,12 +9,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand column */}
           <div>
-            <Link
+            <a
               href="/"
               className="text-white font-bold text-xl tracking-tight block mb-3"
             >
               {siteConfig.name}
-            </Link>
+            </a>
             <p className="text-sm text-muted-2 leading-relaxed">
               {siteConfig.fullName}
             </p>
@@ -47,12 +46,14 @@ export default function Footer() {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
-                  <Link
+                  <a
                     href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-sm text-muted-2 hover:text-white transition-colors"
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>

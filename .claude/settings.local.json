@@ -41,7 +41,8 @@
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://kbdvsqdctgeirakpctoz.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MjIwNjQsImV4cCI6MjA5NTI5ODA2NH0.d3hISkhDVv4wOovH6zJZMhld-QhhmYE9Adi6x_N6Nzs SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTcyMjA2NCwiZXhwIjoyMDk1Mjk4MDY0fQ.8imZYuqWyxS1g_9vjOgBlNwsnc30zDjANyvFcmx2uJk npx tsx scripts/seed-questions.ts)",
       "Bash(vercel --version)",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://kbdvsqdctgeirakpctoz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTcyMjA2NCwiZXhwIjoyMDk1Mjk4MDY0fQ.8imZYuqWyxS1g_9vjOgBlNwsnc30zDjANyvFcmx2uJk npx tsx *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(vercel *)"
     ]
   }
 }

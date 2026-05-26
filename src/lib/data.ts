@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "A.D.A.M.",
-  fullName: "Automated Document & Account Manager",
+  fullName: "AI-Powered Business Development Operating System",
   company: "Andy'K Group International LTD",
   companyReg: "16453500",
   address: "86-90 Paul Street, London, EC2A 4NE",
@@ -345,18 +345,18 @@ export const integrationFeatures = [
 
 export const footerLinks = {
   company: [
-    { label: "About", href: "#about" },
-    { label: "Services", href: "#services" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Contact", href: "#contact" },
+    { label: "About", href: "https://andykgroup.com/about" },
+    { label: "Services", href: "https://andykgroup.com/#services" },
+    { label: "Pricing", href: "https://andykgroup.com/pricing" },
+    { label: "Contact", href: "https://andykgroup.com/contact" },
   ],
   legal: [
-    { label: "Privacy Policy", href: "/#" },
-    { label: "Terms of Service", href: "/#" },
-    { label: "Cookie Policy", href: "/#" },
+    { label: "Privacy Policy", href: "https://andykgroup.com/privacy-policy" },
+    { label: "Terms of Service", href: "https://andykgroup.com/terms-and-conditions" },
+    { label: "Cookie Policy", href: "https://andykgroup.com/cookies-policy" },
   ],
   connect: [
-    { label: "LinkedIn", href: "https://www.linkedin.com/company/80971657/" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/company/andyk-group-international" },
     { label: "Email", href: "mailto:info@andykgroup.com" },
   ],
 };

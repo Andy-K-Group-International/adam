@@ -31,12 +31,9 @@ export default function Hero() {
         className="mx-auto mb-4"
         priority
       />
-      <p className="gradient-text font-bold tracking-tight text-[clamp(2.375rem,1.6rem+2.75vw,3.75rem)] mb-2">
-        A.D.A.M.
-      </p>
-      <h1 className="gradient-text tracking-tight leading-[1.2] text-[clamp(1.25rem,0.9rem+1.25vw,1.75rem)] mb-6 font-serif font-light italic">
-        <span className="block">AI-Powered Business Development</span>
-        <span className="block">
+      <h1 className="gradient-text font-bold tracking-tight leading-[1.2] text-[clamp(2.375rem,1.6rem+2.75vw,3.75rem)] mb-6">
+        <span className="block">A.D.A.M.</span>
+        <span className="block font-serif font-light italic text-[1.3em]">
           Operating System
         </span>
       </h1>

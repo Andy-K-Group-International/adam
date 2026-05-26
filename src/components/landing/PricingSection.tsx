@@ -4,21 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { pricingData, siteConfig } from "@/lib/data";
 import { cn } from "@/lib/utils";
-
-// ─── Currency ────────────────────────────────────────────────────────────────
-
-const CURRENCIES = [
-  { code: "GBP", symbol: "£", rate: 1 },
-  { code: "EUR", symbol: "€", rate: 1.18 },
-  { code: "USD", symbol: "$", rate: 1.27 },
-] as const;
-
-type CurrencyCode = (typeof CURRENCIES)[number]["code"];
-
-function formatPrice(gbp: number, symbol: string, rate: number): string {
-  const converted = Math.round(gbp * rate);
-  return `${symbol}${converted.toLocaleString()}`;
-}
+import { useCurrency } from "@/context/CurrencyContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 // ─── Check icon ──────────────────────────────────────────────────────────────
 
@@ -53,17 +40,18 @@ interface Plan {
 function PricingCard({
   plan,
   billing,
-  symbol,
-  rate,
+  billedAnnuallyLabel,
+  popularLabel,
 }: {
   plan: Plan;
   billing: "monthly" | "annual";
-  symbol: string;
-  rate: number;
+  billedAnnuallyLabel: string;
+  popularLabel: string;
 }) {
+  const { convert } = useCurrency();
   const isCustom = plan.monthlyGBP === null;
   const gbpPrice = billing === "annual" ? plan.annualGBP : plan.monthlyGBP;
-  const priceDisplay = isCustom ? "Custom" : formatPrice(gbpPrice!, symbol, rate);
+  const priceDisplay = isCustom ? "Custom" : convert(gbpPrice!, "GBP");
 
   return (
     <div
@@ -76,7 +64,7 @@ function PricingCard({
     >
       {plan.highlighted && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-[10px] uppercase tracking-widest font-mono bg-highlight text-white rounded-full">
-          Popular
+          {popularLabel}
         </span>
       )}
 
@@ -113,7 +101,7 @@ function PricingCard({
 
         {!isCustom && billing === "annual" && (
           <p className={cn("text-xs mt-1", plan.highlighted ? "text-white/50" : "text-muted-2")}>
-            billed annually · save 40%
+            {billedAnnuallyLabel} · save 40%
           </p>
         )}
       </div>
@@ -174,11 +162,10 @@ function PricingCard({
 type Tab = "internal" | "whitelabel";
 
 export default function PricingSection() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>("internal");
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
-  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("GBP");
 
-  const currency = CURRENCIES.find((c) => c.code === currencyCode)!;
   const activeData = tab === "internal" ? pricingData.internal : pricingData.whitelabel;
 
   return (
@@ -188,14 +175,10 @@ export default function PricingSection() {
         {/* Header */}
         <div className="text-center max-w-[700px] mx-auto mb-10">
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted-2 font-mono block mb-3">
-            Pricing
+            {t.pricing.label}
           </span>
           <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
-            Simple,{" "}
-            <span className="font-serif font-light italic text-[1.2em]">
-              transparent
-            </span>{" "}
-            pricing
+            {t.pricing.title}
           </h2>
         </div>
 
@@ -220,54 +203,34 @@ export default function PricingSection() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Billing toggle */}
-            <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
-              {(["monthly", "annual"] as const).map((b) => (
-                <button
-                  key={b}
-                  onClick={() => setBilling(b)}
-                  className={cn(
-                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-1.5",
-                    billing === b
-                      ? "bg-foreground text-white"
-                      : "text-muted hover:text-foreground"
-                  )}
-                >
-                  {b === "monthly" ? "Monthly" : "Annual"}
-                  {b === "annual" && (
-                    <span
-                      className={cn(
-                        "text-[10px] font-mono px-1.5 py-0.5 rounded-full",
-                        billing === "annual"
-                          ? "bg-highlight/20 text-highlight"
-                          : "bg-grid-300 text-muted-2"
-                      )}
-                    >
-                      −40%
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Currency switcher */}
-            <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
-              {CURRENCIES.map((c) => (
-                <button
-                  key={c.code}
-                  onClick={() => setCurrencyCode(c.code)}
-                  className={cn(
-                    "px-2.5 py-1.5 text-xs font-mono font-medium rounded-md transition-all duration-200",
-                    currencyCode === c.code
-                      ? "bg-foreground text-white"
-                      : "text-muted hover:text-foreground"
-                  )}
-                >
-                  {c.symbol} {c.code}
-                </button>
-              ))}
-            </div>
+          {/* Billing toggle */}
+          <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
+            {(["monthly", "annual"] as const).map((b) => (
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-1.5",
+                  billing === b
+                    ? "bg-foreground text-white"
+                    : "text-muted hover:text-foreground"
+                )}
+              >
+                {b === "monthly" ? t.pricing.monthly : t.pricing.annual}
+                {b === "annual" && (
+                  <span
+                    className={cn(
+                      "text-[10px] font-mono px-1.5 py-0.5 rounded-full",
+                      billing === "annual"
+                        ? "bg-highlight/20 text-highlight"
+                        : "bg-grid-300 text-muted-2"
+                    )}
+                  >
+                    −40%
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -290,8 +253,8 @@ export default function PricingSection() {
               key={plan.name}
               plan={plan}
               billing={billing}
-              symbol={currency.symbol}
-              rate={currency.rate}
+              billedAnnuallyLabel={t.pricing.billedAnnually}
+              popularLabel={t.pricing.popular}
             />
           ))}
         </div>

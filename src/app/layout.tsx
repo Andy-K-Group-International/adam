@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { CurrencyProvider } from "@/context/CurrencyContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const ibmPlexSans = IBM_Plex_Sans({
   variable: "--font-sans",
@@ -108,7 +110,11 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} ${playfairDisplay.variable} font-sans antialiased`}
       >
-        {children}
+        <LanguageProvider>
+          <CurrencyProvider>
+            {children}
+          </CurrencyProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

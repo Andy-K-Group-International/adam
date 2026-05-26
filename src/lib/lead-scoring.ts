@@ -7,6 +7,7 @@ export interface ShortQuestionnaireAnswers {
   business_description?: string;
   biggest_challenge?: string;
   website?: string;
+  document_uploaded?: boolean;
 }
 
 export interface ScoreDimension {
@@ -72,6 +73,10 @@ export function calculateLeadScore(answers: ShortQuestionnaireAnswers): LeadScor
     const svc = SERVICE_INTEREST[answers.service_interest] ?? { score: 0, label: answers.service_interest };
     dimensions.service_interest = { value: answers.service_interest, label: svc.label, score: svc.score, max: 10 };
     total += svc.score;
+  }
+
+  if (answers.service_interest === "end_to_end" && answers.document_uploaded) {
+    total += 20;
   }
 
   return { total, dimensions, scored_at: new Date().toISOString() };

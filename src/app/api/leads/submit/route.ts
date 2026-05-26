@@ -65,15 +65,18 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  const serviceInterest = answers.service_interest ? String(answers.service_interest) : null;
+  const isEndToEnd = serviceInterest === "end_to_end";
 
-  if (!isBusinessEmail(normalizedEmail)) {
+  if (!isEndToEnd && !isBusinessEmail(normalizedEmail)) {
     return NextResponse.json(
       { success: false, error: "Please use your business email address" },
       { status: 400, headers }
     );
   }
 
-  const serviceInterest = answers.service_interest ? String(answers.service_interest) : null;
+  const documentUrl = answers.document_url ? String(answers.document_url) : null;
+  const documentUploaded = !!documentUrl;
   const supabase = createAdminClient();
 
   // Rate limiting: 3 requests per IP per 24 hours
@@ -126,18 +129,23 @@ export async function POST(req: NextRequest) {
     business_description: answers.business_description ? String(answers.business_description) : undefined,
     biggest_challenge:    answers.biggest_challenge    ? String(answers.biggest_challenge)    : undefined,
     website:              answers.website              ? String(answers.website)              : undefined,
+    document_uploaded:    documentUploaded,
   });
 
-  // Auto-routing by score
+  // Auto-routing by score (E2E leads are never auto-rejected)
   let initialStatus: "new" | "qualified" | "rejected";
   let autoRejected = false;
   let coolingUntil: Date | null = null;
+  let requiresManualReview = false;
 
-  if (scoreResult.total < 40) {
+  if (!isEndToEnd && scoreResult.total < 40) {
     initialStatus = "rejected";
     autoRejected = true;
     coolingUntil = new Date();
     coolingUntil.setMonth(coolingUntil.getMonth() + 6);
+  } else if (isEndToEnd && !documentUploaded) {
+    initialStatus = "new";
+    requiresManualReview = true;
   } else if (scoreResult.total >= 60) {
     initialStatus = "qualified";
   } else {
@@ -150,6 +158,8 @@ export async function POST(req: NextRequest) {
     questionnaire:    { ...answers },
     scored_at:        scoreResult.scored_at,
     ...(serviceInterest ? { service_interest: serviceInterest } : {}),
+    ...(documentUrl ? { document_url: documentUrl } : {}),
+    ...(requiresManualReview ? { requires_manual_review: true } : {}),
   };
 
   const baseData = {
@@ -216,9 +226,15 @@ export async function POST(req: NextRequest) {
         breakdown:     scoreResult.dimensions,
         questionnaire: { ...answers },
         highPriority:  scoreResult.total >= 60,
+        isEndToEnd,
+        documentUrl,
       }),
     ]);
   }
 
-  return NextResponse.json({ success: true, message: "Application received." }, { status: 200, headers });
+  const message = isEndToEnd
+    ? "Your End-to-End application has been received. Our team will review it and be in touch within 48 hours."
+    : "Application received.";
+
+  return NextResponse.json({ success: true, message }, { status: 200, headers });
 }

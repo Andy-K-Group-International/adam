@@ -596,6 +596,8 @@ export async function sendLeadAdminNotification({
   breakdown,
   questionnaire,
   highPriority = false,
+  isEndToEnd = false,
+  documentUrl = null,
 }: {
   leadId: string;
   name: string;
@@ -611,6 +613,8 @@ export async function sendLeadAdminNotification({
   };
   questionnaire: Record<string, unknown>;
   highPriority?: boolean;
+  isEndToEnd?: boolean;
+  documentUrl?: string | null;
 }) {
   const services = Array.isArray(questionnaire.services)
     ? (questionnaire.services as string[]).join(", ")
@@ -670,16 +674,31 @@ export async function sendLeadAdminNotification({
     </table>
 
     ${questionnaire.business_description ? `<div style="margin-bottom:16px;"><p style="color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Business Description</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${questionnaire.business_description}</p></div>` : ""}
-    ${questionnaire.biggest_challenge ? `<div style="margin-bottom:28px;"><p style="color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Biggest Challenge</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${questionnaire.biggest_challenge}</p></div>` : ""}
+    ${questionnaire.biggest_challenge ? `<div style="margin-bottom:${isEndToEnd ? "16" : "28"}px;"><p style="color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Biggest Challenge</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${questionnaire.biggest_challenge}</p></div>` : ""}
+
+    ${isEndToEnd ? `<div style="background:#faf6f3;border-left:2px solid ${documentUrl ? "#2e7d5e" : "#c9707d"};padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px;">Supporting Document</p>
+      ${documentUrl
+        ? `<a href="${documentUrl}" style="color:#2e7d5e;font-size:14px;font-weight:600;text-decoration:none;">&#8681; Download Document</a>`
+        : `<p style="color:#c9707d;font-size:14px;font-weight:600;margin:0;">&#9888; Not uploaded &mdash; manual review required</p>`}
+    </div>` : ""}
 
     <a href="${reviewUrl}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Lead &#8594;</a>
   `);
 
+  const subject = isEndToEnd
+    ? `🔴 End-to-End Application: ${company || name} — Score: ${score}/100`
+    : `${highPriority ? "🔴 HIGH PRIORITY — " : ""}New lead: ${company || name} — Score: ${score}/100`;
+
+  const documentLine = isEndToEnd
+    ? `\nDocument: ${documentUrl ? documentUrl : "⚠ Not uploaded — manual review required"}`
+    : "";
+
   return await sendEmail({
     to: "ceo@andykgroup.com",
     from: "info@andykgroup.com",
-    subject: `${highPriority ? "🔴 HIGH PRIORITY — " : ""}New lead: ${company || name} — Score: ${score}/100`,
-    text: `New lead submitted via andykgroup.com\n\nCompany: ${company || "—"}\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "—"}\nScore: ${score}/100\n\nScore Breakdown:\n${breakdownText}\n\nServices: ${services}\nBusiness: ${questionnaire.business_description || "—"}\nChallenge: ${questionnaire.biggest_challenge || "—"}\n\nReview: ${reviewUrl}`,
+    subject,
+    text: `New lead submitted via andykgroup.com\n\nCompany: ${company || "—"}\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "—"}\nScore: ${score}/100\n\nScore Breakdown:\n${breakdownText}\n\nServices: ${services}\nBusiness: ${questionnaire.business_description || "—"}\nChallenge: ${questionnaire.biggest_challenge || "—"}${documentLine}\n\nReview: ${reviewUrl}`,
     html,
   });
 }

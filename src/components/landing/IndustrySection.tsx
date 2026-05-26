@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/context/LanguageContext";
+
 const industries = [
   {
     label: "Hospitality",
@@ -86,10 +90,6 @@ const industries = [
     ),
   },
 ];
-
-"use client";
-
-import { useLanguage } from "@/context/LanguageContext";
 
 export default function IndustrySection() {
   const { t } = useLanguage();

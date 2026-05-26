@@ -17,7 +17,7 @@ export default function LandingShell() {
   return (
     <LanguageProvider>
       <CurrencyProvider>
-        <main className="overflow-x-hidden">
+        <main className="[overflow-x:clip]">
           <Navbar />
           <div className="relative overflow-clip">
             <HeroBackground />

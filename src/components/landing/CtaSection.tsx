@@ -1,23 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import { siteConfig } from "@/lib/data";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CtaSection() {
+  const { t } = useLanguage();
+
   return (
     <section id="contact" className="bg-foreground py-20 px-8">
       <div className="max-w-[800px] mx-auto text-center">
         <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-white mb-4">
-          Ready to transform your operations?
+          {t.cta.heading}
         </h2>
         <p className="text-lg text-muted-2 font-light leading-relaxed mb-8 max-w-xl mx-auto">
-          Start your journey with {siteConfig.name}. Complete our questionnaire
-          and let us build a tailored solution for your business.
+          {t.cta.sub}
         </p>
 
         <Link
           href="/questionnaire"
           className="relative inline-flex items-center justify-center h-12 px-8 text-sm font-medium text-foreground btn-primary-gradient"
         >
-          <span className="relative z-10">Apply for Access</span>
+          <span className="relative z-10">{t.cta.button}</span>
         </Link>
 
         <div className="mt-10 pt-8 border-t border-white/10">

@@ -289,10 +289,10 @@ export const integrationFeatures = [
 
 export const footerLinks = {
   company: [
-    { label: "About", href: "https://andykgroup.com/about" },
+    { label: "About", href: "https://andykgroup.com/#about" },
     { label: "Services", href: "https://andykgroup.com/#services" },
-    { label: "Pricing", href: "https://andykgroup.com/pricing" },
-    { label: "Contact", href: "https://andykgroup.com/contact" },
+    { label: "Pricing", href: "https://andykgroup.com/#pricing" },
+    { label: "Contact", href: "https://andykgroup.com/#contact" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },

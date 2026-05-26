@@ -533,7 +533,7 @@ export default function ClientDetailPage() {
           <div className="bg-white rounded-xl border border-grid-300 p-5">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-xs font-semibold text-muted uppercase tracking-wider">Strategy Type</label>
-              {strategyType && strategyType !== "b2b" && (
+              {!!strategyType && (
                 <button
                   type="button"
                   onClick={() => {
@@ -556,10 +556,9 @@ export default function ClientDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {([
-                { value: "b2b",          label: "B2B" },
                 { value: "b2g",          label: "B2G" },
                 { value: "adam_license", label: "A.D.A.M. License" },
-                { value: "end_to_end",   label: "End-to-End" },
+                { value: "end_to_end",   label: "End-to-End Business Development" },
               ] as { value: StrategyType; label: string }[]).map((opt) => (
                 <button
                   key={opt.value}

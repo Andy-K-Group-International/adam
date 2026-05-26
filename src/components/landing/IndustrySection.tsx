@@ -87,24 +87,28 @@ const industries = [
   },
 ];
 
+"use client";
+
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function IndustrySection() {
+  const { t } = useLanguage();
+
   return (
     <section className="relative py-20 px-8">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center max-w-[680px] mx-auto mb-12">
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted-2 font-mono block mb-3">
-            Industries
+            {t.industry.label}
           </span>
           <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
-            Built for{" "}
+            {t.industry.headingPrefix}{" "}
             <span className="font-serif font-light italic text-[1.2em]">
-              any industry
+              {t.industry.headingItalic}
             </span>
           </h2>
           <p className="text-lg leading-relaxed text-muted font-light">
-            A.D.A.M. adapts to your business segment. After onboarding, we configure the
-            system specifically for your industry — workflows, documents, and processes
-            tailored to how you operate.
+            {t.industry.description}
           </p>
         </div>
 

@@ -45,7 +45,9 @@
       "Bash(vercel *)",
       "Bash(ssh data-server *)",
       "Read(//Users/andrejkneisl/andyk-landing/src/**)",
-      "Read(//Users/andrejkneisl/Desktop/**)"
+      "Read(//Users/andrejkneisl/Desktop/**)",
+      "Bash(sed -n '1,30p' /Users/andrejkneisl/adam/src/lib/data.ts)",
+      "Bash(sed -n '288,330p' /Users/andrejkneisl/adam/src/lib/data.ts)"
     ]
   }
 }

@@ -54,7 +54,7 @@ export default function Hero() {
           Andy'K Group International LTD
         </a>
         <br/>
-        <span className="font-bold"> Ready to automate your business?</span>
+        <span className="font-bold"> Ready to transform your operations?</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="inline w-4 h-4 ml-1 -mt-0.5 text-muted-2"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </p>
 
@@ -71,7 +71,7 @@ export default function Hero() {
           type="submit"
           className="relative inline-flex items-center justify-center h-12 px-5 text-sm font-medium text-foreground btn-primary-gradient w-full sm:w-auto shrink-0 cursor-pointer"
         >
-          <span className="relative z-10">Start Questionnaire</span>
+          <span className="relative z-10">Apply for Access</span>
         </button>
       </form>
     </section>

@@ -296,8 +296,14 @@ export default function PricingSection() {
           ))}
         </div>
 
+        {/* Implementation note */}
+        <p className="text-center text-sm text-muted mt-8 max-w-[580px] mx-auto leading-relaxed">
+          All plans include a complimentary implementation phase.{" "}
+          <span className="text-foreground font-medium">Billing begins only after your system is operationally activated.</span>
+        </p>
+
         {/* Custom quote CTA */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-8">
           <p className="text-sm text-muted mb-3">
             Need a tailored solution for your organisation?
           </p>

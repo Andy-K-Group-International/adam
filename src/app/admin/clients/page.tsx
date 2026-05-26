@@ -6,6 +6,7 @@ import { listClients } from "@/lib/supabase/queries/clients";
 import type { Client } from "@/lib/supabase/types";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
+import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -102,6 +103,9 @@ export default function ClientsPage() {
                   Stage
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
+                  Health
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
                   Created
                 </th>
               </tr>
@@ -109,7 +113,7 @@ export default function ClientsPage() {
             <tbody>
               {(clients || []).length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-muted-2">
+                  <td colSpan={5} className="text-center py-12 text-muted-2">
                     {search ? "No clients found matching your search." : "No clients yet."}
                   </td>
                 </tr>
@@ -149,6 +153,9 @@ export default function ClientsPage() {
                       >
                         {stageLabels[client.stage] || client.stage}
                       </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <HealthScoreBadge score={client.health_score ?? null} />
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
                       {formatDate(client.created_at)}

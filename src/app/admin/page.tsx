@@ -11,9 +11,66 @@ import StatsCards from "@/components/admin/StatsCards";
 import ActionItems from "@/components/admin/ActionItems";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
+import Link from "next/link";
+
+// ─── At Risk widget ───────────────────────────────────────────────────────────
+
+type ClientWithHealth = Client & { primary_contact: { name: string; email: string } | null };
+
+const stageLabels: Record<string, string> = {
+  questionnaire: "Questionnaire",
+  proposal: "Proposal",
+  strategy: "Strategy",
+  contract: "Contract",
+  invoice: "Invoice",
+  kickoff: "Kick-off",
+};
+
+function AtRiskWidget({ clients }: { clients: ClientWithHealth[] }) {
+  const atRisk = clients
+    .filter((c) => c.health_score !== null && c.health_score < 60)
+    .sort((a, b) => (a.health_score ?? 0) - (b.health_score ?? 0));
+
+  if (atRisk.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-base font-semibold text-foreground mb-4">
+        At Risk Clients
+        <span className="ml-2 text-xs font-mono font-normal text-muted-2">health score &lt; 60</span>
+      </h2>
+      <div className="bg-white rounded-xl border border-grid-300 divide-y divide-grid-300 overflow-hidden">
+        {atRisk.map((client) => (
+          <Link
+            key={client.id}
+            href={`/admin/clients/${client.id}`}
+            className="flex items-center gap-4 px-5 py-3.5 hover:bg-grid-300/20 transition-colors group"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-highlight transition-colors">
+                {client.company_name}
+              </p>
+              <p className="text-xs text-muted-2">
+                {stageLabels[client.stage] ?? client.stage}
+                {client.primary_contact && (
+                  <> &middot; {client.primary_contact.name}</>
+                )}
+              </p>
+            </div>
+            <HealthScoreBadge score={client.health_score ?? null} showBar size="sm" />
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
-  const [clients, setClients] = useState<Client[] | undefined>(undefined);
+  type ClientWithHealth = Client & { primary_contact: { name: string; email: string } | null };
+  const [clients, setClients] = useState<ClientWithHealth[] | undefined>(undefined);
   const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
   const [activities, setActivities] = useState<ActivityLog[] | undefined>(undefined);
@@ -146,6 +203,9 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* At Risk clients */}
+      <AtRiskWidget clients={clients || []} />
     </div>
   );
 }

@@ -6,7 +6,7 @@ export default function CtaSection() {
     <section className="bg-foreground py-20 px-8">
       <div className="max-w-[800px] mx-auto text-center">
         <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-white mb-4">
-          Ready to automate?
+          Ready to transform your operations?
         </h2>
         <p className="text-lg text-muted-2 font-light leading-relaxed mb-8 max-w-xl mx-auto">
           Start your journey with {siteConfig.name}. Complete our questionnaire
@@ -17,7 +17,7 @@ export default function CtaSection() {
           href="/questionnaire"
           className="relative inline-flex items-center justify-center h-12 px-8 text-sm font-medium text-foreground btn-primary-gradient"
         >
-          <span className="relative z-10">Start Questionnaire</span>
+          <span className="relative z-10">Apply for Access</span>
         </Link>
 
         <div className="mt-10 pt-8 border-t border-white/10">

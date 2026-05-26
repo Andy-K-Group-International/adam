@@ -22,6 +22,8 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContactsTab from "@/components/admin/ContactsTab";
 import { listContacts } from "@/lib/supabase/queries/contacts";
 import type { Contact } from "@/lib/supabase/types";
+import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
+import { RefreshCw } from "lucide-react";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -60,6 +62,25 @@ export default function ClientDetailPage() {
   const [strategyNotes, setStrategyNotes] = useState("");
   const [isSavingStrategy, setIsSavingStrategy] = useState(false);
   const [isCreatingProposal, setIsCreatingProposal] = useState(false);
+
+  // Health score
+  const [healthScoreLoading, setHealthScoreLoading] = useState(false);
+
+  const recalculateHealthScore = async () => {
+    setHealthScoreLoading(true);
+    try {
+      const res = await fetch(`/api/clients/${clientId}/health-score`, { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setClient((prev) => prev
+          ? { ...prev, health_score: json.score, health_score_updated_at: new Date().toISOString() }
+          : prev
+        );
+      }
+    } catch { /* silent */ } finally {
+      setHealthScoreLoading(false);
+    }
+  };
 
   // Kickoff state
   const [kickoffDate, setKickoffDate] = useState("");
@@ -246,7 +267,7 @@ export default function ClientDetailPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-serif font-semibold text-foreground">
                 {client.company_name}
               </h1>
@@ -258,6 +279,17 @@ export default function ClientDetailPage() {
               >
                 {stageLabels[client.stage] || client.stage}
               </span>
+              <div className="flex items-center gap-1.5">
+                <HealthScoreBadge score={client.health_score ?? null} size="sm" />
+                <button
+                  onClick={recalculateHealthScore}
+                  disabled={healthScoreLoading}
+                  title="Recalculate health score"
+                  className="h-5 w-5 flex items-center justify-center text-muted-2 hover:text-foreground transition-colors disabled:opacity-40"
+                >
+                  <RefreshCw className={cn("h-3 w-3", healthScoreLoading && "animate-spin")} />
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
               {client.client_ref && (

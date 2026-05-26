@@ -146,6 +146,8 @@ export interface Client {
   kickoff_notes: string | null;
   kickoff_checklist: { id: string; label: string; checked: boolean }[];
   kickoff_confirmed_at: string | null;
+  health_score: number | null;
+  health_score_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }

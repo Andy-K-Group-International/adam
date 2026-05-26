@@ -12,7 +12,7 @@ export const CURRENCIES: { code: CurrencyCode; symbol: string; label: string }[]
 export type ExchangeRates = Record<CurrencyCode, number>;
 
 // Fallback rates (USD = 1 base)
-const FALLBACK_RATES: ExchangeRates = {
+export const FALLBACK_RATES: ExchangeRates = {
   USD: 1,
   GBP: 0.79,
   EUR: 0.92,

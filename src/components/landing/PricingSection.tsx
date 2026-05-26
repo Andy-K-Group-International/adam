@@ -187,18 +187,18 @@ export default function PricingSection() {
 
           {/* Tab switcher */}
           <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
-            {(["internal", "whitelabel"] as Tab[]).map((t) => (
+            {(["internal", "whitelabel"] as Tab[]).map((tabId) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
+                key={tabId}
+                onClick={() => setTab(tabId)}
                 className={cn(
                   "px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
-                  tab === t
+                  tab === tabId
                     ? "bg-foreground text-white"
                     : "text-muted hover:text-foreground"
                 )}
               >
-                {t === "internal" ? "Internal Use" : "White-label"}
+                {tabId === "internal" ? "Internal Use" : "White-label"}
               </button>
             ))}
           </div>

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { CurrencyCode, ExchangeRates } from "@/lib/currency";
-import { CURRENCIES, fetchRates, convertPrice, formatPrice } from "@/lib/currency";
+import { CURRENCIES, FALLBACK_RATES, fetchRates, convertPrice, formatPrice } from "@/lib/currency";
 
 const COOKIE_KEY = "adam-currency";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -46,7 +46,7 @@ interface CurrencyContextValue {
   setCurrency: (code: CurrencyCode) => void;
   convert: (amount: number, from: CurrencyCode) => string;
   convertRaw: (amount: number, from: CurrencyCode) => number;
-  rates: ExchangeRates | null;
+  rates: ExchangeRates;
   ready: boolean;
 }
 
@@ -55,13 +55,15 @@ const CurrencyContext = createContext<CurrencyContextValue>({
   setCurrency: () => {},
   convert: (amount) => `£${amount}`,
   convertRaw: (amount) => amount,
-  rates: null,
-  ready: false,
+  rates: FALLBACK_RATES,
+  ready: true,
 });
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>("GBP");
-  const [rates, setRates] = useState<ExchangeRates | null>(null);
+  // Start with fallback rates so conversion works immediately on first render
+  const [rates, setRates] = useState<ExchangeRates>(FALLBACK_RATES);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const saved = getCookie(COOKIE_KEY) as CurrencyCode | null;
@@ -79,27 +81,26 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    fetchRates().then(setRates);
+    fetchRates().then((r) => {
+      setRates(r);
+      setReady(true);
+    });
   }, []);
 
   const convert = useCallback(
-    (amount: number, from: CurrencyCode): string => {
-      if (!rates) return formatPrice(amount, from);
-      return formatPrice(convertPrice(amount, from, currency, rates), currency);
-    },
+    (amount: number, from: CurrencyCode): string =>
+      formatPrice(convertPrice(amount, from, currency, rates), currency),
     [rates, currency]
   );
 
   const convertRaw = useCallback(
-    (amount: number, from: CurrencyCode): number => {
-      if (!rates) return amount;
-      return convertPrice(amount, from, currency, rates);
-    },
+    (amount: number, from: CurrencyCode): number =>
+      convertPrice(amount, from, currency, rates),
     [rates, currency]
   );
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, convert, convertRaw, rates, ready: !!rates }}>
+    <CurrencyContext.Provider value={{ currency, setCurrency, convert, convertRaw, rates, ready }}>
       {children}
     </CurrencyContext.Provider>
   );

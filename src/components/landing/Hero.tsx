@@ -37,8 +37,11 @@ export default function Hero() {
           Operating System
         </span>
       </h1>
-      <p className="text-xl leading-relaxed text-muted font-light max-w-[620px] mx-auto mb-3">
+      <p className="text-xl leading-relaxed text-muted font-light max-w-[620px] mx-auto mb-2">
         From first contact to <span className="italic font-normal">signed contract</span> — A.D.A.M. automates your entire client lifecycle. Proposals, contracts, invoices and onboarding in one intelligent system.
+      </p>
+      <p className="text-base leading-relaxed text-muted-2 font-light max-w-[560px] mx-auto mb-3">
+        Whether you&rsquo;re managing your own clients or building a platform for others — A.D.A.M. scales with your business model.
       </p>
       <p className="text-base leading-relaxed text-muted-2 font-light max-w-[540px] mx-auto mb-9">
         By{" "}

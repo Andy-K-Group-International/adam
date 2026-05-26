@@ -1,12 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { pricingData, siteConfig } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
+// ─── Currency ────────────────────────────────────────────────────────────────
+
+const CURRENCIES = [
+  { code: "GBP", symbol: "£", rate: 1 },
+  { code: "EUR", symbol: "€", rate: 1.18 },
+  { code: "USD", symbol: "$", rate: 1.27 },
+] as const;
+
+type CurrencyCode = (typeof CURRENCIES)[number]["code"];
+
+function formatPrice(gbp: number, symbol: string, rate: number): string {
+  const converted = Math.round(gbp * rate);
+  return `${symbol}${converted.toLocaleString()}`;
+}
+
+// ─── Check icon ──────────────────────────────────────────────────────────────
+
 function CheckIcon({ highlighted }: { highlighted?: boolean }) {
   return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className={cn("w-4 h-4 shrink-0", highlighted ? "text-highlight" : "text-highlight")}>
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={cn("w-4 h-4 shrink-0", highlighted ? "text-rose" : "text-highlight")}
+    >
       <path
         fillRule="evenodd"
         d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -16,17 +38,33 @@ function CheckIcon({ highlighted }: { highlighted?: boolean }) {
   );
 }
 
-interface PlanData {
+// ─── Plan card ───────────────────────────────────────────────────────────────
+
+interface Plan {
   name: string;
-  price: string;
-  period: string;
+  monthlyGBP: number | null;
+  annualGBP: number | null;
   description: string;
   features: string[];
   cta: string;
   highlighted: boolean;
 }
 
-function PricingCard({ plan }: { plan: PlanData }) {
+function PricingCard({
+  plan,
+  billing,
+  symbol,
+  rate,
+}: {
+  plan: Plan;
+  billing: "monthly" | "annual";
+  symbol: string;
+  rate: number;
+}) {
+  const isCustom = plan.monthlyGBP === null;
+  const gbpPrice = billing === "annual" ? plan.annualGBP : plan.monthlyGBP;
+  const priceDisplay = isCustom ? "Custom" : formatPrice(gbpPrice!, symbol, rate);
+
   return (
     <div
       className={cn(
@@ -51,23 +89,32 @@ function PricingCard({ plan }: { plan: PlanData }) {
         >
           {plan.name}
         </h4>
-        <span
-          className={cn(
-            "text-3xl font-bold tracking-tight",
-            plan.highlighted ? "text-white" : "text-foreground"
-          )}
-        >
-          {plan.price}
-        </span>
-        {plan.period && (
+
+        <div className="flex items-end gap-1">
           <span
             className={cn(
-              "text-sm ml-1",
-              plan.highlighted ? "text-white/60" : "text-muted-2"
+              "text-3xl font-bold tracking-tight",
+              plan.highlighted ? "text-white" : "text-foreground"
             )}
           >
-            {plan.period}
+            {priceDisplay}
           </span>
+          {!isCustom && (
+            <span
+              className={cn(
+                "text-sm mb-0.5",
+                plan.highlighted ? "text-white/60" : "text-muted-2"
+              )}
+            >
+              /mo
+            </span>
+          )}
+        </div>
+
+        {!isCustom && billing === "annual" && (
+          <p className={cn("text-xs mt-1", plan.highlighted ? "text-white/50" : "text-muted-2")}>
+            billed annually · save 40%
+          </p>
         )}
       </div>
 
@@ -104,7 +151,11 @@ function PricingCard({ plan }: { plan: PlanData }) {
       </ul>
 
       <Link
-        href={plan.cta === "Request Quote" ? `mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan` : "/questionnaire"}
+        href={
+          plan.cta === "Request Quote"
+            ? `mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan`
+            : "/questionnaire"
+        }
         className={cn(
           "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
           plan.highlighted
@@ -118,61 +169,137 @@ function PricingCard({ plan }: { plan: PlanData }) {
   );
 }
 
+// ─── Section ─────────────────────────────────────────────────────────────────
+
+type Tab = "internal" | "whitelabel";
+
 export default function PricingSection() {
-  const plans = pricingData.tech.plans;
-  const addon = pricingData.tech.addon;
+  const [tab, setTab] = useState<Tab>("internal");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>("GBP");
+
+  const currency = CURRENCIES.find((c) => c.code === currencyCode)!;
+  const activeData = tab === "internal" ? pricingData.internal : pricingData.whitelabel;
 
   return (
     <section id="pricing" className="relative py-20 px-8">
       <div className="max-w-[1200px] mx-auto">
+
         {/* Header */}
-        <div className="text-center max-w-[700px] mx-auto mb-12">
+        <div className="text-center max-w-[700px] mx-auto mb-10">
           <span className="text-[10px] uppercase tracking-[0.25em] text-muted-2 font-mono block mb-3">
             Pricing
           </span>
           <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
-            Choose Your{" "}
+            Simple,{" "}
             <span className="font-serif font-light italic text-[1.2em]">
-              Plan
-            </span>
+              transparent
+            </span>{" "}
+            pricing
           </h2>
-          <p className="text-lg leading-relaxed text-muted font-light">
-            {pricingData.tech.subtitle}
-          </p>
         </div>
+
+        {/* Controls row */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-[960px] mx-auto mb-10">
+
+          {/* Tab switcher */}
+          <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
+            {(["internal", "whitelabel"] as Tab[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200",
+                  tab === t
+                    ? "bg-foreground text-white"
+                    : "text-muted hover:text-foreground"
+                )}
+              >
+                {t === "internal" ? "Internal Use" : "White-label"}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Billing toggle */}
+            <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
+              {(["monthly", "annual"] as const).map((b) => (
+                <button
+                  key={b}
+                  onClick={() => setBilling(b)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-1.5",
+                    billing === b
+                      ? "bg-foreground text-white"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  {b === "monthly" ? "Monthly" : "Annual"}
+                  {b === "annual" && (
+                    <span
+                      className={cn(
+                        "text-[10px] font-mono px-1.5 py-0.5 rounded-full",
+                        billing === "annual"
+                          ? "bg-highlight/20 text-highlight"
+                          : "bg-grid-300 text-muted-2"
+                      )}
+                    >
+                      −40%
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Currency switcher */}
+            <div className="flex rounded-lg border border-grid-300 bg-white p-1 gap-1">
+              {CURRENCIES.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => setCurrencyCode(c.code)}
+                  className={cn(
+                    "px-2.5 py-1.5 text-xs font-mono font-medium rounded-md transition-all duration-200",
+                    currencyCode === c.code
+                      ? "bg-foreground text-white"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  {c.symbol} {c.code}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <p className="text-center text-base text-muted font-light max-w-[560px] mx-auto mb-10">
+          {activeData.subtitle}
+        </p>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[960px] mx-auto">
-          {plans.map((plan) => (
-            <PricingCard key={plan.name} plan={plan} />
+        <div
+          className={cn(
+            "grid gap-6 mx-auto",
+            tab === "internal"
+              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 max-w-[1200px]"
+              : "grid-cols-1 md:grid-cols-3 max-w-[960px]"
+          )}
+        >
+          {activeData.plans.map((plan) => (
+            <PricingCard
+              key={plan.name}
+              plan={plan}
+              billing={billing}
+              symbol={currency.symbol}
+              rate={currency.rate}
+            />
           ))}
-        </div>
-
-        {/* Branding Add-on */}
-        <div className="max-w-[960px] mx-auto mt-8">
-          <div className="relative rounded-xl border border-grid-300 bg-white p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-foreground/5 flex items-center justify-center shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5 text-foreground">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-foreground">{addon.name}</h4>
-                <p className="text-sm text-muted">{addon.description}</p>
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-foreground whitespace-nowrap">
-              {addon.price}
-              <span className="text-sm font-normal text-muted-2 ml-1">one-time</span>
-            </span>
-          </div>
         </div>
 
         {/* Custom quote CTA */}
         <div className="text-center mt-12">
           <p className="text-sm text-muted mb-3">
-            Need a tailored solution for your organization?
+            Need a tailored solution for your organisation?
           </p>
           <a
             href={`mailto:${siteConfig.email}?subject=Custom Quote Request`}
@@ -181,6 +308,7 @@ export default function PricingSection() {
             Request a Custom Quote ›
           </a>
         </div>
+
       </div>
     </section>
   );

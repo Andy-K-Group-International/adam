@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 import { HeroBackground } from "@/components/landing/BackgroundGrid";
 import TronDivider from "@/components/landing/TronDivider";
 import RoadmapSection from "@/components/landing/RoadmapSection";
+import IndustrySection from "@/components/landing/IndustrySection";
 import PricingSection from "@/components/landing/PricingSection";
 import LovedBySection from "@/components/landing/LovedBySection";
 import CtaSection from "@/components/landing/CtaSection";
@@ -34,6 +35,11 @@ export default function Home() {
 
       {/* A.D.A.M. Roadmap Section */}
       <RoadmapSection />
+
+      <TronDivider />
+
+      {/* Industry section */}
+      <IndustrySection />
 
       <TronDivider />
 

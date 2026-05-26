@@ -298,7 +298,7 @@ export default function NdaSignPage() {
     if ("error" in result) {
       setError(result.error);
     } else {
-      router.push("/nda-sign/success");
+      router.push(`/nda-sign/success?token=${result.demoToken}`);
     }
   }
 

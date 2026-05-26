@@ -82,11 +82,13 @@ async function sendNdaConfirmation({
   email,
   company,
   signedAt,
+  demoUrl,
 }: {
   name: string;
   email: string;
   company: string;
   signedAt: string;
+  demoUrl: string;
 }) {
   const html = emailHtml("NDA Signed", `
     <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.3;">Your NDA has been signed</h1>
@@ -108,15 +110,19 @@ async function sendNdaConfirmation({
         </tr>
       </table>
     </div>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">Our team will be in touch within 24 hours to schedule your A.D.A.M. demo. We look forward to speaking with you.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 20px;">Your private A.D.A.M. demo is ready. Use your personal access link below — this link is unique to you.</p>
+    <div style="margin-bottom:32px;">
+      <a href="${demoUrl}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.01em;">Access Your Private Demo &#8594;</a>
+    </div>
+    <p style="color:#8b93a8;font-size:12px;line-height:1.6;margin:0 0 24px;font-family:'Courier New',Courier,monospace;word-break:break-all;">${demoUrl}</p>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
       <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
     </div>
   `);
   await sendEmail({
     to: email,
-    subject: "Your NDA has been signed — Andy'K Group International LTD",
-    text: `Hi ${name},\n\nThank you for signing the NDA with Andy'K Group International LTD. Your signature has been recorded.\n\nName: ${name}\nCompany: ${company}\nSigned: ${signedAt}\n\nOur team will be in touch within 24 hours to schedule your A.D.A.M. demo.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    subject: "Your Private A.D.A.M. Demo Access — Andy'K Group International LTD",
+    text: `Hi ${name},\n\nThank you for signing the NDA with Andy'K Group International LTD.\n\nYour private A.D.A.M. demo is ready:\n${demoUrl}\n\nName: ${name}\nCompany: ${company}\nSigned: ${signedAt}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
   });
 }
@@ -185,7 +191,7 @@ export async function submitNdaSignature(data: {
   email: string;
   job_title: string;
   signature_data: string;
-}): Promise<{ success: true } | { error: string }> {
+}): Promise<{ success: true; demoToken: string } | { error: string }> {
   const headersList = await headers();
   const ip =
     headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -207,15 +213,26 @@ export async function submitNdaSignature(data: {
     return { error: "Failed to save your signature. Please try again." };
   }
 
+  // Generate demo access token
+  const token = crypto.randomUUID();
+  await supabase.from("demo_tokens").insert({
+    token,
+    email: data.email,
+    name: data.full_name,
+    company: data.company,
+  });
+
   const signedAt = new Date().toLocaleString("en-GB", {
     day: "numeric", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit", timeZone: "Europe/London",
   });
 
+  const demoUrl = `https://adam.andykgroup.com/demo?token=${token}`;
+
   await Promise.allSettled([
-    sendNdaConfirmation({ name: data.full_name, email: data.email, company: data.company, signedAt }),
+    sendNdaConfirmation({ name: data.full_name, email: data.email, company: data.company, signedAt, demoUrl }),
     sendNdaAdminNotification({ name: data.full_name, email: data.email, company: data.company, jobTitle: data.job_title, signedAt, ip }),
   ]);
 
-  return { success: true };
+  return { success: true, demoToken: token };
 }

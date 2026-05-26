@@ -42,7 +42,8 @@
       "Bash(vercel --version)",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://kbdvsqdctgeirakpctoz.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiZHZzcWRjdGdlaXJha3BjdG96Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTcyMjA2NCwiZXhwIjoyMDk1Mjk4MDY0fQ.8imZYuqWyxS1g_9vjOgBlNwsnc30zDjANyvFcmx2uJk npx tsx *)",
       "Bash(git *)",
-      "Bash(vercel *)"
+      "Bash(vercel *)",
+      "Bash(ssh data-server *)"
     ]
   }
 }

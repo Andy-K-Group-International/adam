@@ -2,7 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getContactForRouting } from "@/lib/supabase/queries/contacts";
-import type { StrategyType } from "@/lib/supabase/types";
+import type { StrategyType, ActivationChecklistItem } from "@/lib/supabase/types";
+import { sendClientActivationEmail } from "@/app/actions/email";
 
 // ── Archive ───────────────────────────────────────────────────────────────────
 
@@ -125,6 +126,59 @@ export async function sendClientReportAction(reportId: string): Promise<{ error?
       text: `Hi ${recipientName},\n\nYour ${periodLabel.toLowerCase()} report "${report.title}" is ready.\n\nView it: https://adam.andykgroup.com/dashboard/reports\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
       html: buildReportEmailHtml(recipientName, clientRow.company_name, report.title, periodLabel),
     });
+
+    return {};
+  } catch (err) {
+    return { error: String(err) };
+  }
+}
+
+// ── Activation ────────────────────────────────────────────────────────────────
+
+export async function activateClientAction(
+  clientId: string,
+  approvedByUserId: string,
+  checklistState: ActivationChecklistItem[]
+): Promise<{ error?: string }> {
+  try {
+    const supabase = createAdminClient();
+
+    const { data: client, error: clientErr } = await supabase
+      .from("clients")
+      .select("company_name, contact_name, contact_email")
+      .eq("id", clientId)
+      .single();
+    if (clientErr || !client) return { error: "Client not found" };
+
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("clients")
+      .update({
+        stage: "active",
+        activated_at: now,
+        activation_approved_by: approvedByUserId,
+        activation_checklist: checklistState,
+        updated_at: now,
+      })
+      .eq("id", clientId);
+    if (error) return { error: error.message };
+
+    await supabase.from("activity_log").insert({
+      client_id: clientId,
+      type: "client_stage_changed",
+      metadata: { action: "activated", approved_by: approvedByUserId },
+      created_at: now,
+    });
+
+    const contact = await getContactForRouting(supabase, clientId, "general");
+    const recipientEmail = contact?.email ?? client.contact_email;
+    const recipientName = contact?.name ?? client.contact_name;
+
+    await sendClientActivationEmail({
+      clientEmail: recipientEmail,
+      clientName: recipientName,
+      companyName: client.company_name,
+    }).catch(() => {});
 
     return {};
   } catch (err) {

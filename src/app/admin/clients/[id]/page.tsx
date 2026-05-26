@@ -34,6 +34,8 @@ import { buildStrategyTemplate } from "@/lib/strategy-templates";
 import type { StrategyTemplateKey } from "@/lib/strategy-templates";
 import InternalNotes from "@/components/admin/InternalNotes";
 import ContextualHelp from "@/components/ui/ContextualHelp";
+import ActivationTab from "@/components/admin/ActivationTab";
+import ImplementationTimeline from "@/components/admin/ImplementationTimeline";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -42,6 +44,7 @@ const stageColors: Record<string, string> = {
   contract:      "bg-warning/10 text-warning",
   invoice:       "bg-success/10 text-success",
   kickoff:       "bg-success/10 text-success",
+  active:        "bg-success/20 text-success font-semibold",
 };
 
 const stageLabels: Record<string, string> = {
@@ -51,12 +54,13 @@ const stageLabels: Record<string, string> = {
   contract:      "Contract",
   invoice:       "Invoice",
   kickoff:       "Kick-off",
+  active:        "Active",
 };
 
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "kyc" | "reports" | "activity";
+  | "kickoff" | "kyc" | "activation" | "reports" | "activity";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
@@ -74,6 +78,9 @@ export default function ClientDetailPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [reports, setReports] = useState<import("@/lib/supabase/types").ClientReport[]>([]);
   const [reportCount, setReportCount] = useState(0);
+
+  // Invoices (for timeline + activation auto-check)
+  const [invoices, setInvoices] = useState<import("@/lib/supabase/types").Invoice[]>([]);
 
   // Strategy state
   const [strategyType, setStrategyType] = useState<StrategyType | null>(null);
@@ -131,15 +138,17 @@ export default function ClientDetailPage() {
         setKickoffNotes(clientData.kickoff_notes ?? "");
         setChecklist(clientData.kickoff_checklist ?? []);
 
-        const [activitiesData, contactsData, reportsData] = await Promise.all([
+        const [activitiesData, contactsData, reportsData, invoicesData] = await Promise.all([
           listActivitiesForClient(supabase, clientId).catch(() => []),
           listContacts(supabase, clientId).catch(() => []),
           listClientReports(supabase, clientId).catch(() => []),
+          (async () => { try { const { data } = await supabase.from("invoices").select("*").eq("client_id", clientId); return data ?? []; } catch { return []; } })(),
         ]);
         setActivities(activitiesData);
         setContacts(contactsData);
         setReports(reportsData);
         setReportCount(reportsData.length);
+        setInvoices(invoicesData);
 
         if (clientData.questionnaire_id) {
           const qData = await getQuestionnaireById(supabase, clientData.questionnaire_id).catch(() => null);
@@ -170,6 +179,7 @@ export default function ClientDetailPage() {
     { key: "questionnaire", label: "Questionnaire" },
     { key: "kickoff",       label: "Kickoff" },
     { key: "kyc",           label: "KYC" },
+    { key: "activation",    label: client.stage === "active" ? "Activation ✓" : "Activation" },
     { key: "reports",       label: `Reports${reportCount > 0 ? ` (${reportCount})` : ""}` },
     { key: "activity",      label: "Activity" },
   ];
@@ -521,6 +531,12 @@ export default function ClientDetailPage() {
         </div>
       )}
 
+      {activeTab === "overview" && (
+        <div className="mt-6">
+          <ImplementationTimeline client={client} activities={activities} invoices={invoices} />
+        </div>
+      )}
+
       {activeTab === "contacts" && <ContactsTab clientId={clientId} />}
 
       {activeTab === "milestones" && <MilestonesTab clientId={clientId} />}
@@ -706,6 +722,15 @@ export default function ClientDetailPage() {
           </div>
           <KycTab clientId={clientId} />
         </div>
+      )}
+
+      {activeTab === "activation" && (
+        <ActivationTab
+          client={client}
+          onActivated={(activatedAt) =>
+            setClient((prev) => prev ? { ...prev, stage: "active" as const, activated_at: activatedAt } : prev)
+          }
+        />
       )}
 
       {activeTab === "reports" && (

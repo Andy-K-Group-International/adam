@@ -1155,3 +1155,42 @@ export async function sendClientRequestResponse({
     html,
   });
 }
+
+// ─── Client Activation ───────────────────────────────────────────────────────
+
+export async function sendClientActivationEmail({
+  clientEmail,
+  clientName,
+  companyName,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+}) {
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">System Activated</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#01011b;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. system<br>is now active</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">We&#8217;re pleased to confirm that your A.D.A.M. system for <strong>${companyName}</strong> has been fully activated. Your implementation is now live and our team is ready to begin work.</p>
+    <div style="background:#f0fdf4;border-left:3px solid #16a34a;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#01011b;font-size:13px;font-weight:600;margin:0 0 8px;">Your next steps</p>
+      <ul style="color:#525a70;font-size:14px;line-height:1.8;margin:0;padding-left:18px;">
+        <li>Log in to your client portal to review your project milestones</li>
+        <li>Check your implementation timeline and upcoming deliverables</li>
+        <li>Reach out to your assigned team member with any questions</li>
+      </ul>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="https://adam.andykgroup.com/dashboard" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Go to Your Portal &#8594;</a>
+    </div>
+    <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Welcome to the active phase of your engagement. We look forward to delivering results together.<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Your A.D.A.M. system is now active — ${companyName}`,
+    text: `Hi ${clientName},\n\nYour A.D.A.M. system for ${companyName} has been fully activated.\n\nLog in to your portal: https://adam.andykgroup.com/dashboard\n\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}

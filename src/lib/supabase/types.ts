@@ -10,7 +10,15 @@ export type ClientStage =
   | "strategy"
   | "contract"
   | "invoice"
-  | "kickoff";
+  | "kickoff"
+  | "active";
+
+export interface ActivationChecklistItem {
+  id: string;
+  label: string;
+  required: boolean;
+  checked: boolean;
+}
 
 export type QuestionnaireStatus = "draft" | "submitted" | "converted";
 
@@ -236,6 +244,9 @@ export interface Client {
   } | null;
   archived: boolean;
   archived_at: string | null;
+  activation_checklist: ActivationChecklistItem[];
+  activated_at: string | null;
+  activation_approved_by: string | null;
   created_at: string;
   updated_at: string;
 }

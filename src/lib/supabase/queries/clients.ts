@@ -12,12 +12,16 @@ async function generateClientRef(supabase: SupabaseClient): Promise<string> {
 
 export async function listClients(
   supabase: SupabaseClient,
-  options: { stage?: string; search?: string } = {}
+  options: { stage?: string; search?: string; showArchived?: boolean } = {}
 ): Promise<(Client & { primary_contact: { name: string; email: string } | null })[]> {
   let query = supabase
     .from('clients')
     .select('*, contacts!left(name, email, is_primary)')
     .order('created_at', { ascending: false });
+
+  if (!options.showArchived) {
+    query = query.eq('archived', false);
+  }
 
   if (options.stage) {
     query = query.eq('stage', options.stage);

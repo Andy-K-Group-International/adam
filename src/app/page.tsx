@@ -18,6 +18,7 @@ import TronDivider from "@/components/landing/TronDivider";
 import RoadmapSection from "@/components/landing/RoadmapSection";
 import IndustrySection from "@/components/landing/IndustrySection";
 import PricingSection from "@/components/landing/PricingSection";
+import RoiCalculator from "@/components/landing/RoiCalculator";
 import LovedBySection from "@/components/landing/LovedBySection";
 import CtaSection from "@/components/landing/CtaSection";
 import Footer from "@/components/landing/Footer";
@@ -40,6 +41,11 @@ export default function Home() {
 
       {/* Industry section */}
       <IndustrySection />
+
+      <TronDivider />
+
+      {/* ROI Calculator */}
+      <RoiCalculator />
 
       <TronDivider />
 

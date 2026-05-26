@@ -13,10 +13,14 @@ import {
   Lightbulb,
   Receipt,
   LogOut,
+  CheckSquare,
+  BarChart2,
 } from "lucide-react";
 
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Milestones", href: "/dashboard/milestones", icon: CheckSquare },
+  { label: "Reports", href: "/dashboard/reports", icon: BarChart2 },
   { label: "Proposals", href: "/dashboard/proposals", icon: Lightbulb },
   { label: "Contracts", href: "/dashboard/contracts", icon: FileText },
   { label: "Invoices", href: "/dashboard/invoices", icon: Receipt },

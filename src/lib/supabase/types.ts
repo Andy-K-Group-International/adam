@@ -61,6 +61,57 @@ export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
 
 export type ContactRole = "primary" | "billing" | "legal" | "operations" | "signatory";
 
+export type MilestoneStatus = "pending" | "in_progress" | "completed" | "blocked";
+export type ReportPeriod = "monthly" | "quarterly";
+export type ReportStatus = "draft" | "sent";
+export type MeetingType = "discovery" | "strategy" | "review" | "kickoff" | "other";
+
+export interface Milestone {
+  id: string;
+  client_id: string;
+  title: string;
+  description: string | null;
+  status: MilestoneStatus;
+  due_date: string | null;
+  completed_at: string | null;
+  order: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientReport {
+  id: string;
+  client_id: string;
+  title: string;
+  period: ReportPeriod;
+  content: Record<string, string>;
+  status: ReportStatus;
+  created_by: string | null;
+  sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeetingActionItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface Meeting {
+  id: string;
+  client_id: string;
+  date: string;
+  type: MeetingType;
+  attendees: string[];
+  notes: string | null;
+  action_items: MeetingActionItem[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Contact {
   id: string;
   client_id: string;
@@ -148,6 +199,15 @@ export interface Client {
   kickoff_confirmed_at: string | null;
   health_score: number | null;
   health_score_updated_at: string | null;
+  market_analysis: {
+    market_overview: string;
+    icp_definition: string;
+    market_opportunities: string;
+    risks_challenges: string;
+    competitors: { name: string; strengths: string; weaknesses: string; market_share: string }[];
+  } | null;
+  archived: boolean;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
 }

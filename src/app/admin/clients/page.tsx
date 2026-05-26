@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { listClients } from "@/lib/supabase/queries/clients";
 import type { Client } from "@/lib/supabase/types";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Archive } from "lucide-react";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
@@ -31,21 +31,22 @@ const stageLabels: Record<string, string> = {
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   type ClientWithPrimary = Client & { primary_contact: { name: string; email: string } | null };
   const [clients, setClients] = useState<ClientWithPrimary[] | undefined>(undefined);
 
   const fetchClients = useCallback(async () => {
     const supabase = createClient();
     try {
-      const data = await listClients(
-        supabase,
-        search.trim().length > 0 ? { search: search.trim() } : {}
-      );
+      const data = await listClients(supabase, {
+        ...(search.trim().length > 0 ? { search: search.trim() } : {}),
+        showArchived,
+      });
       setClients(data);
     } catch {
       setClients([]);
     }
-  }, [search]);
+  }, [search, showArchived]);
 
   useEffect(() => {
     fetchClients();
@@ -73,9 +74,9 @@ export default function ClientsPage() {
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search + Archive toggle */}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="relative max-w-md flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-2" />
           <input
             type="text"
@@ -85,6 +86,18 @@ export default function ClientsPage() {
             className="w-full pl-10 pr-4 h-10 text-sm border border-grid-500 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
           />
         </div>
+        <button
+          onClick={() => setShowArchived(!showArchived)}
+          className={cn(
+            "inline-flex items-center gap-2 h-10 px-4 rounded-lg border text-sm font-medium transition-colors",
+            showArchived
+              ? "bg-warning/10 border-warning/30 text-warning"
+              : "border-grid-500 text-muted-2 hover:text-foreground hover:border-highlight/40"
+          )}
+        >
+          <Archive className="h-4 w-4" />
+          {showArchived ? "Showing Archived" : "Show Archived"}
+        </button>
       </div>
 
       {/* Table */}
@@ -124,12 +137,17 @@ export default function ClientsPage() {
                     className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                   >
                     <td className="px-5 py-4">
-                      <Link
-                        href={`/admin/clients/${client.id}`}
-                        className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
-                      >
-                        {client.company_name}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/clients/${client.id}`}
+                          className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
+                        >
+                          {client.company_name}
+                        </Link>
+                        {(client as any).archived && (
+                          <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium">Archived</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       {client.primary_contact ? (

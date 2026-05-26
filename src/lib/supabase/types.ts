@@ -59,6 +59,22 @@ export type QuestionType =
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
 
+export type ContactRole = "primary" | "billing" | "legal" | "operations" | "signatory";
+
+export interface Contact {
+  id: string;
+  client_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  job_title: string | null;
+  role: ContactRole;
+  is_primary: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface InvoiceLineItem {
   description: string;
   quantity: number;

@@ -30,7 +30,8 @@ const stageLabels: Record<string, string> = {
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
-  const [clients, setClients] = useState<Client[] | undefined>(undefined);
+  type ClientWithPrimary = Client & { primary_contact: { name: string; email: string } | null };
+  const [clients, setClients] = useState<ClientWithPrimary[] | undefined>(undefined);
 
   const fetchClients = useCallback(async () => {
     const supabase = createClient();
@@ -95,7 +96,7 @@ export default function ClientsPage() {
                   Company
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
-                  Contact
+                  Primary Contact
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
                   Stage
@@ -127,8 +128,17 @@ export default function ClientsPage() {
                       </Link>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-sm text-foreground">{client.contact_name}</p>
-                      <p className="text-xs text-muted-2">{client.contact_email}</p>
+                      {client.primary_contact ? (
+                        <>
+                          <p className="text-sm text-foreground">{client.primary_contact.name}</p>
+                          <p className="text-xs text-muted-2">{client.primary_contact.email}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm text-foreground">{client.contact_name}</p>
+                          <p className="text-xs text-muted-2">{client.contact_email}</p>
+                        </>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <span

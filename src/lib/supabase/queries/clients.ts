@@ -13,8 +13,11 @@ async function generateClientRef(supabase: SupabaseClient): Promise<string> {
 export async function listClients(
   supabase: SupabaseClient,
   options: { stage?: string; search?: string } = {}
-): Promise<Client[]> {
-  let query = supabase.from('clients').select('*').order('created_at', { ascending: false });
+): Promise<(Client & { primary_contact: { name: string; email: string } | null })[]> {
+  let query = supabase
+    .from('clients')
+    .select('*, contacts!left(name, email, is_primary)')
+    .order('created_at', { ascending: false });
 
   if (options.stage) {
     query = query.eq('stage', options.stage);
@@ -30,7 +33,17 @@ export async function listClients(
     throw new Error(`Failed to list clients: ${error.message}`);
   }
 
-  return data;
+  return (data ?? []).map((row: any) => {
+    const contactsArr: { name: string; email: string; is_primary: boolean }[] =
+      Array.isArray(row.contacts) ? row.contacts : [];
+    const primary =
+      contactsArr.find((c) => c.is_primary) ?? contactsArr[0] ?? null;
+    const { contacts: _contacts, ...client } = row;
+    return {
+      ...client,
+      primary_contact: primary ? { name: primary.name, email: primary.email } : null,
+    };
+  });
 }
 
 export async function getClientById(

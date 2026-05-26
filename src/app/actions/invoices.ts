@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendInvoiceSent, sendKickoffConfirmed } from "@/app/actions/email";
+import { getContactForRouting } from "@/lib/supabase/queries/contacts";
 
 export async function sendInvoiceAction(invoiceId: string): Promise<{ error?: string }> {
   try {
@@ -21,14 +22,19 @@ export async function sendInvoiceAction(invoiceId: string): Promise<{ error?: st
       .single();
     if (!client) return { error: "Client not found" };
 
+    // Use billing contact if available, fall back to client row
+    const routedContact = await getContactForRouting(supabase, invoice.client_id, "invoice");
+    const recipientEmail = routedContact?.email ?? client.contact_email;
+    const recipientName = routedContact?.name ?? client.contact_name;
+
     await supabase
       .from("invoices")
       .update({ status: "sent", updated_at: new Date().toISOString() })
       .eq("id", invoiceId);
 
     await sendInvoiceSent({
-      clientEmail: client.contact_email,
-      clientName: client.contact_name,
+      clientEmail: recipientEmail,
+      clientName: recipientName,
       companyName: client.company_name,
       invoiceNumber: invoice.invoice_number,
       invoiceId,
@@ -74,6 +80,11 @@ export async function confirmKickoffAction(
       .single();
     if (!client) return { error: "Client not found" };
 
+    // Use primary contact if available, fall back to client row
+    const routedContact = await getContactForRouting(supabase, clientId, "general");
+    const recipientEmail = routedContact?.email ?? client.contact_email;
+    const recipientName = routedContact?.name ?? client.contact_name;
+
     await supabase
       .from("clients")
       .update({
@@ -87,8 +98,8 @@ export async function confirmKickoffAction(
       .eq("id", clientId);
 
     await sendKickoffConfirmed({
-      clientEmail: client.contact_email,
-      clientName: client.contact_name,
+      clientEmail: recipientEmail,
+      clientName: recipientName,
       companyName: client.company_name,
       kickoffDate,
       checklist: checklist.map((item) => item.label),

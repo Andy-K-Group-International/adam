@@ -10,7 +10,7 @@ import { createProposal } from "@/lib/supabase/queries/proposals";
 import { defaultInvestment } from "@/lib/proposal-content";
 import type { Client, Questionnaire, ActivityLog, StrategyType } from "@/lib/supabase/types";
 import Link from "next/link";
-import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
@@ -19,6 +19,9 @@ import ContractCard from "@/components/dashboard/ContractCard";
 import QuestionnairePreview from "@/components/admin/QuestionnairePreview";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ContactsTab from "@/components/admin/ContactsTab";
+import { listContacts } from "@/lib/supabase/queries/contacts";
+import type { Contact } from "@/lib/supabase/types";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -38,7 +41,7 @@ const stageLabels: Record<string, string> = {
   kickoff: "Kick-off",
 };
 
-type Tab = "overview" | "contracts" | "questionnaire" | "activity" | "strategy" | "kickoff";
+type Tab = "overview" | "contacts" | "contracts" | "questionnaire" | "activity" | "strategy" | "kickoff";
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
 export default function ClientDetailPage() {
@@ -50,6 +53,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<(Client & { contracts: any[] }) | null | undefined>(undefined);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   // Strategy state
   const [strategyType, setStrategyType] = useState<StrategyType | null>(null);
@@ -78,9 +82,13 @@ export default function ClientDetailPage() {
         setKickoffNotes(clientData.kickoff_notes ?? "");
         setChecklist(clientData.kickoff_checklist ?? []);
 
-        // Fetch activities
-        const activitiesData = await listActivitiesForClient(supabase, clientId).catch(() => []);
+        // Fetch activities and contacts in parallel
+        const [activitiesData, contactsData] = await Promise.all([
+          listActivitiesForClient(supabase, clientId).catch(() => []),
+          listContacts(supabase, clientId).catch(() => []),
+        ]);
         setActivities(activitiesData);
+        setContacts(contactsData);
 
         // Fetch questionnaire if linked
         if (clientData.questionnaire_id) {
@@ -107,8 +115,11 @@ export default function ClientDetailPage() {
     );
   }
 
+  const primaryContact = contacts.find((c) => c.is_primary) ?? contacts[0] ?? null;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "overview", label: "Overview" },
+    { key: "contacts", label: `Contacts${contacts.length > 0 ? ` (${contacts.length})` : ""}` },
     { key: "strategy", label: "Strategy" },
     { key: "contracts", label: `Contracts (${client.contracts?.length || 0})` },
     { key: "questionnaire", label: "Questionnaire" },
@@ -248,13 +259,23 @@ export default function ClientDetailPage() {
                 {stageLabels[client.stage] || client.stage}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-0.5">
+            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
               {client.client_ref && (
                 <span className="font-mono text-xs font-semibold text-highlight tracking-wider">
                   {client.client_ref}
                 </span>
               )}
               <span className="text-sm text-muted-2">Created {formatDate(client.created_at)}</span>
+              {primaryContact && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-2">
+                  <Users className="h-3 w-3" />
+                  <span className="text-foreground font-medium">{primaryContact.name}</span>
+                  <span>·</span>
+                  <a href={`mailto:${primaryContact.email}`} className="hover:text-highlight transition-colors">
+                    {primaryContact.email}
+                  </a>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -640,6 +661,10 @@ export default function ClientDetailPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {activeTab === "contacts" && (
+        <ContactsTab clientId={clientId} />
       )}
 
       {activeTab === "activity" && (

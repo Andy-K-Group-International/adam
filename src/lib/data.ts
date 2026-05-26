@@ -351,9 +351,9 @@ export const footerLinks = {
     { label: "Contact", href: "https://andykgroup.com/contact" },
   ],
   legal: [
-    { label: "Privacy Policy", href: "https://andykgroup.com/privacy-policy" },
-    { label: "Terms of Service", href: "https://andykgroup.com/terms-and-conditions" },
-    { label: "Cookie Policy", href: "https://andykgroup.com/cookies-policy" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms of Service", href: "/terms-and-conditions" },
+    { label: "Cookie Policy", href: "/cookies-policy" },
   ],
   connect: [
     { label: "LinkedIn", href: "https://www.linkedin.com/company/andyk-group-international" },

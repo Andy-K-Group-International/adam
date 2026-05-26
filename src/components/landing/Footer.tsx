@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { footerLinks, siteConfig } from "@/lib/data";
 
 export default function Footer() {
@@ -46,14 +47,12 @@ export default function Footer() {
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="text-sm text-muted-2 hover:text-white transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

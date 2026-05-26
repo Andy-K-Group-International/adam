@@ -29,6 +29,7 @@ import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import MilestonesTab from "@/components/admin/MilestonesTab";
 import MeetingsTab from "@/components/admin/MeetingsTab";
 import AnalysisTab from "@/components/admin/AnalysisTab";
+import KycTab from "@/components/admin/KycTab";
 import { buildStrategyTemplate } from "@/lib/strategy-templates";
 import type { StrategyTemplateKey } from "@/lib/strategy-templates";
 
@@ -53,7 +54,7 @@ const stageLabels: Record<string, string> = {
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "activity";
+  | "kickoff" | "kyc" | "activity";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
@@ -162,6 +163,7 @@ export default function ClientDetailPage() {
     { key: "contracts",     label: `Contracts (${client.contracts?.length || 0})` },
     { key: "questionnaire", label: "Questionnaire" },
     { key: "kickoff",       label: "Kickoff" },
+    { key: "kyc",           label: "KYC" },
     { key: "activity",      label: "Activity" },
   ];
 
@@ -674,6 +676,10 @@ export default function ClientDetailPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {activeTab === "kyc" && (
+        <KycTab clientId={clientId} />
       )}
 
       {activeTab === "activity" && (

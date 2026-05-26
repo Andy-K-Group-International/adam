@@ -62,9 +62,37 @@ export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue" | "cancelled";
 export type ContactRole = "primary" | "billing" | "legal" | "operations" | "signatory";
 
 export type MilestoneStatus = "pending" | "in_progress" | "completed" | "blocked";
+export type KycStatus = "pending" | "verified" | "rejected" | "expired";
+export type KycDocumentType = "registry_extract" | "id_passport" | "power_of_attorney";
 export type ReportPeriod = "monthly" | "quarterly";
 export type ReportStatus = "draft" | "sent";
 export type MeetingType = "discovery" | "strategy" | "review" | "kickoff" | "other";
+
+export interface KycDocument {
+  type: KycDocumentType;
+  path: string;
+  name: string;
+  uploaded_at: string;
+}
+
+export interface KycVerification {
+  id: string;
+  client_id: string;
+  status: KycStatus;
+  company_name: string | null;
+  company_reg_number: string | null;
+  vat_number: string | null;
+  country: string | null;
+  director_name: string | null;
+  director_email: string | null;
+  documents: KycDocument[];
+  verified_by: string | null;
+  verified_at: string | null;
+  rejection_reason: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Milestone {
   id: string;

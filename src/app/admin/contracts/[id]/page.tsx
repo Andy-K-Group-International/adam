@@ -8,8 +8,9 @@ import { getContractById, updateContract, publishContract, countersign, verifyAp
 import { listByContract as listCommentsByContract } from "@/lib/supabase/queries/contract-comments";
 import { listByContract as listVersionsByContract } from "@/lib/supabase/queries/contract-versions";
 import { getClientById } from "@/lib/supabase/queries/clients";
+import { getKycByClientId } from "@/lib/supabase/queries/kyc";
 import { serviceTypeLabel, serviceTypeStyle } from "@/lib/contract-templates";
-import type { Contract, ContractComment, ContractVersion, ContractType, Client, AppendixDFormData } from "@/lib/supabase/types";
+import type { Contract, ContractComment, ContractVersion, ContractType, Client, AppendixDFormData, KycStatus } from "@/lib/supabase/types";
 
 function contractTypeStyle(type: ContractType | undefined): string {
   switch (type) {
@@ -44,6 +45,7 @@ export default function AdminContractDetailPage() {
 
   const [contract, setContract] = useState<Contract | null | undefined>(undefined);
   const [client, setClient] = useState<(Client & { contracts: any[] }) | null>(null);
+  const [kycStatus, setKycStatus] = useState<KycStatus | null | undefined>(undefined);
   const [comments, setComments] = useState<any[]>([]);
   const [versions, setVersions] = useState<ContractVersion[]>([]);
 
@@ -75,6 +77,9 @@ export default function AdminContractDetailPage() {
         setVersions(versionsData);
         if (contractData.client_id) {
           getClientById(supabase, contractData.client_id).then(setClient).catch(() => null);
+          getKycByClientId(supabase, contractData.client_id)
+            .then((kyc) => setKycStatus(kyc?.status ?? null))
+            .catch(() => setKycStatus(null));
         }
         // Pre-fill Appendix D form if already saved
         const appendixD = contractData.appendices?.find((a) => a.slot === "appendix_d");
@@ -105,9 +110,11 @@ export default function AdminContractDetailPage() {
     contract.status === "draft" || contract.status === "changes_requested";
   const appendixD = contract.appendices?.find((a) => a.slot === "appendix_d") ?? null;
   const appendixDComplete = !appendixD || appendixD.status === "completed";
+  const kycVerified = kycStatus === "verified";
   const canPublish =
     (contract.status === "draft" || contract.status === "changes_requested") &&
-    appendixDComplete;
+    appendixDComplete &&
+    kycVerified;
   const canCountersign = contract.status === "client_signed";
 
   const handleSaveAppendixD = async () => {
@@ -284,6 +291,29 @@ export default function AdminContractDetailPage() {
   // View mode with admin actions
   return (
     <div>
+      {/* KYC warning banner */}
+      {kycStatus !== undefined && kycStatus !== "verified" && (contract.status === "draft" || contract.status === "changes_requested") && (
+        <div className="flex items-start gap-3 rounded-xl bg-warning/8 border border-warning/20 px-4 py-3.5 mb-5 text-sm text-warning">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <span className="font-semibold">KYC not verified — </span>
+            {kycStatus === null || kycStatus === undefined
+              ? "This client has not submitted KYC documents."
+              : kycStatus === "pending"
+              ? "KYC is pending review. Verify it before publishing."
+              : kycStatus === "rejected"
+              ? "KYC has been rejected. Client must resubmit before you can publish."
+              : "KYC has expired. Client must resubmit."
+            }
+            {client && (
+              <a href={`/admin/clients/${client.id}?tab=kyc`} className="ml-2 underline underline-offset-2 hover:text-warning/80">
+                Review KYC →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Admin Action Bar */}
       <div className="bg-white rounded-xl border border-grid-300 p-4 mb-6">
         <div className="flex items-center justify-between">
@@ -331,8 +361,8 @@ export default function AdminContractDetailPage() {
             {(contract.status === "draft" || contract.status === "changes_requested") && (
               <button
                 onClick={handlePublish}
-                disabled={isPublishing || !appendixDComplete}
-                title={!appendixDComplete ? "Complete Appendix D before publishing" : undefined}
+                disabled={isPublishing || !appendixDComplete || !kycVerified}
+                title={!kycVerified ? "KYC must be verified before publishing" : !appendixDComplete ? "Complete Appendix D before publishing" : undefined}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-info hover:bg-info/90 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="h-3.5 w-3.5" />

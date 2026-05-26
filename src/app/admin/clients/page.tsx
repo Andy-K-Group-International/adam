@@ -3,13 +3,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listClients } from "@/lib/supabase/queries/clients";
-import type { Client } from "@/lib/supabase/types";
+import { listKycForClients } from "@/lib/supabase/queries/kyc";
+import type { Client, KycStatus } from "@/lib/supabase/types";
 import Link from "next/link";
-import { Plus, Search, Archive } from "lucide-react";
+import { Plus, Search, Archive, ShieldCheck, ShieldX, Clock } from "lucide-react";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+
+const KYC_BADGE: Record<KycStatus, { label: string; cls: string }> = {
+  pending:  { label: "KYC Pending",  cls: "bg-warning/10 text-warning" },
+  verified: { label: "KYC Verified", cls: "bg-success/10 text-success" },
+  rejected: { label: "KYC Rejected", cls: "bg-error/10 text-error" },
+  expired:  { label: "KYC Expired",  cls: "bg-grid-300/60 text-muted" },
+};
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -34,6 +42,7 @@ export default function ClientsPage() {
   const [showArchived, setShowArchived] = useState(false);
   type ClientWithPrimary = Client & { primary_contact: { name: string; email: string } | null };
   const [clients, setClients] = useState<ClientWithPrimary[] | undefined>(undefined);
+  const [kycMap, setKycMap] = useState<Record<string, KycStatus>>({});
 
   const fetchClients = useCallback(async () => {
     const supabase = createClient();
@@ -43,6 +52,12 @@ export default function ClientsPage() {
         showArchived,
       });
       setClients(data);
+      if (data.length > 0) {
+        const kycList = await listKycForClients(supabase, data.map((c) => c.id)).catch(() => []);
+        const map: Record<string, KycStatus> = {};
+        for (const k of kycList) map[k.client_id] = k.status as KycStatus;
+        setKycMap(map);
+      }
     } catch {
       setClients([]);
     }
@@ -119,6 +134,9 @@ export default function ClientsPage() {
                   Health
                 </th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
+                  KYC
+                </th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">
                   Created
                 </th>
               </tr>
@@ -126,7 +144,7 @@ export default function ClientsPage() {
             <tbody>
               {(clients || []).length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-muted-2">
+                  <td colSpan={6} className="text-center py-12 text-muted-2">
                     {search ? "No clients found matching your search." : "No clients yet."}
                   </td>
                 </tr>
@@ -174,6 +192,15 @@ export default function ClientsPage() {
                     </td>
                     <td className="px-5 py-4">
                       <HealthScoreBadge score={client.health_score ?? null} />
+                    </td>
+                    <td className="px-5 py-4">
+                      {kycMap[client.id] ? (
+                        <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", KYC_BADGE[kycMap[client.id]].cls)}>
+                          {KYC_BADGE[kycMap[client.id]].label}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-2">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 text-sm text-muted-2">
                       {formatDate(client.created_at)}

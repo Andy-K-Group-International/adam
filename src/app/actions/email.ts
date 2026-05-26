@@ -1057,3 +1057,101 @@ export async function sendKickoffConfirmed({
     html,
   });
 }
+
+// ─── Client Request Notification (admin) ─────────────────────────────────────
+
+export async function sendClientRequestNotification({
+  companyName,
+  contactName,
+  documentType,
+  documentId,
+  content,
+  sectionId,
+}: {
+  companyName: string;
+  contactName: string;
+  documentType: string;
+  documentId: string;
+  content: string;
+  sectionId?: string | null;
+}) {
+  const docLabel = documentType.charAt(0).toUpperCase() + documentType.slice(1);
+  const sectionNote = sectionId ? ` (Section: ${sectionId})` : "";
+
+  const html = emailHtml("Client Request", `
+    <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#01011b;margin:0 0 8px;">Client Request Received</h2>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">A new request has been submitted by <strong>${companyName}</strong>.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+      <tr><td style="padding:8px 0;color:#525a70;font-size:13px;font-weight:600;width:140px;">Company</td><td style="padding:8px 0;color:#01011b;font-size:13px;">${companyName}</td></tr>
+      <tr><td style="padding:8px 0;color:#525a70;font-size:13px;font-weight:600;">Contact</td><td style="padding:8px 0;color:#01011b;font-size:13px;">${contactName}</td></tr>
+      <tr><td style="padding:8px 0;color:#525a70;font-size:13px;font-weight:600;">Document</td><td style="padding:8px 0;color:#01011b;font-size:13px;">${docLabel}${sectionNote}</td></tr>
+    </table>
+    <div style="background:#faf8f5;border-left:3px solid #c9707d;padding:16px 20px;border-radius:4px;margin-bottom:24px;">
+      <p style="color:#01011b;font-size:14px;line-height:1.7;margin:0;">${content.replace(/\n/g, "<br>")}</p>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="https://adam.andykgroup.com/admin/${documentType}s/${documentId}" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Request &#8594;</a>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: "ceo@andykgroup.com",
+    from: "info@andykgroup.com",
+    subject: `📋 Client Request: ${companyName} — ${docLabel}`,
+    text: `Client request from ${companyName} (${contactName})\n\nDocument: ${docLabel}${sectionNote}\n\n${content}\n\nReview: https://adam.andykgroup.com/admin/${documentType}s/${documentId}`,
+    html,
+  });
+}
+
+// ─── Client Request Response (client) ────────────────────────────────────────
+
+export async function sendClientRequestResponse({
+  clientEmail,
+  clientName,
+  documentType,
+  adminResponse,
+  status,
+}: {
+  clientEmail: string;
+  clientName: string;
+  documentType: string;
+  adminResponse: string;
+  status: string;
+}) {
+  const docLabel = documentType.charAt(0).toUpperCase() + documentType.slice(1);
+  const statusLabel: Record<string, string> = {
+    acknowledged: "Acknowledged",
+    resolved: "Resolved",
+    declined: "Declined",
+  };
+  const statusColor: Record<string, string> = {
+    acknowledged: "#d97706",
+    resolved: "#16a34a",
+    declined: "#dc2626",
+  };
+  const label = statusLabel[status] ?? status;
+  const color = statusColor[status] ?? "#525a70";
+
+  const html = emailHtml("Request Update", `
+    <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#01011b;margin:0 0 8px;">Update on Your Request</h2>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Hi ${clientName}, we have reviewed your request regarding your <strong>${docLabel}</strong>.</p>
+    <div style="margin-bottom:16px;">
+      <span style="display:inline-block;padding:4px 12px;background:${color}20;color:${color};border-radius:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">${label}</span>
+    </div>
+    <div style="background:#faf8f5;border-left:3px solid #ede8e2;padding:16px 20px;border-radius:4px;margin-bottom:24px;">
+      <p style="color:#01011b;font-size:14px;line-height:1.7;margin:0;">${adminResponse.replace(/\n/g, "<br>")}</p>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="https://adam.andykgroup.com/dashboard/${documentType}s" style="display:inline-block;background:#c9707d;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View in Portal &#8594;</a>
+    </div>
+    <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">If you have further questions, please don&#8217;t hesitate to reach out.<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Update on your ${docLabel} request — Andy'K Group`,
+    text: `Hi ${clientName},\n\nYour request regarding your ${docLabel} has been ${label}.\n\n${adminResponse}\n\nView your portal: https://adam.andykgroup.com/dashboard/${documentType}s\n\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}

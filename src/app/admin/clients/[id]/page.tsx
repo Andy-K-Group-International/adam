@@ -32,6 +32,7 @@ import AnalysisTab from "@/components/admin/AnalysisTab";
 import KycTab from "@/components/admin/KycTab";
 import { buildStrategyTemplate } from "@/lib/strategy-templates";
 import type { StrategyTemplateKey } from "@/lib/strategy-templates";
+import InternalNotes from "@/components/admin/InternalNotes";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -604,6 +605,8 @@ export default function ClientDetailPage() {
               {isCreatingProposal ? "Creating..." : "Create Proposal from Strategy"}
             </button>
           </div>
+
+          <InternalNotes documentType="strategy" documentId={client.id} />
         </div>
       )}
 

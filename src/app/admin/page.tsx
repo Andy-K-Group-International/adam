@@ -6,7 +6,8 @@ import { listClients } from "@/lib/supabase/queries/clients";
 import { listAllContracts } from "@/lib/supabase/queries/contracts";
 import { listQuestionnaires } from "@/lib/supabase/queries/questionnaires";
 import { listAll as listAllActivities } from "@/lib/supabase/queries/activity-log";
-import type { Client, Contract, Questionnaire, ActivityLog } from "@/lib/supabase/types";
+import { listPendingClientRequests } from "@/lib/supabase/queries/client-requests";
+import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest } from "@/lib/supabase/types";
 import StatsCards from "@/components/admin/StatsCards";
 import ActionItems from "@/components/admin/ActionItems";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
@@ -74,23 +75,26 @@ export default function AdminDashboardPage() {
   const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
   const [activities, setActivities] = useState<ActivityLog[] | undefined>(undefined);
+  const [pendingRequests, setPendingRequests] = useState<ClientRequest[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
 
     async function fetchData() {
-      const [clientsData, contractsData, questionnairesData, activitiesData] =
+      const [clientsData, contractsData, questionnairesData, activitiesData, pendingRequestsData] =
         await Promise.all([
           listClients(supabase).catch(() => []),
           listAllContracts(supabase).catch(() => []),
           listQuestionnaires(supabase, { status: "submitted" }).catch(() => []),
           listAllActivities(supabase, 15).catch(() => []),
+          listPendingClientRequests(supabase).catch(() => []),
         ]);
 
       setClients(clientsData);
       setContracts(contractsData);
       setQuestionnaires(questionnairesData);
       setActivities(activitiesData);
+      setPendingRequests(pendingRequestsData);
     }
 
     fetchData();
@@ -108,7 +112,7 @@ export default function AdminDashboardPage() {
   // Build action items from real data
   const actionItems: {
     id: string;
-    type: "unsigned_contract" | "unverified_appendix" | "change_request" | "new_questionnaire";
+    type: "unsigned_contract" | "unverified_appendix" | "change_request" | "new_questionnaire" | "client_request";
     title: string;
     description: string;
     href: string;
@@ -168,6 +172,20 @@ export default function AdminDashboardPage() {
       description: `Submitted by ${q.contact_name} (${q.contact_email})`,
       href: `/admin/questionnaires/${q.id}`,
       priority: "medium",
+    });
+  });
+
+  // Pending client requests — urgent/high appear as high priority
+  pendingRequests.forEach((r) => {
+    const docLabel = r.document_type.charAt(0).toUpperCase() + r.document_type.slice(1);
+    const company = r.client?.company_name ?? "Client";
+    actionItems.push({
+      id: `req-${r.id}`,
+      type: "client_request",
+      title: `${company} — ${docLabel}`,
+      description: r.content.slice(0, 80) + (r.content.length > 80 ? "…" : ""),
+      href: `/admin/${r.document_type}s/${r.document_id}`,
+      priority: r.priority === "urgent" || r.priority === "high" ? "high" : r.priority === "medium" ? "medium" : "low",
     });
   });
 

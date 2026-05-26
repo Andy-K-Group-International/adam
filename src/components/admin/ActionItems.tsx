@@ -6,13 +6,14 @@ import {
   ShieldCheck,
   ArrowRightLeft,
   ClipboardList,
+  MessageSquareText,
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActionItem {
   id: string;
-  type: "unsigned_contract" | "unverified_appendix" | "change_request" | "new_questionnaire";
+  type: "unsigned_contract" | "unverified_appendix" | "change_request" | "new_questionnaire" | "client_request";
   title: string;
   description: string;
   href: string;
@@ -28,6 +29,7 @@ const typeIcons: Record<ActionItem["type"], typeof FileText> = {
   unverified_appendix: ShieldCheck,
   change_request: ArrowRightLeft,
   new_questionnaire: ClipboardList,
+  client_request: MessageSquareText,
 };
 
 const typeLabels: Record<ActionItem["type"], string> = {
@@ -35,6 +37,11 @@ const typeLabels: Record<ActionItem["type"], string> = {
   unverified_appendix: "Unverified Appendix",
   change_request: "Change Request",
   new_questionnaire: "New Questionnaire",
+  client_request: "Client Request",
+};
+
+const typeColorClass: Partial<Record<ActionItem["type"], string>> = {
+  client_request: "bg-[#c9707d]/10 text-[#c9707d]",
 };
 
 export default function ActionItems({ items }: ActionItemsProps) {
@@ -72,11 +79,12 @@ export default function ActionItems({ items }: ActionItemsProps) {
                 <span
                   className={cn(
                     "text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0",
-                    item.type === "change_request"
-                      ? "bg-warning/10 text-warning"
-                      : item.type === "new_questionnaire"
-                        ? "bg-success/10 text-success"
-                        : "bg-info/10 text-info"
+                    typeColorClass[item.type] ??
+                      (item.type === "change_request"
+                        ? "bg-warning/10 text-warning"
+                        : item.type === "new_questionnaire"
+                          ? "bg-success/10 text-success"
+                          : "bg-info/10 text-info")
                   )}
                 >
                   {typeLabels[item.type]}

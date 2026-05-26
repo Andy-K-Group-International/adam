@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import StatusBadge from "@/components/contracts/StatusBadge";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import InternalNotes from "@/components/admin/InternalNotes";
 
 export default function AdminContractDetailPage() {
   const params = useParams();
@@ -574,6 +575,8 @@ export default function AdminContractDetailPage() {
         canRequestChanges={false}
         backHref="/admin/contracts"
       />
+
+      <InternalNotes documentType="contract" documentId={contract.id} />
     </div>
   );
 }

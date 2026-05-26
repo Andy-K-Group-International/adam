@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import InternalNotes from "@/components/admin/InternalNotes";
 import { siteConfig } from "@/lib/data";
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -592,6 +593,8 @@ export default function AdminProposalDetailPage() {
           <p className="text-sm text-muted whitespace-pre-wrap">{proposal.admin_notes}</p>
         </div>
       )}
+
+      <InternalNotes documentType="proposal" documentId={proposal.id} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { listByContract as getCommentsByContract } from "@/lib/supabase/queries/
 import { listByContract as getVersionsByContract } from "@/lib/supabase/queries/contract-versions";
 import ContractViewer from "@/components/contracts/ContractViewer";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ClientRequestForm from "@/components/dashboard/ClientRequestForm";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function ContractPage() {
@@ -66,25 +67,34 @@ export default function ContractPage() {
     contract.status === "viewed" || contract.status === "published";
 
   return (
-    <ContractViewer
-      contract={contract}
-      comments={comments || []}
-      versions={versions || []}
-      canSign={canSign}
-      canRequestChanges={canRequestChanges}
-      onSign={async (signature) => {
-        if (!user) return;
-        const supabase = createClient();
-        const updated = await clientSign(supabase, contractId, user.id, signature);
-        if (updated) setContract(updated);
-      }}
-      onRequestChanges={async (comment) => {
-        if (!user) return;
-        const supabase = createClient();
-        const updated = await requestChanges(supabase, contractId, user.id, comment);
-        if (updated) setContract(updated);
-      }}
-      backHref="/dashboard"
-    />
+    <div>
+      <ContractViewer
+        contract={contract}
+        comments={comments || []}
+        versions={versions || []}
+        canSign={canSign}
+        canRequestChanges={canRequestChanges}
+        onSign={async (signature) => {
+          if (!user) return;
+          const supabase = createClient();
+          const updated = await clientSign(supabase, contractId, user.id, signature);
+          if (updated) setContract(updated);
+        }}
+        onRequestChanges={async (comment) => {
+          if (!user) return;
+          const supabase = createClient();
+          const updated = await requestChanges(supabase, contractId, user.id, comment);
+          if (updated) setContract(updated);
+        }}
+        backHref="/dashboard"
+      />
+      <div className="max-w-3xl mt-2">
+        <ClientRequestForm
+          documentType="contract"
+          documentId={contractId}
+          sections={contract.sections?.map((s: { id: string; title: string }) => ({ id: s.id, title: s.title }))}
+        />
+      </div>
+    </div>
   );
 }

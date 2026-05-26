@@ -424,6 +424,47 @@ export interface ContractComment {
   updated_at: string;
 }
 
+export type NoteDocumentType = "proposal" | "strategy" | "contract";
+export type NoteVisibility = "operational" | "legal" | "onboarding" | "billing" | "implementation" | "escalation";
+export type ClientRequestStatus = "pending" | "acknowledged" | "resolved" | "declined";
+export type ClientRequestPriority = "low" | "medium" | "high" | "urgent";
+
+export interface DocumentNote {
+  id: string;
+  document_type: NoteDocumentType;
+  document_id: string;
+  section_id: string | null;
+  content: string;
+  author_id: string;
+  parent_id: string | null;
+  is_resolved: boolean;
+  is_pinned: boolean;
+  edited: boolean;
+  visibility: NoteVisibility;
+  created_at: string;
+  updated_at: string;
+  author?: Pick<User, "id" | "first_name" | "last_name" | "email">;
+  replies?: DocumentNote[];
+}
+
+export interface ClientRequest {
+  id: string;
+  document_type: NoteDocumentType;
+  document_id: string;
+  section_id: string | null;
+  content: string;
+  client_id: string;
+  status: ClientRequestStatus;
+  priority: ClientRequestPriority;
+  admin_response: string | null;
+  admin_responded_by: string | null;
+  admin_responded_at: string | null;
+  edited: boolean;
+  created_at: string;
+  updated_at: string;
+  client?: Pick<Client, "id" | "company_name" | "contact_name" | "contact_email">;
+}
+
 export interface ProposalRecurringItem {
   name: string;
   monthly: number;

@@ -12,6 +12,7 @@ import { ArrowLeft, CheckCircle, XCircle, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ClientRequestForm from "@/components/dashboard/ClientRequestForm";
 import { siteConfig } from "@/lib/data";
 
 function statusStyle(status: ProposalStatus): string {
@@ -232,6 +233,13 @@ export default function ClientProposalPage() {
             ))
           )}
         </div>
+
+        {/* Request changes */}
+        <ClientRequestForm
+          documentType="proposal"
+          documentId={proposalId}
+          sections={sortedSections.map((s) => ({ id: s.key, title: s.title }))}
+        />
 
         {/* Action panel */}
         {canRespond && (

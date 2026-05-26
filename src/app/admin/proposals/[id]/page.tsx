@@ -13,7 +13,8 @@ import {
   buildRecommendedServicesContent, SECTION_KEYS,
 } from "@/lib/proposal-content";
 import { getContractTemplate } from "@/lib/contract-templates";
-import type { Proposal, Client, ProposalInvestment, ProposalRecurringItem, ProposalOneTimeItem, StrategyType } from "@/lib/supabase/types";
+import type { ContractClientData } from "@/lib/contract-templates";
+import type { Proposal, Client, ProposalInvestment, ProposalRecurringItem, ProposalOneTimeItem, StrategyType, Address } from "@/lib/supabase/types";
 import Link from "next/link";
 import {
   ArrowLeft, Send, FileText, Save, Sparkles, Lock, Unlock, Edit2,
@@ -258,9 +259,34 @@ export default function AdminProposalDetailPage() {
     setIsCreatingContract(true);
     try {
       const supabase = createClient();
-      const serviceType: StrategyType = (proposal.service_type ?? client.strategy_type ?? "b2b") as StrategyType;
+      const serviceType: StrategyType = (proposal.service_type ?? client.strategy_type ?? "b2g") as StrategyType;
       const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-      const template = getContractTemplate(serviceType, client.contact_name, client.company_name, date);
+
+      const addr = client.address as Address | null;
+      const formattedAddress = addr
+        ? [addr.line1, addr.line2, `${addr.city}${addr.postcode ? `, ${addr.postcode}` : ""}`, addr.country]
+            .filter(Boolean).join("\n")
+        : "";
+
+      const currency = proposal.addons?.currency ?? client.billing_currency ?? "GBP";
+      const totalMonthly = proposal.addons
+        ? proposal.addons.recurringItems.reduce((s, i) => s + (Number(i.monthly) || 0), 0)
+        : 0;
+      const monthlyFeeStr = totalMonthly > 0
+        ? new Intl.NumberFormat("en-GB", { style: "currency", currency, minimumFractionDigits: 0 }).format(totalMonthly)
+        : "";
+
+      const contractData: ContractClientData = {
+        clientName:    client.contact_name,
+        clientCompany: client.company_name,
+        clientAddress: formattedAddress,
+        clientRef:     client.client_ref ?? "",
+        date,
+        packageName:   proposal.title,
+        monthlyFee:    monthlyFeeStr,
+        currency,
+      };
+      const template = getContractTemplate(serviceType, contractData);
 
       const visibleSections = proposal.sections.filter((s) => s.isVisible && s.key !== "investment_overview" && s.key !== "approval").sort((a, b) => a.order - b.order);
       const commercialsSnapshot = {

@@ -41,10 +41,39 @@ export default function ContractDocument({
   adminSignedAt,
   date,
 }: ContractDocProps) {
+  const isDraft = !adminSignedAt || !clientSignedAt;
+
+  const draftWatermark = isDraft ? (
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 96,
+          color: "#ede8e2",
+          fontFamily: "Helvetica-Bold",
+          transform: "rotate(-40deg)",
+          letterSpacing: 12,
+        }}
+      >
+        DRAFT
+      </Text>
+    </View>
+  ) : null;
+
   return (
     <Document>
       {/* Cover */}
       <Page size="A4" style={styles.coverPage}>
+        {draftWatermark}
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Text style={styles.coverBrand}>ANDY'K GROUP INTERNATIONAL LTD</Text>
           <Text style={{ fontSize: 10, color: colors.muted, marginBottom: 60, textAlign: "center" }}>
@@ -60,6 +89,7 @@ export default function ContractDocument({
       {/* Content sections */}
       {sections.map((section) => (
         <Page key={section.id} size="A4" style={styles.page}>
+          {draftWatermark}
           <Text style={styles.sectionTitle}>{section.title}</Text>
           {section.content.split("\n").map((line, i) => (
             <Text key={i} style={styles.body}>
@@ -73,6 +103,7 @@ export default function ContractDocument({
       {/* Appendix D — Contact Person (if provided) */}
       {appendixDContact && (
         <Page size="A4" style={styles.page}>
+          {draftWatermark}
           <Text style={styles.sectionTitle}>Appendix D — Primary Contact Person</Text>
           <Text style={styles.body}>
             The following individual is designated as the primary contact for all communications relating to this Agreement.
@@ -98,7 +129,8 @@ export default function ContractDocument({
       )}
 
       {/* Signature Page */}
-      <Page size="A4" style={styles.page}>
+<Page size="A4" style={styles.page}>
+        {draftWatermark}
         <Text style={styles.sectionTitle}>Signatures</Text>
         <Text style={styles.body}>
           This agreement is entered into by the parties identified below.

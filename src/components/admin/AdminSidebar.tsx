@@ -17,6 +17,7 @@ import {
   Receipt,
   BarChart2,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Leads", href: "/admin/leads", icon: Target },
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
+  { label: "Strategy",  href: "/admin/strategy",  icon: BookOpen },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },
   { label: "Invoices", href: "/admin/invoices", icon: Receipt },
   { label: "Reports", href: "/admin/reports", icon: BarChart2 },

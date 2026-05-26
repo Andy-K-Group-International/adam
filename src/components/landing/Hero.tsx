@@ -35,13 +35,13 @@ export default function Hero() {
         A.D.A.M.
       </p>
       <h1 className="gradient-text tracking-tight leading-[1.2] text-[clamp(1.25rem,0.9rem+1.25vw,1.75rem)] mb-6 font-serif font-light italic">
-        <span className="block">Automated Document</span>
+        <span className="block">AI-Powered Business Development</span>
         <span className="block">
-          &amp; Account Manager
+          Operating System
         </span>
       </h1>
       <p className="text-xl leading-relaxed text-muted font-light max-w-[620px] mx-auto mb-3">
-        AI-powered business automation — from client intake to <span className="italic font-normal">signed contracts</span>, handled end-to-end.
+        From first contact to <span className="italic font-normal">signed contract</span> — A.D.A.M. automates your entire client lifecycle. Proposals, contracts, invoices and onboarding in one intelligent system.
       </p>
       <p className="text-base leading-relaxed text-muted-2 font-light max-w-[540px] mx-auto mb-9">
         By{" "}
@@ -51,7 +51,7 @@ export default function Hero() {
           rel="noopener noreferrer"
           className="underline underline-offset-2 hover:text-foreground transition-colors"
         >
-          Andy'K Group International LTD.
+          Andy'K Group International LTD
         </a>
         <br/>
         <span className="font-bold"> Ready to automate your business?</span>

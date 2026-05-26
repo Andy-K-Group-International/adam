@@ -3,7 +3,7 @@ export const siteConfig = {
   fullName: "Automated Document & Account Manager",
   company: "Andy'K Group International LTD",
   companyReg: "16453500",
-  address: "86-90 Paul Street, London EC2A 4NE",
+  address: "86-90 Paul Street, London, EC2A 4NE",
   email: "info@andykgroup.com",
   website: "https://andykgroup.com",
 };
@@ -31,44 +31,44 @@ export const statsData = [
 export const roadmapSteps = [
   {
     step: "01",
-    title: "Questionnaire",
+    title: "Strategic Application",
     description:
-      "Complete our structured intake form. We learn about your business, goals, and requirements.",
+      "Submit your strategic brief. Tell us about your business objectives, target market, and growth ambitions.",
     icon: "clipboard",
   },
   {
     step: "02",
-    title: "Proposal",
+    title: "Internal Review & Qualification",
     description:
-      "We craft a tailored proposal based on your needs. Review it in your personal dashboard.",
+      "Our team evaluates your application against our qualification criteria. You'll hear back within 24 hours.",
     icon: "file-text",
   },
   {
     step: "03",
-    title: "Contract",
+    title: "Proposal & Strategy",
     description:
-      "Review, comment, and digitally sign your contract. Full transparency, no surprises.",
-    icon: "pen-tool",
+      "We craft a bespoke proposal with a clear strategy and roadmap. Review it in your personal client portal.",
+    icon: "map",
   },
   {
     step: "04",
-    title: "Strategy",
+    title: "Contract & Signing",
     description:
-      "Together we define the strategy and timeline. Every detail aligned before we start.",
-    icon: "target",
+      "Review, negotiate, and digitally sign your contract. Full transparency — no surprises, no small print.",
+    icon: "shield",
   },
   {
     step: "05",
-    title: "Invoice",
+    title: "Invoice & Payment",
     description:
-      "Automated invoicing with clear payment terms. Everything tracked in one place.",
+      "Automated invoicing with clear payment terms and milestones. Everything tracked and accessible in one place.",
     icon: "receipt",
   },
   {
     step: "06",
-    title: "Onboarding",
+    title: "Kickoff & Execution",
     description:
-      "Project launches. Real-time updates, document sharing, and ongoing support through A.D.A.M.",
+      "Project launches. Real-time updates, document sharing, and ongoing management through A.D.A.M.",
     icon: "rocket",
   },
 ];

@@ -79,19 +79,66 @@ export function buildAboutYouContent(q: {
   return lines.join("\n");
 }
 
-export function buildRecommendedServicesContent(serviceType: StrategyType): string {
+export function buildRecommendedServicesContent(serviceType: StrategyType, companyName = ""): string {
   switch (serviceType) {
     case "b2b":
       return `Service Package: B2B Lead Generation & Sales Development\n\nBased on our assessment of your business goals and challenges, we recommend our B2B Sales Development programme. This engagement is designed to build and accelerate your outbound pipeline, opening new commercial relationships and converting prospects into signed clients.\n\nTarget Audience:\n• Decision-makers within your defined industry verticals\n• Companies matching your ideal customer profile (ICP)\n• Accounts with demonstrated budget and purchase authority\n\nCampaign Approach:\n• Multi-channel outreach (email, LinkedIn, telephone)\n• Personalised messaging sequences aligned to your value proposition\n• CRM-integrated pipeline reporting\n• Monthly performance reviews and optimisation cycles\n\nAvailable Add-Ons:\n• Content production (case studies, whitepapers)\n• Sales enablement material design\n• Market research and competitor analysis\n• CRM setup and integration`;
 
     case "b2g":
-      return `Service Package: B2G Tender Development & Government Market Entry\n\nBased on your profile and objectives, we recommend our B2G Engagement Programme. This is a structured approach to identifying, qualifying, and pursuing public sector opportunities through frameworks, portals, and direct engagement with contracting authorities.\n\nTender Scope:\n• Central government procurement portals (Find a Tender, Contracts Finder)\n• Local authority and NHS frameworks\n• Grant identification and application support\n\nCapability & Compliance:\n• Pre-qualification questionnaire (PQQ) preparation\n• Social value and sustainability statement development\n• GDPR and security compliance documentation review\n\nCampaign Approach:\n• Bid management and writing support\n• Stakeholder mapping within target authorities\n• Market warming prior to procurement\n\nAvailable Add-Ons:\n• DPS (Dynamic Purchasing System) registration\n• G-Cloud and Digital Marketplace listing\n• Supplier diversity certification guidance`;
+      return `Based on your procurement profile and target markets, we recommend our B2G Tender Strategy service. Our approach includes:
+- Full CPV code analysis and opportunity mapping
+- Tender pipeline management and bid preparation
+- Compliance documentation support
+- Consortium partnership identification
+- Monthly tender calendar and deadline tracking`;
 
     case "adam_license":
-      return `Service Package: A.D.A.M. Platform Licence\n\nBased on your operational requirements, we recommend our A.D.A.M. (Automated Document & Account Manager) platform licence. A.D.A.M. provides your team with a fully integrated client lifecycle management environment — from initial questionnaire intake through proposals, contracts, invoicing, and project kickoff.\n\nConfiguration Included:\n• Platform setup and onboarding for your team\n• Custom branding and domain configuration\n• User role setup (admin, staff, client access)\n• Integration with your preferred tools (where applicable)\n\nKey Features:\n• AI-assisted proposal generation\n• Digital contract execution (e-signature)\n• Automated invoicing and payment tracking\n• Client portal with real-time document access\n\nTimeline:\n• Onboarding and configuration: 5–10 business days\n• Training session: 2 hours (remote)\n• Go-live: within 2 weeks of contract execution\n\nAvailable Add-Ons:\n• Dedicated support SLA tier upgrade\n• Custom workflow automation\n• API integration development\n• Monthly performance and usage reporting`;
+      return `We recommend implementing A.D.A.M. — our AI-Powered Business Development Operating System — configured specifically for ${companyName}'s workflows. Your implementation includes:
+- Full system setup and configuration
+- Custom questionnaire for your client intake
+- Proposal and contract templates for your services
+- Invoice and payment tracking
+- Client portal access for your clients
+- 30-day implementation support`;
 
     case "end_to_end":
-      return `Service Package: End-to-End Business Development Programme\n\nBased on your goals and stage of growth, we recommend our End-to-End Business Development Programme. This is a comprehensive, retainer-based engagement covering strategy design, market execution, operational support, and ongoing account management across your target sectors.\n\nCustom Programme Scope:\n• Commercial strategy design and market entry planning\n• Outbound pipeline development and prospect engagement\n• Bid, tender, and proposal support across B2B and B2G channels\n• Operations and process optimisation\n• Technology stack audit and implementation (including A.D.A.M.)\n\nEngagement Objectives:\n• Establish a repeatable, scalable revenue pipeline\n• Reduce time-to-revenue on new market entries\n• Build institutional knowledge within your team\n• Deliver measurable pipeline growth within 90 days\n\nEngagement Model:\n• Dedicated programme manager\n• Weekly operational calls\n• Monthly strategic reviews with senior leadership\n• Quarterly performance reports with board-ready summaries\n\nAvailable Add-Ons:\n• PR & media relations\n• Investor materials and fundraising support\n• International market expansion strategy\n• Dedicated business development resource (secondment model)`;
+      return `Based on our assessment of ${companyName}, we propose a full End-to-End Business Development engagement. This is a custom, implementation-based partnership covering:
+- Business architecture review and strategic alignment
+- Revenue growth planning and market expansion
+- Operational improvement and process optimization
+- Go-to-market strategy and execution support
+- Monthly strategic reviews and course corrections
+This is not a template service — every deliverable is built specifically for your business.`;
+  }
+}
+
+export function buildHowWeWorkContent(serviceType: StrategyType): string {
+  switch (serviceType) {
+    case "b2b":
+      return HOW_WE_WORK;
+
+    case "b2g":
+      return `Our B2G engagement follows a structured monthly cycle:
+- Week 1: Tender identification and pipeline review
+- Week 2: Bid/no-bid decisions and preparation
+- Week 3: Document preparation and submission
+- Week 4: Review, feedback analysis and next cycle planning
+Monthly reporting includes: tenders submitted, pipeline value, win/loss analysis`;
+
+    case "adam_license":
+      return `Your A.D.A.M. implementation follows 4 phases:
+Phase 1 (Week 1-2): System access, initial configuration, team onboarding
+Phase 2 (Week 3-4): Template setup, test runs, workflow calibration
+Phase 3 (Month 2): Go-live with first real client, monitoring and optimization
+Phase 4 (Month 3+): Advanced features, reporting, scaling
+Weekly check-in calls during implementation. Dedicated support via info@andykgroup.com`;
+
+    case "end_to_end":
+      return `Our End-to-End engagement operates on a structured monthly rhythm:
+Weekly: Progress calls, action item reviews, obstacle resolution
+Monthly: Strategic review, KPI analysis, plan adjustment
+Quarterly: Full business review, pivot decisions, next quarter planning
+You will have direct access to senior consultants. All strategy documents, reports and deliverables are delivered through A.D.A.M. — your dedicated client portal.`;
   }
 }
 
@@ -147,7 +194,8 @@ Andy'K Group International LTD reserves the right to withdraw or amend this prop
 
 export function buildDefaultSections(
   serviceType: StrategyType,
-  aboutYouContent: string
+  aboutYouContent: string,
+  companyName = ""
 ): ProposalSection[] {
   return [
     {
@@ -168,7 +216,7 @@ export function buildDefaultSections(
     {
       key: "recommended_services",
       title: "Recommended Services",
-      content: buildRecommendedServicesContent(serviceType),
+      content: buildRecommendedServicesContent(serviceType, companyName),
       order: 2,
       isVisible: true,
     },
@@ -182,7 +230,7 @@ export function buildDefaultSections(
     {
       key: "how_we_work",
       title: "How We Work Together",
-      content: HOW_WE_WORK,
+      content: buildHowWeWorkContent(serviceType),
       order: 4,
       isVisible: true,
     },

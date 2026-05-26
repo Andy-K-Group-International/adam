@@ -75,7 +75,7 @@ export default function NewProposalPage() {
         });
       }
 
-      const sections = buildDefaultSections(serviceType, aboutYouContent);
+      const sections = buildDefaultSections(serviceType, aboutYouContent, client.company_name);
       const proposalRef = await generateProposalRef(supabase, clientId);
       const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 

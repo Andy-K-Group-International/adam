@@ -23,7 +23,9 @@ import ContactsTab from "@/components/admin/ContactsTab";
 import { listContacts } from "@/lib/supabase/queries/contacts";
 import type { Contact } from "@/lib/supabase/types";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, FileText } from "lucide-react";
+import { buildStrategyTemplate } from "@/lib/strategy-templates";
+import type { StrategyTemplateKey } from "@/lib/strategy-templates";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -447,9 +449,32 @@ export default function ClientDetailPage() {
         <div className="space-y-6 max-w-3xl">
           {/* Strategy Type */}
           <div className="bg-white rounded-xl border border-grid-300 p-5">
-            <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-3">
-              Strategy Type
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-xs font-semibold text-muted uppercase tracking-wider">
+                Strategy Type
+              </label>
+              {strategyType && strategyType !== "b2b" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const templateKey = strategyType as StrategyTemplateKey;
+                    const filled = buildStrategyTemplate(templateKey, {
+                      company_name: client.company_name,
+                      segments: client.segments,
+                      countries_of_operation: questionnaire?.countries_of_operation ?? "",
+                      annual_revenue: questionnaire?.annual_revenue ?? "",
+                    });
+                    if (!strategyNotes.trim() || window.confirm("Replace current strategy notes with the template? This cannot be undone.")) {
+                      setStrategyNotes(filled);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-highlight/40 text-highlight hover:bg-highlight/8 transition-colors"
+                >
+                  <FileText className="h-3 w-3" />
+                  Load Template
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {([
                 { value: "b2b", label: "B2B" },

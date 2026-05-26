@@ -162,7 +162,7 @@ export default function AdminProposalDetailPage() {
     const supabase = createClient();
     const updatedSections = proposal.sections.map((s) =>
       s.key === "recommended_services"
-        ? { ...s, content: buildRecommendedServicesContent(newType) }
+        ? { ...s, content: buildRecommendedServicesContent(newType, client?.company_name ?? "") }
         : s
     );
     const updated = await updateProposal(supabase, proposalId, {

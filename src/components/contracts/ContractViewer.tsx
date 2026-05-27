@@ -139,7 +139,7 @@ export default function ContractViewer({
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 min-w-0">
           <div className="bg-white rounded-xl border border-grid-300 p-8">
             {contract.sections && contract.sections.length > 0 ? (
               contract.sections.map((section) => (
@@ -147,13 +147,13 @@ export default function ContractViewer({
                   <h2 className="text-base font-semibold text-foreground mb-3 pb-2 border-b border-grid-300">
                     {section.title}
                   </h2>
-                  <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap break-words">
                     {section.content}
                   </p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">
+              <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap break-words">
                 {contract.content}
               </p>
             )}

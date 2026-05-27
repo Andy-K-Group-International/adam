@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getClientById, updateClient } from "@/lib/supabase/queries/clients";
@@ -15,8 +15,9 @@ import type { Client, Questionnaire, ActivityLog, StrategyType, Contact } from "
 import Link from "next/link";
 import {
   ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2,
-  Users, RefreshCw, FileText, Archive, ArchiveRestore, RefreshCcw, BarChart2,
+  Users, RefreshCw, FileText, Archive, ArchiveRestore, RefreshCcw, BarChart2, Lock,
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import { confirmKickoffAction } from "@/app/actions/invoices";
@@ -102,6 +103,13 @@ export default function ClientDetailPage() {
   const [reactivating, setReactivating] = useState(false);
   const [reactivateMsg, setReactivateMsg] = useState("");
 
+  // Founder notes (admin-only, no audit trail)
+  const { isAdmin } = useCurrentUser();
+  const [founderNotes, setFounderNotes] = useState("");
+  const [founderNotesSaving, setFounderNotesSaving] = useState(false);
+  const [founderNotesSavedAt, setFounderNotesSavedAt] = useState<string | null>(null);
+  const founderSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Kickoff state
   const [kickoffDate, setKickoffDate] = useState("");
   const [kickoffNotes, setKickoffNotes] = useState("");
@@ -109,6 +117,28 @@ export default function ClientDetailPage() {
   const [newChecklistItem, setNewChecklistItem] = useState("");
   const [isConfirmingKickoff, setIsConfirmingKickoff] = useState(false);
   const [kickoffMsg, setKickoffMsg] = useState("");
+
+  const handleFounderNotesChange = (value: string) => {
+    setFounderNotes(value);
+    if (founderSaveTimer.current) clearTimeout(founderSaveTimer.current);
+    founderSaveTimer.current = setTimeout(async () => {
+      setFounderNotesSaving(true);
+      try {
+        const supabase = createClient();
+        await supabase
+          .from("clients")
+          .update({
+            founder_notes: value.trim() || null,
+            founder_notes_updated_at: new Date().toISOString(),
+          })
+          .eq("id", clientId);
+        const now = new Date().toISOString();
+        setFounderNotesSavedAt(now);
+      } catch { /* silent */ } finally {
+        setFounderNotesSaving(false);
+      }
+    }, 2000);
+  };
 
   const recalculateHealthScore = async () => {
     setHealthScoreLoading(true);
@@ -134,6 +164,8 @@ export default function ClientDetailPage() {
         setClient(clientData);
         setStrategyType(clientData.strategy_type ?? null);
         setStrategyNotes(clientData.strategy_notes ?? "");
+        setFounderNotes(clientData.founder_notes ?? "");
+        setFounderNotesSavedAt(clientData.founder_notes_updated_at ?? null);
         setKickoffDate(clientData.kickoff_date ? clientData.kickoff_date.slice(0, 16) : "");
         setKickoffNotes(clientData.kickoff_notes ?? "");
         setChecklist(clientData.kickoff_checklist ?? []);
@@ -534,6 +566,50 @@ export default function ClientDetailPage() {
       {activeTab === "overview" && (
         <div className="mt-6">
           <ImplementationTimeline client={client} activities={activities} invoices={invoices} />
+        </div>
+      )}
+
+      {/* ── Founder Notes — admin only, no audit trail ───────────────────────── */}
+      {activeTab === "overview" && isAdmin && (
+        <div className="mt-6 max-w-3xl">
+          <div className="rounded-xl border border-grid-300 bg-grid-300/20 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-grid-300">
+              <div className="flex items-center gap-2">
+                <Lock className="h-3.5 w-3.5 text-muted-2" />
+                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                  Private Founder Notes
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {founderNotesSaving && (
+                  <span className="text-[10px] font-mono text-muted-2 animate-pulse">Saving…</span>
+                )}
+                <span className="text-[10px] font-mono text-muted-2">
+                  Visible only to admin · Not logged · Not shared
+                </span>
+              </div>
+            </div>
+            <textarea
+              value={founderNotes}
+              onChange={(e) => handleFounderNotesChange(e.target.value)}
+              rows={5}
+              placeholder={[
+                "Strong long-term partner potential",
+                "Needs strict scope boundaries",
+                "High implementation risk — monitor closely",
+                "Potential white-label expansion client",
+                "Avoid scope creep — document everything",
+              ].join("\n")}
+              className="w-full px-5 py-4 text-sm text-muted bg-transparent placeholder:text-muted-2/50 focus:outline-none resize-none leading-relaxed"
+            />
+            {founderNotesSavedAt && (
+              <div className="px-5 py-2 border-t border-grid-300">
+                <p className="text-[10px] font-mono text-muted-2">
+                  Last saved {formatDate(founderNotesSavedAt)}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

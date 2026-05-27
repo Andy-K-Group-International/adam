@@ -247,6 +247,8 @@ export interface Client {
   activation_checklist: ActivationChecklistItem[];
   activated_at: string | null;
   activation_approved_by: string | null;
+  founder_notes: string | null;
+  founder_notes_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -288,6 +288,29 @@ export interface LeadMetadata {
   demo_request?: boolean;
 }
 
+export interface ProposalVersion {
+  id: string;
+  proposal_id: string;
+  version: number;
+  sections: unknown[];
+  addons: unknown | null;
+  service_type: string | null;
+  snapshot_label: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface StrategyVersion {
+  id: string;
+  client_id: string;
+  version: number;
+  strategy_type: string | null;
+  strategy_notes: string | null;
+  snapshot_label: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface DemoToken {
   id: string;
   token: string;

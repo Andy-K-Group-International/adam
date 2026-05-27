@@ -37,6 +37,9 @@ import InternalNotes from "@/components/admin/InternalNotes";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import ActivationTab from "@/components/admin/ActivationTab";
 import ImplementationTimeline from "@/components/admin/ImplementationTimeline";
+import StrategyVersionHistory from "@/components/admin/StrategyVersionHistory";
+import { listStrategyVersions, createStrategyVersion } from "@/lib/supabase/queries/strategy-versions";
+import type { StrategyVersion } from "@/lib/supabase/types";
 
 const stageColors: Record<string, string> = {
   questionnaire: "bg-grid-300 text-muted",
@@ -103,8 +106,11 @@ export default function ClientDetailPage() {
   const [reactivating, setReactivating] = useState(false);
   const [reactivateMsg, setReactivateMsg] = useState("");
 
+  // Strategy versions
+  const [strategyVersions, setStrategyVersions] = useState<StrategyVersion[]>([]);
+
   // Founder notes (admin-only, no audit trail)
-  const { isAdmin } = useCurrentUser();
+  const { isAdmin, user } = useCurrentUser();
   const [founderNotes, setFounderNotes] = useState("");
   const [founderNotesSaving, setFounderNotesSaving] = useState(false);
   const [founderNotesSavedAt, setFounderNotesSavedAt] = useState<string | null>(null);
@@ -169,6 +175,8 @@ export default function ClientDetailPage() {
         setKickoffDate(clientData.kickoff_date ? clientData.kickoff_date.slice(0, 16) : "");
         setKickoffNotes(clientData.kickoff_notes ?? "");
         setChecklist(clientData.kickoff_checklist ?? []);
+
+        listStrategyVersions(supabase, clientId).then(setStrategyVersions).catch(() => {});
 
         const [activitiesData, contactsData, reportsData, invoicesData] = await Promise.all([
           listActivitiesForClient(supabase, clientId).catch(() => []),
@@ -254,11 +262,32 @@ export default function ClientDetailPage() {
         strategy_notes: strategyNotes.trim() || null,
       } as Partial<Client>);
       setClient((prev) => prev ? { ...prev, ...updated } : prev);
+
+      // Snapshot if content changed vs latest version
+      const latestVersion = strategyVersions[0];
+      const contentChanged = strategyNotes.trim() !== (latestVersion?.strategy_notes ?? "").trim();
+      if (strategyNotes.trim() && contentChanged) {
+        const nextNum = (latestVersion?.version ?? 0) + 1;
+        const label = nextNum === 1 ? "Initial draft" : `Revision ${nextNum}`;
+        const newVersion = await createStrategyVersion(supabase, {
+          client_id: clientId,
+          strategy_type: strategyType ?? null,
+          strategy_notes: strategyNotes.trim(),
+          snapshot_label: label,
+          created_by: user?.id ?? null,
+        });
+        setStrategyVersions((prev) => [newVersion, ...prev].slice(0, 10));
+      }
     } catch (err) {
       console.error("Failed to save strategy:", err);
     } finally {
       setIsSavingStrategy(false);
     }
+  };
+
+  const handleRestoreStrategyVersion = (v: StrategyVersion) => {
+    setStrategyNotes(v.strategy_notes ?? "");
+    if (v.strategy_type) setStrategyType(v.strategy_type as typeof strategyType);
   };
 
   const handleCreateProposalFromStrategy = async () => {
@@ -704,6 +733,11 @@ export default function ClientDetailPage() {
               {isCreatingProposal ? "Creating..." : "Create Proposal from Strategy"}
             </button>
           </div>
+
+          <StrategyVersionHistory
+            versions={strategyVersions}
+            onRestore={handleRestoreStrategyVersion}
+          />
 
           <InternalNotes documentType="strategy" documentId={client.id} />
         </div>

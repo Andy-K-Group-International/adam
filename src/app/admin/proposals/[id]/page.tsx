@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getProposalById, updateProposal } from "@/lib/supabase/queries/proposals";
 import { getClientById } from "@/lib/supabase/queries/clients";
+import { listProposalVersions, createProposalVersion } from "@/lib/supabase/queries/proposal-versions";
+import ProposalVersionHistory from "@/components/admin/ProposalVersionHistory";
 import { createContract } from "@/lib/supabase/queries/contracts";
 import { sendProposalPublished } from "@/app/actions/email";
 import {
@@ -14,7 +16,7 @@ import {
 } from "@/lib/proposal-content";
 import { getContractTemplate } from "@/lib/contract-templates";
 import type { ContractClientData } from "@/lib/contract-templates";
-import type { Proposal, Client, ProposalInvestment, ProposalRecurringItem, ProposalOneTimeItem, StrategyType, Address } from "@/lib/supabase/types";
+import type { Proposal, Client, ProposalInvestment, ProposalRecurringItem, ProposalOneTimeItem, StrategyType, Address, ProposalVersion } from "@/lib/supabase/types";
 import Link from "next/link";
 import {
   ArrowLeft, Send, FileText, Save, Sparkles, Lock, Unlock, Edit2,
@@ -61,6 +63,9 @@ export default function AdminProposalDetailPage() {
   const [isUnlockMode, setIsUnlockMode] = useState(false);
   const [unlockReason, setUnlockReason] = useState("");
 
+  // Version history
+  const [proposalVersions, setProposalVersions] = useState<ProposalVersion[]>([]);
+
   // Loading states
   const [isPublishing, setIsPublishing] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -77,6 +82,7 @@ export default function AdminProposalDetailPage() {
       if (p.client_id) {
         getClientById(supabase, p.client_id).then(setClient).catch(() => null);
       }
+      listProposalVersions(supabase, proposalId).then(setProposalVersions).catch(() => {});
     } catch {
       setProposal(null);
     }
@@ -203,6 +209,22 @@ export default function AdminProposalDetailPage() {
     }
   };
 
+  // ── Restore version ─────────────────────────────────────────────
+
+  const handleRestoreVersion = async (version: ProposalVersion) => {
+    try {
+      const supabase = createClient();
+      const updated = await updateProposal(supabase, proposalId, {
+        sections: version.sections as Proposal["sections"],
+        ...(version.addons ? { addons: version.addons as Proposal["addons"] } : {}),
+        ...(version.service_type ? { service_type: version.service_type as StrategyType } : {}),
+      });
+      setProposal(updated);
+    } catch (err) {
+      console.error("Failed to restore version:", err);
+    }
+  };
+
   // ── Publish ─────────────────────────────────────────────────────
 
   const handlePublish = async () => {
@@ -215,6 +237,26 @@ export default function AdminProposalDetailPage() {
         sent_to_client_at: new Date().toISOString(),
       });
       setProposal(updated);
+
+      // Snapshot on publish
+      const isRevision = proposal.status === "changes_requested";
+      const existingVersions = await listProposalVersions(supabase, proposalId);
+      const versionNum = (existingVersions[0]?.version ?? 0) + 1;
+      const label = isRevision
+        ? `v${versionNum} — Revised after client request`
+        : existingVersions.length === 0
+          ? `v${versionNum} — Initial draft`
+          : `v${versionNum} — Sent to client`;
+      const newVersion = await createProposalVersion(supabase, {
+        proposal_id: proposalId,
+        sections: proposal.sections,
+        addons: proposal.addons ?? null,
+        service_type: proposal.service_type ?? null,
+        snapshot_label: label,
+        created_by: user?.id ?? null,
+      });
+      setProposalVersions((prev) => [newVersion, ...prev]);
+
       await sendProposalPublished({
         clientEmail: client.contact_email,
         clientName: client.contact_name,
@@ -350,6 +392,11 @@ export default function AdminProposalDetailPage() {
             {isLocked && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded">
                 <Lock className="h-2.5 w-2.5" /> LOCKED
+              </span>
+            )}
+            {proposalVersions.length > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-2 bg-grid-300 px-1.5 py-0.5 rounded">
+                Last stable: v{proposalVersions[0].version}
               </span>
             )}
           </div>
@@ -593,6 +640,11 @@ export default function AdminProposalDetailPage() {
           <p className="text-sm text-muted whitespace-pre-wrap">{proposal.admin_notes}</p>
         </div>
       )}
+
+      <ProposalVersionHistory
+        versions={proposalVersions}
+        onRestore={handleRestoreVersion}
+      />
 
       <InternalNotes documentType="proposal" documentId={proposal.id} />
     </div>

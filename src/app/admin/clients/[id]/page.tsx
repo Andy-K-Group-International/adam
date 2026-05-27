@@ -27,6 +27,8 @@ import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContactsTab from "@/components/admin/ContactsTab";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
+import ReadinessScoreBadge from "@/components/admin/ReadinessScoreBadge";
+import type { ReadinessBreakdown } from "@/lib/readiness-score";
 import MilestonesTab from "@/components/admin/MilestonesTab";
 import MeetingsTab from "@/components/admin/MeetingsTab";
 import AnalysisTab from "@/components/admin/AnalysisTab";
@@ -95,6 +97,9 @@ export default function ClientDetailPage() {
   // Health score
   const [healthScoreLoading, setHealthScoreLoading] = useState(false);
 
+  // Readiness score
+  const [readinessScoreLoading, setReadinessScoreLoading] = useState(false);
+
   // Archive state
   const [archiving, setArchiving] = useState(false);
   const [archiveConfirm, setArchiveConfirm] = useState(false);
@@ -159,6 +164,22 @@ export default function ClientDetailPage() {
       }
     } catch { /* silent */ } finally {
       setHealthScoreLoading(false);
+    }
+  };
+
+  const recalculateReadinessScore = async () => {
+    setReadinessScoreLoading(true);
+    try {
+      const res = await fetch(`/api/clients/${clientId}/readiness-score`, { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setClient((prev) => prev
+          ? { ...prev, readiness_score: json.score, readiness_breakdown: json.breakdown, readiness_score_updated_at: new Date().toISOString() }
+          : prev
+        );
+      }
+    } catch { /* silent */ } finally {
+      setReadinessScoreLoading(false);
     }
   };
 
@@ -419,6 +440,27 @@ export default function ClientDetailPage() {
                   id="client-health-score"
                   title="Health Score"
                   description="Health Score reflects this client's operational engagement, payment behaviour and implementation participation."
+                  position="bottom"
+                />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ReadinessScoreBadge
+                  score={client.readiness_score ?? null}
+                  breakdown={(client.readiness_breakdown as unknown as ReadinessBreakdown) ?? null}
+                  size="sm"
+                />
+                <button
+                  onClick={recalculateReadinessScore}
+                  disabled={readinessScoreLoading}
+                  title="Recalculate implementation readiness score"
+                  className="h-5 w-5 flex items-center justify-center text-muted-2 hover:text-foreground transition-colors disabled:opacity-40"
+                >
+                  <RefreshCw className={cn("h-3 w-3", readinessScoreLoading && "animate-spin")} />
+                </button>
+                <ContextualHelp
+                  id="client-readiness-score"
+                  title="Implementation Readiness"
+                  description="Implementation Readiness measures how prepared this client is for onboarding. Covers documentation, responsiveness, operational maturity, and cooperation. Admin only — never shown to clients."
                   position="bottom"
                 />
               </div>

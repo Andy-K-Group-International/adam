@@ -249,6 +249,9 @@ export interface Client {
   activation_approved_by: string | null;
   founder_notes: string | null;
   founder_notes_updated_at: string | null;
+  readiness_score: number | null;
+  readiness_score_updated_at: string | null;
+  readiness_breakdown: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }

@@ -181,7 +181,17 @@ const LIFECYCLE_STAGES = [
 
 // ── Main component ──────────────────────────────────────────────────────────
 
-export default function DemoContent({ name, company }: { name: string; company: string }) {
+export default function DemoContent({
+  name,
+  company,
+  tokenId,
+  accessDate,
+}: {
+  name: string;
+  company: string;
+  tokenId?: string;
+  accessDate?: string;
+}) {
   const [activeSection, setActiveSection] = useState("overview");
   const [portalTab, setPortalTab] = useState<"milestones" | "documents" | "activity" | "reports" | "kyc" | "timeline" | "activation">("milestones");
 
@@ -202,6 +212,19 @@ export default function DemoContent({ name, company }: { name: string; company: 
 
   return (
     <div className="relative">
+      {/* ── WATERMARK BANNER ──────────────────────────────────────────────── */}
+      {company && (
+        <div className="sticky top-0 z-50 bg-foreground/95 text-background text-[11px] font-mono px-4 py-2 flex items-center justify-between gap-4 backdrop-blur-sm">
+          <span className="truncate">
+            Private Implementation Demo &mdash; Prepared for{" "}
+            <strong>{company}</strong>
+            {accessDate && <> &mdash; {accessDate}</>}
+          </span>
+          <span className="shrink-0 text-background/50">
+            NDA Protected · Access Logged{tokenId && ` · #${tokenId}`}
+          </span>
+        </div>
+      )}
       <NavDots active={activeSection} />
 
       {/* ── HERO HEADER ───────────────────────────────────────────────────── */}
@@ -1696,9 +1719,19 @@ export default function DemoContent({ name, company }: { name: string; company: 
           </div>
         </div>
 
-        <div className="mt-20 pt-8 border-t border-grid-300 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-2 font-mono">
+        {/* Protection notice */}
+        {(company || tokenId) && (
+          <div className="mt-10 p-4 bg-foreground/4 border border-grid-500 rounded-xl text-xs text-muted-2 leading-relaxed">
+            <span className="font-semibold text-muted">NDA Protected Environment. </span>
+            This implementation environment is NDA protected and access activity is logged by Andy&#8217;K Group International LTD.
+            {company && <> This session was prepared for <strong className="text-muted">{company}</strong>.</>}
+            {tokenId && <> Access reference: <span className="font-mono text-foreground">#{tokenId}</span>.</>}
+          </div>
+        )}
+
+        <div className="mt-8 pt-8 border-t border-grid-300 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-2 font-mono">
           <span>Andy&#8217;K Group International LTD &middot; Reg: 16453500 &middot; 86-90 Paul Street, London EC2A 4NE</span>
-          <span className="text-highlight">Confidential &mdash; NDA Protected</span>
+          <span className="text-highlight">Confidential &mdash; NDA Protected{tokenId && ` · #${tokenId}`}</span>
         </div>
       </SectionWrapper>
     </div>

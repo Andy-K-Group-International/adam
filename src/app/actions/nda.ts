@@ -213,13 +213,19 @@ export async function submitNdaSignature(data: {
     return { error: "Failed to save your signature. Please try again." };
   }
 
-  // Generate demo access token
+  // Generate demo access token (7-day expiry)
   const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
   await supabase.from("demo_tokens").insert({
     token,
     email: data.email,
     name: data.full_name,
     company: data.company,
+    company_name: data.company,
+    contact_name: data.full_name,
+    ip_address: ip,
+    expires_at: expiresAt.toISOString(),
   });
 
   const signedAt = new Date().toLocaleString("en-GB", {

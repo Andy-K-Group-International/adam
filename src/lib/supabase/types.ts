@@ -283,6 +283,25 @@ export interface LeadMetadata {
   questionnaire: Record<string, unknown>;
   scored_at: string;
   service_interest?: string;
+  demo_request?: boolean;
+}
+
+export interface DemoToken {
+  id: string;
+  token: string;
+  email: string;
+  name: string | null;
+  company: string | null;
+  company_name: string | null;
+  contact_name: string | null;
+  ip_address: string | null;
+  used_at: string | null;
+  expires_at: string | null;
+  revoked: boolean;
+  revoked_at: string | null;
+  last_accessed_at: string | null;
+  access_count: number;
+  created_at: string;
 }
 
 export interface Lead {

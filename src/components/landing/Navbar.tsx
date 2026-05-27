@@ -69,7 +69,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-7 text-sm text-muted absolute left-1/2 -translate-x-1/2">
             <a href="#process" className="hover:text-foreground transition-colors">{t.nav.features}</a>
             <a href="#pricing" className="hover:text-foreground transition-colors">{t.nav.pricing}</a>
-            <Link href="/demo" className="hover:text-foreground transition-colors">{t.nav.demo}</Link>
+            <Link href="/request-demo" className="hover:text-foreground transition-colors">{t.nav.demo}</Link>
             <a href="#contact" className="hover:text-foreground transition-colors">{t.nav.contact}</a>
           </div>
 
@@ -145,7 +145,7 @@ export default function Navbar() {
               {t.nav.pricing}
             </a>
             <Link
-              href="/demo"
+              href="/request-demo"
               onClick={closeMobile}
               className="block py-3 text-base font-medium border-b border-grid-300"
               style={{ color: "#01011b" }}

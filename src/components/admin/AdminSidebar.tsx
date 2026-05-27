@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/app/actions/auth-signout";
@@ -41,13 +40,17 @@ export default function AdminSidebar() {
     <aside className="w-64 h-screen sticky top-0 flex flex-col bg-background border-r border-grid-300">
       {/* Logo */}
       <div className="px-6 py-5 shrink-0">
-        <Link href="/admin" className="flex items-center gap-3">
-          <Image
-            src="/adam-logo-simple-no-bg.png"
-            alt="A.D.A.M."
-            width={34}
-            height={34}
-          />
+        <Link href="/admin" className="flex items-center gap-2">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{ mixBlendMode: "screen", height: "40px", width: "auto" }}
+          >
+            <source src="/images/adam-logo.mp4" type="video/mp4" />
+            <img src="/images/adam-logo.png" alt="A.D.A.M." width={34} height={34} />
+          </video>
           <div>
             <p className="text-foreground font-bold text-base tracking-tight leading-none">A.D.A.M.</p>
             <p className="label-mono mt-0.5">Admin Panel</p>

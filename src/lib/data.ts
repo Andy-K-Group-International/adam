@@ -272,10 +272,10 @@ export const integrationFeatures = [
     ],
   },
   {
-    name: "E.V.A.",
-    tagline: "Efficient Virtual Assistant",
+    name: "E.V.E.",
+    tagline: "Efficient Virtual Executor",
     description:
-      "The automation layer that executes. E.V.A. handles emails, generates proposals, triggers notifications, and keeps everything moving.",
+      "The automation layer that executes. E.V.E. handles emails, generates proposals, triggers notifications, and keeps everything moving.",
     features: [
       "Automated proposal generation",
       "Automated email sequences",

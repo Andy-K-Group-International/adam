@@ -47,9 +47,11 @@ async function sendEmail({
 
 // ─── Template builder ─────────────────────────────────────────────────────────
 
-const LOGO_SVG_40 = `<svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#01011b" stroke-width="4" fill="none"/><polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#c9707d" stroke-width="3" fill="none"/><text x="50" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#01011b">A</text></svg>`;
+const LOGO_URL = "https://adam.andykgroup.com/images/adam-logo.png";
 
-const LOGO_SVG_24 = `<svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#01011b" stroke-width="4" fill="none"/><polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#c9707d" stroke-width="3" fill="none"/><text x="50" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#01011b">A</text></svg>`;
+const LOGO_SVG_40 = `<img src="${LOGO_URL}" alt="A.D.A.M." width="40" height="40" style="display:block;width:40px;height:40px;object-fit:contain;" />`;
+
+const LOGO_SVG_24 = `<img src="${LOGO_URL}" alt="A.D.A.M." width="24" height="24" style="display:block;width:24px;height:24px;object-fit:contain;" />`;
 
 function emailHtml(label: string | undefined, body: string): string {
   const labelSpan = label

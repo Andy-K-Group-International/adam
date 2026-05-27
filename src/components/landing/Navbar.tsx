@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import LogoIcon from "./LogoIcon";
+
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { CURRENCIES } from "@/lib/currency";
@@ -27,8 +27,17 @@ function CloseIcon() {
 
 function AdamLogo() {
   return (
-    <div className="flex items-center gap-2.5">
-      <LogoIcon className="w-7 h-7 text-foreground" />
+    <div className="flex items-center gap-2">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{ mixBlendMode: "screen", height: "48px", width: "auto" }}
+      >
+        <source src="/images/adam-logo.mp4" type="video/mp4" />
+        <img src="/images/adam-logo.png" alt="A.D.A.M." />
+      </video>
       <span className="text-sm font-bold tracking-tight text-foreground">A.D.A.M.</span>
     </div>
   );

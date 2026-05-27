@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "@/app/actions/auth";
@@ -164,14 +163,17 @@ export default function SignInPage() {
 
       <div className="relative w-full max-w-[400px]">
         <div className="text-center mb-10">
-          <Image
-            src="/adam-logo-simple-no-bg.png"
-            alt="A.D.A.M."
-            width={60}
-            height={60}
-            className="mx-auto mb-5"
-            priority
-          />
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            style={{ mixBlendMode: "screen", height: "48px", width: "auto" }}
+            className="mx-auto mb-3"
+          >
+            <source src="/images/adam-logo.mp4" type="video/mp4" />
+            <img src="/images/adam-logo.png" alt="A.D.A.M." width={60} height={60} className="mx-auto mb-5" />
+          </video>
           <p className="gradient-text font-bold tracking-tight text-3xl mb-1">A.D.A.M.</p>
           <p className="label-mono">Automated Document &amp; Account Manager</p>
         </div>

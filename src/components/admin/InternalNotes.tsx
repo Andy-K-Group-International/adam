@@ -67,7 +67,7 @@ function NoteRow({
         className={cn(
           "rounded-lg border px-4 py-3 mb-2 transition-colors",
           note.is_pinned
-            ? "border-highlight/30 bg-[rgba(201,112,125,0.04)]"
+            ? "border-highlight/30 bg-[rgba(47,158,154,0.04)]"
             : note.is_resolved
             ? "border-grid-300 bg-white opacity-60"
             : "border-grid-300 bg-white",

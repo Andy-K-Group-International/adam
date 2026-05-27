@@ -234,9 +234,9 @@ export default function DemoContent({
         <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-16 py-20 lg:py-28">
           <div className="flex items-center gap-3 mb-8">
             <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
-              <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#01011b" strokeWidth="4" fill="none" />
-              <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#c9707d" strokeWidth="3" fill="none" />
-              <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#01011b">A</text>
+              <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#0E282D" strokeWidth="4" fill="none" />
+              <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#2F9E9A" strokeWidth="3" fill="none" />
+              <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#0E282D">A</text>
             </svg>
             <span className="font-mono text-xs tracking-[0.2em] uppercase text-muted-2">Confidential · Private Demo</span>
           </div>
@@ -556,8 +556,8 @@ export default function DemoContent({
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-highlight/20 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" fill="none" className="h-5 w-5">
-                  <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#c9707d" strokeWidth="6" fill="none" />
-                  <text x="50" y="60" textAnchor="middle" fontFamily="Georgia,serif" fontSize="30" fontWeight="700" fill="#c9707d">A</text>
+                  <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#2F9E9A" strokeWidth="6" fill="none" />
+                  <text x="50" y="60" textAnchor="middle" fontFamily="Georgia,serif" fontSize="30" fontWeight="700" fill="#2F9E9A">A</text>
                 </svg>
               </div>
               <div>
@@ -775,8 +775,8 @@ export default function DemoContent({
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <svg viewBox="0 0 100 100" fill="none" className="h-7 w-7">
-                    <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#c9707d" strokeWidth="6" fill="none" />
-                    <text x="50" y="60" textAnchor="middle" fontFamily="Georgia,serif" fontSize="30" fontWeight="700" fill="#c9707d">A</text>
+                    <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#2F9E9A" strokeWidth="6" fill="none" />
+                    <text x="50" y="60" textAnchor="middle" fontFamily="Georgia,serif" fontSize="30" fontWeight="700" fill="#2F9E9A">A</text>
                   </svg>
                   <div>
                     <p className="text-foreground text-xs font-bold">A.D.A.M.</p>
@@ -1104,11 +1104,11 @@ export default function DemoContent({
                     formatter={(v) => [`£${Number(v).toLocaleString()}`, "Revenue"]}
                     contentStyle={{ background: "#fff", border: "1px solid #e8e3dd", borderRadius: 8, fontSize: 12 }}
                     labelStyle={{ color: "#525a70" }}
-                    itemStyle={{ color: "#c9707d" }}
+                    itemStyle={{ color: "#2F9E9A" }}
                   />
                   <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                     {revenueData.map((_, i) => (
-                      <Cell key={i} fill={i === revenueData.length - 1 ? "#c9707d" : "rgba(201,112,125,0.3)"} />
+                      <Cell key={i} fill={i === revenueData.length - 1 ? "#2F9E9A" : "rgba(47,158,154,0.3)"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -1533,11 +1533,11 @@ export default function DemoContent({
                     formatter={(v) => [`£${Number(v).toLocaleString()}`, "Revenue"]}
                     contentStyle={{ background: "#1a1425", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
                     labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                    itemStyle={{ color: "#c9707d" }}
+                    itemStyle={{ color: "#2F9E9A" }}
                   />
                   <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                     {monthlyData.map((_, i) => (
-                      <Cell key={i} fill={i === monthlyData.length - 1 ? "#c9707d" : "rgba(201,112,125,0.25)"} />
+                      <Cell key={i} fill={i === monthlyData.length - 1 ? "#2F9E9A" : "rgba(47,158,154,0.25)"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -1669,9 +1669,9 @@ export default function DemoContent({
         <div className="text-center max-w-2xl mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-highlight/10 border border-highlight/20 flex items-center justify-center mx-auto mb-8">
             <svg viewBox="0 0 100 100" fill="none" className="h-10 w-10">
-              <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#01011b" strokeWidth="4" fill="none" />
-              <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#c9707d" strokeWidth="3" fill="none" />
-              <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#01011b">A</text>
+              <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#0E282D" strokeWidth="4" fill="none" />
+              <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#2F9E9A" strokeWidth="3" fill="none" />
+              <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#0E282D">A</text>
             </svg>
           </div>
 

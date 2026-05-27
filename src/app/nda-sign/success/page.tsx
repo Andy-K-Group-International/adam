@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 
 const LOGO_SVG = (
   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#01011b" strokeWidth="4" fill="none" />
-    <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#c9707d" strokeWidth="3" fill="none" />
-    <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#01011b">A</text>
+    <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#0E282D" strokeWidth="4" fill="none" />
+    <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#2F9E9A" strokeWidth="3" fill="none" />
+    <text x="50" y="57" textAnchor="middle" fontFamily="Georgia,serif" fontSize="22" fontWeight="700" fill="#0E282D">A</text>
   </svg>
 );
 

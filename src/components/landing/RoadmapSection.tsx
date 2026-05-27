@@ -78,8 +78,8 @@ function RoadmapCard({
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
             style={{
-              background: "linear-gradient(135deg, rgba(245,192,192,0.2), rgba(205,160,165,0.15))",
-              color: "#cda0a5",
+              background: "linear-gradient(135deg, rgba(168,216,214,0.2), rgba(205,160,165,0.15))",
+              color: "#1a7a76",
             }}
           >
             {icon}

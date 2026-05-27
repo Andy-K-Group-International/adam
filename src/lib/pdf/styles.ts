@@ -10,12 +10,12 @@ Font.register({
 });
 
 export const C = {
-  navy:   "#01011b",
-  rose:   "#c9707d",
-  cream:  "#faf6f3",
+  navy:   "#0E282D",
+  rose:   "#2F9E9A",
+  cream:  "#f0f4f4",
   muted:  "#525a70",
   dimmed: "#8b93a8",
-  border: "#ede8e2",
+  border: "#dce8e8",
   white:  "#ffffff",
 };
 
@@ -66,23 +66,23 @@ export const styles = StyleSheet.create({
   },
   coverSubtitle: {
     fontSize: 12,
-    color: "#7070a0",
+    color: "#6aa8a6",
     marginBottom: 4,
   },
   coverMeta: {
     fontSize: 9,
-    color: "#4a4a6a",
+    color: "#3a6a68",
     marginTop: 2,
   },
   coverDateRow: {
     marginTop: 36,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "#111130",
+    borderTopColor: "#0a2020",
   },
   coverDateText: {
     fontSize: 9,
-    color: "#4a4a6a",
+    color: "#3a6a68",
   },
 
   // ── Content pages (white) ─────────────────────────────────────────────────

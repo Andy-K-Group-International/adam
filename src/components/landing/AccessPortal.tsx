@@ -24,25 +24,25 @@ export default function AccessPortal() {
           {/* Admin card — dark */}
           <div
             className="rounded-2xl p-8 flex flex-col"
-            style={{ backgroundColor: "#01011b" }}
+            style={{ backgroundColor: "#0E282D" }}
           >
             <div
               className="w-11 h-11 rounded-xl flex items-center justify-center mb-6 shrink-0"
-              style={{ backgroundColor: "rgba(201,112,125,0.12)" }}
+              style={{ backgroundColor: "rgba(47,158,154,0.12)" }}
             >
-              <Shield className="h-5 w-5" style={{ color: "#c9707d" }} />
+              <Shield className="h-5 w-5" style={{ color: "#2F9E9A" }} />
             </div>
 
             <div className="flex-1">
               <p
                 className="text-xs font-semibold tracking-widest uppercase mb-2"
-                style={{ color: "#c9707d" }}
+                style={{ color: "#2F9E9A" }}
               >
                 Team Access
               </p>
               <h3
                 className="text-lg font-serif font-semibold mb-3"
-                style={{ color: "#faf6f3" }}
+                style={{ color: "#f0f4f4" }}
               >
                 Admin Panel
               </h3>
@@ -55,7 +55,7 @@ export default function AccessPortal() {
             <Link
               href="/sign-in?role=admin"
               className="mt-8 inline-flex items-center justify-center gap-2 h-11 px-5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#faf6f3", color: "#01011b" }}
+              style={{ backgroundColor: "#f0f4f4", color: "#0E282D" }}
             >
               Admin Sign In
               <ArrowRight className="h-4 w-4" />
@@ -84,7 +84,7 @@ export default function AccessPortal() {
             <Link
               href="/sign-in?role=client"
               className="mt-8 inline-flex items-center justify-center gap-2 h-11 px-5 text-sm font-medium rounded-xl transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#01011b", color: "#faf6f3" }}
+              style={{ backgroundColor: "#0E282D", color: "#f0f4f4" }}
             >
               Client Sign In
               <ArrowRight className="h-4 w-4" />

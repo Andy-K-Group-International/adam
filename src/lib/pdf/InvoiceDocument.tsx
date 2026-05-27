@@ -11,12 +11,12 @@ Font.register({
 });
 
 const C = {
-  navy: "#01011b",
-  rose: "#c9707d",
+  navy: "#0E282D",
+  rose: "#2F9E9A",
   muted: "#525a70",
   dimmed: "#8b93a8",
-  cream: "#faf6f3",
-  border: "#ede8e2",
+  cream: "#f0f4f4",
+  border: "#dce8e8",
   white: "#ffffff",
 };
 

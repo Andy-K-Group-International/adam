@@ -74,8 +74,8 @@ export default function AdminSidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all mb-0.5 rounded-lg border-l-2",
                 isActive
-                  ? "bg-[rgba(201,112,125,0.08)] text-highlight border-l-highlight"
-                  : "text-foreground border-l-transparent hover:bg-[rgba(201,112,125,0.05)]"
+                  ? "bg-[rgba(47,158,154,0.08)] text-highlight border-l-highlight"
+                  : "text-foreground border-l-transparent hover:bg-[rgba(47,158,154,0.05)]"
               )}
             >
               <item.icon

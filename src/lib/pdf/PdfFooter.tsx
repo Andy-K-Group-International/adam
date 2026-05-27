@@ -17,8 +17,8 @@ const s = StyleSheet.create({
 });
 
 export default function PdfFooter({ dark = false }: { dark?: boolean }) {
-  const color = dark ? "#2a2a50" : C.dimmed;
-  const borderColor = dark ? "#0e0e2a" : C.border;
+  const color = dark ? "#3a6a68" : C.dimmed;
+  const borderColor = dark ? "#0a2020" : C.border;
 
   return (
     <View style={[s.footer, { borderTopWidth: 1, borderTopColor: borderColor }]} fixed>

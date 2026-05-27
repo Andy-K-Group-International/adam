@@ -15,10 +15,10 @@ function RoleBadge({ role }: { role: PortalRole }) {
     return (
       <div
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-6 mx-auto"
-        style={{ backgroundColor: "#01011b", color: "#faf6f3" }}
+        style={{ backgroundColor: "#0E282D", color: "#f0f4f4" }}
       >
-        <Shield className="h-4 w-4 shrink-0" style={{ color: "#c9707d" }} />
-        <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#c9707d" }}>
+        <Shield className="h-4 w-4 shrink-0" style={{ color: "#2F9E9A" }} />
+        <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#2F9E9A" }}>
           Admin Panel
         </span>
       </div>
@@ -85,7 +85,7 @@ function SignInForm() {
 
       {/* Role accent strip for admin */}
       {role === "admin" && (
-        <div style={{ height: 3, backgroundColor: "#c9707d" }} />
+        <div style={{ height: 3, backgroundColor: "#2F9E9A" }} />
       )}
 
       <div className="p-8">

@@ -126,14 +126,14 @@ export default function Navbar() {
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-x-0 bottom-0 z-[200] overflow-y-auto"
-          style={{ top: "60px", backgroundColor: "#faf6f3" }}
+          style={{ top: "60px", backgroundColor: "#f0f4f4" }}
         >
           <div className="px-6 py-6 space-y-1">
             <a
               href="#process"
               onClick={closeMobile}
               className="block py-3 text-base font-medium border-b border-grid-300"
-              style={{ color: "#01011b" }}
+              style={{ color: "#0E282D" }}
             >
               {t.nav.features}
             </a>
@@ -141,7 +141,7 @@ export default function Navbar() {
               href="#pricing"
               onClick={closeMobile}
               className="block py-3 text-base font-medium border-b border-grid-300"
-              style={{ color: "#01011b" }}
+              style={{ color: "#0E282D" }}
             >
               {t.nav.pricing}
             </a>
@@ -149,7 +149,7 @@ export default function Navbar() {
               href="/request-demo"
               onClick={closeMobile}
               className="block py-3 text-base font-medium border-b border-grid-300"
-              style={{ color: "#01011b" }}
+              style={{ color: "#0E282D" }}
             >
               {t.nav.demo}
             </Link>
@@ -157,7 +157,7 @@ export default function Navbar() {
               href="#contact"
               onClick={closeMobile}
               className="block py-3 text-base font-medium border-b border-grid-300"
-              style={{ color: "#01011b" }}
+              style={{ color: "#0E282D" }}
             >
               {t.nav.contact}
             </a>
@@ -177,7 +177,7 @@ export default function Navbar() {
                 onChange={(e) => setLocale(e.target.value as Locale)}
                 aria-label="Select language"
                 className="text-sm border border-grid-500 rounded px-2 py-2 cursor-pointer focus:outline-none flex-1"
-                style={{ color: "#525a70", backgroundColor: "#faf6f3" }}
+                style={{ color: "#525a70", backgroundColor: "#f0f4f4" }}
               >
                 <option value="en">EN — English</option>
                 <option value="sk">SK — Slovenčina</option>
@@ -191,7 +191,7 @@ export default function Navbar() {
                 onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
                 aria-label="Select currency"
                 className="text-sm border border-grid-500 rounded px-2 py-2 cursor-pointer focus:outline-none flex-1"
-                style={{ color: "#525a70", backgroundColor: "#faf6f3" }}
+                style={{ color: "#525a70", backgroundColor: "#f0f4f4" }}
               >
                 {CURRENCIES.map((c) => (
                   <option key={c.code} value={c.code}>{c.label}</option>

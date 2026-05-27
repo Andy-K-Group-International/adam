@@ -96,7 +96,7 @@ export default function ContextualHelp({
         <div className="flex items-start justify-between gap-2 px-4 pt-4 pb-2">
           <p
             className="text-sm font-semibold leading-snug"
-            style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", color: "#01011b" }}
+            style={{ fontFamily: "'IBM Plex Sans', 'Inter', sans-serif", color: "#0E282D" }}
           >
             {title}
           </p>

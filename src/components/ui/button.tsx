@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-br from-highlight to-[#b8606c] text-white border border-rose-dark shadow-sm hover:from-[#b8606c] hover:to-highlight hover:shadow-[0_4px_16px_rgba(201,112,125,0.3)]",
+          "bg-gradient-to-br from-highlight to-[#b8606c] text-white border border-rose-dark shadow-sm hover:from-[#b8606c] hover:to-highlight hover:shadow-[0_4px_16px_rgba(47,158,154,0.3)]",
         secondary:
           "bg-transparent text-foreground border border-grid-500 hover:bg-grid-300 hover:border-grid-700",
         destructive:

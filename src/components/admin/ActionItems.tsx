@@ -41,7 +41,7 @@ const typeLabels: Record<ActionItem["type"], string> = {
 };
 
 const typeColorClass: Partial<Record<ActionItem["type"], string>> = {
-  client_request: "bg-[#c9707d]/10 text-[#c9707d]",
+  client_request: "bg-[#2F9E9A]/10 text-[#2F9E9A]",
 };
 
 export default function ActionItems({ items }: ActionItemsProps) {

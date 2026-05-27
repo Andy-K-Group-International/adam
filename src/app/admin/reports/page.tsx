@@ -174,7 +174,7 @@ const HEALTH_COLORS: Record<string, string> = {
   Excellent: "#2e7d5e",
   Good:      "#d4a017",
   "At Risk": "#f97316",
-  Critical:  "#c9707d",
+  Critical:  "#2F9E9A",
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -317,8 +317,8 @@ export default function ReportsPage() {
                   tickLine={false}
                   width={48}
                 />
-                <Tooltip content={<RevenueTooltip />} cursor={{ fill: "rgba(201,112,125,0.06)" }} />
-                <Bar dataKey="amount" fill="#c9707d" radius={[4, 4, 0, 0]} />
+                <Tooltip content={<RevenueTooltip />} cursor={{ fill: "rgba(47,158,154,0.06)" }} />
+                <Bar dataKey="amount" fill="#2F9E9A" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}

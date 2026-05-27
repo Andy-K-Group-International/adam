@@ -160,7 +160,7 @@ function SignatureCanvas({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.strokeStyle = "#01011b";
+    ctx.strokeStyle = "#0E282D";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";

@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ClientRequestForm from "@/components/dashboard/ClientRequestForm";
 import { siteConfig } from "@/lib/data";
+import { usePreviewContext } from "@/lib/preview-context";
 
 function statusStyle(status: ProposalStatus): string {
   switch (status) {
@@ -66,6 +67,7 @@ export default function ClientProposalPage() {
   const params = useParams();
   const proposalId = params.id as string;
   const { user } = useCurrentUser();
+  const { isPreview, previewClientId } = usePreviewContext();
 
   const [proposal, setProposal] = useState<Proposal | null | undefined>(undefined);
   const [isDeclineMode, setIsDeclineMode] = useState(false);
@@ -153,7 +155,7 @@ export default function ClientProposalPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link
-          href="/dashboard/proposals"
+          href={isPreview && previewClientId ? `/dashboard/proposals?preview=${previewClientId}` : "/dashboard/proposals"}
           className="text-muted-2 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -251,7 +253,27 @@ export default function ClientProposalPage() {
               Please review the proposal carefully before responding. Your decision will notify our team immediately.
             </p>
 
-            {!isDeclineMode ? (
+            {isPreview ? (
+              <div className="flex items-center gap-3">
+                <button
+                  disabled
+                  title="Preview only — actions are disabled"
+                  className="inline-flex items-center gap-2 bg-success/40 text-white px-5 py-2.5 rounded-lg text-sm font-medium cursor-not-allowed opacity-60"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Approve Proposal
+                </button>
+                <button
+                  disabled
+                  title="Preview only — actions are disabled"
+                  className="inline-flex items-center gap-2 border border-error/40 text-error/60 px-5 py-2.5 rounded-lg text-sm font-medium cursor-not-allowed opacity-60"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Decline
+                </button>
+                <span className="text-xs text-warning ml-1">Preview only</span>
+              </div>
+            ) : !isDeclineMode ? (
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleApprove}

@@ -10,11 +10,13 @@ import ContractViewer from "@/components/contracts/ContractViewer";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ClientRequestForm from "@/components/dashboard/ClientRequestForm";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { usePreviewContext } from "@/lib/preview-context";
 
 export default function ContractPage() {
   const params = useParams();
   const contractId = params.id as string;
   const { user } = useCurrentUser();
+  const { isPreview, previewClientId } = usePreviewContext();
 
   const [contract, setContract] = useState<any | undefined>(undefined);
   const [comments, setComments] = useState<any[]>([]);
@@ -38,16 +40,16 @@ export default function ContractPage() {
     fetchData();
   }, [contractId]);
 
-  // Auto-mark as viewed
+  // Auto-mark as viewed (suppressed in preview mode — admin visit must not affect contract state)
   useEffect(() => {
-    if (contract && contract.status === "published" && !markedViewedRef.current && user) {
+    if (contract && contract.status === "published" && !markedViewedRef.current && user && !isPreview) {
       markedViewedRef.current = true;
       const supabase = createClient();
       markViewed(supabase, contractId, user.id).then((updated) => {
         if (updated) setContract(updated);
       });
     }
-  }, [contract, contractId, user]);
+  }, [contract, contractId, user, isPreview]);
 
   if (contract === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -68,12 +70,17 @@ export default function ContractPage() {
 
   return (
     <div>
+      {isPreview && (canSign || canRequestChanges) && (
+        <div className="flex items-center gap-2 rounded-lg bg-warning/8 border border-warning/20 px-4 py-2.5 text-xs text-warning mb-4">
+          <span>Preview only — signing and change requests are disabled.</span>
+        </div>
+      )}
       <ContractViewer
         contract={contract}
         comments={comments || []}
         versions={versions || []}
-        canSign={canSign}
-        canRequestChanges={canRequestChanges}
+        canSign={isPreview ? false : canSign}
+        canRequestChanges={isPreview ? false : canRequestChanges}
         onSign={async (signature) => {
           if (!user) return;
           const supabase = createClient();
@@ -86,7 +93,7 @@ export default function ContractPage() {
           const updated = await requestChanges(supabase, contractId, user.id, comment);
           if (updated) setContract(updated);
         }}
-        backHref="/dashboard"
+        backHref={isPreview && previewClientId ? `/dashboard?preview=${previewClientId}` : "/dashboard"}
       />
       <div className="max-w-3xl mt-2">
         <ClientRequestForm

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listSentReportsForClient, getClientReport } from "@/lib/supabase/queries/client-reports";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { ClientReport } from "@/lib/supabase/types";
 import { ArrowLeft, FileText, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,25 +21,19 @@ const SECTION_LABELS: Record<string, string> = {
 const SECTION_ORDER = ["executive_summary", "milestones_progress", "kpis", "next_period_goals", "notes"];
 
 export default function DashboardReportsPage() {
+  const { user, isLoading: userLoading } = useCurrentUser();
   const [reports, setReports] = useState<ClientReport[] | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selected, setSelected] = useState<ClientReport | null>(null);
 
   useEffect(() => {
+    if (userLoading) return;
+    if (!user?.client_id) { setReports([]); return; }
     const supabase = createClient();
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setReports([]); return; }
-      const { data: profile } = await supabase
-        .from("users")
-        .select("client_id")
-        .eq("auth_id", user.id)
-        .single();
-      if (!profile?.client_id) { setReports([]); return; }
-      const rows = await listSentReportsForClient(supabase, profile.client_id).catch(() => []);
-      setReports(rows);
-    })();
-  }, []);
+    listSentReportsForClient(supabase, user.client_id)
+      .then(setReports)
+      .catch(() => setReports([]));
+  }, [user, userLoading]);
 
   useEffect(() => {
     if (!selectedId) { setSelected(null); return; }

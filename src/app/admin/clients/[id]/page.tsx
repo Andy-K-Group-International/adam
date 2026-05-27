@@ -15,7 +15,7 @@ import type { Client, Questionnaire, ActivityLog, StrategyType, Contact } from "
 import Link from "next/link";
 import {
   ArrowLeft, Building2, Mail, Phone, Globe, MapPin, Save, Plus, Trash2,
-  Users, RefreshCw, FileText, Archive, ArchiveRestore, RefreshCcw, BarChart2, Lock,
+  Users, RefreshCw, FileText, Archive, ArchiveRestore, RefreshCcw, BarChart2, Lock, Eye,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
@@ -483,6 +483,15 @@ export default function ClientDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Preview as Client */}
+          <button
+            onClick={() => window.open(`/dashboard?preview=${clientId}`, "_blank")}
+            className="inline-flex items-center gap-2 bg-grid-300 text-foreground px-3 py-2 rounded-lg text-sm font-medium hover:bg-grid-500 transition-colors"
+          >
+            <Eye className="h-4 w-4" />
+            Preview as Client
+          </button>
+
           {/* Report button */}
           <Link
             href={`/admin/reports/client/${clientId}/new`}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PreviewContext } from "@/lib/preview-context";
 import type { User } from "@/lib/supabase/types";
 
 interface CurrentUser {
@@ -19,6 +20,8 @@ export function useCurrentUser(): CurrentUser {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { isPreview, previewClientId } = useContext(PreviewContext);
 
   useEffect(() => {
     const supabase = createClient();
@@ -54,7 +57,6 @@ export function useCurrentUser(): CurrentUser {
 
     fetchUser();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (!session) {
@@ -68,14 +70,20 @@ export function useCurrentUser(): CurrentUser {
     return () => subscription.unsubscribe();
   }, []);
 
+  // In preview mode, overlay the preview client's ID onto the admin user
+  const effectiveUser =
+    user && isPreview && previewClientId
+      ? { ...user, client_id: previewClientId }
+      : user;
+
   return {
-    user,
+    user: effectiveUser,
     isLoading,
     error,
-    role: user?.role ?? null,
-    isAdmin: user?.role === "admin",
-    isStaff: user?.role === "staff",
-    isClient: user?.role === "client",
-    clientId: user?.client_id ?? null,
+    role: effectiveUser?.role ?? null,
+    isAdmin: effectiveUser?.role === "admin",
+    isStaff: effectiveUser?.role === "staff",
+    isClient: effectiveUser?.role === "client",
+    clientId: effectiveUser?.client_id ?? null,
   };
 }

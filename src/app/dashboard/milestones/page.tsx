@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listMilestones } from "@/lib/supabase/queries/milestones";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Milestone, MilestoneStatus } from "@/lib/supabase/types";
 import { Calendar, CheckCircle2, Circle, Clock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,27 +18,19 @@ const STATUS_CONFIG: Record<MilestoneStatus, { label: string; icon: React.Elemen
 };
 
 export default function DashboardMilestonesPage() {
+  const { user, isLoading: userLoading } = useCurrentUser();
   const [milestones, setMilestones] = useState<Milestone[] | undefined>(undefined);
-  const [clientId, setClientId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (userLoading) return;
+    if (!user?.client_id) { setMilestones([]); return; }
     const supabase = createClient();
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("users")
-        .select("client_id")
-        .eq("auth_id", user.id)
-        .single();
-      if (!profile?.client_id) { setMilestones([]); return; }
-      setClientId(profile.client_id);
-      const rows = await listMilestones(supabase, profile.client_id).catch(() => []);
-      setMilestones(rows);
-    })();
-  }, []);
+    listMilestones(supabase, user.client_id)
+      .then(setMilestones)
+      .catch(() => setMilestones([]));
+  }, [user, userLoading]);
 
-  if (milestones === undefined) return <LoadingSpinner className="min-h-[60vh]" />;
+  if (userLoading || milestones === undefined) return <LoadingSpinner className="min-h-[60vh]" />;
 
   const completed = milestones.filter((m) => m.status === "completed").length;
   const total = milestones.length;
@@ -89,7 +82,6 @@ export default function DashboardMilestonesPage() {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            {/* Status counts */}
             <div className="grid grid-cols-4 gap-3 mt-4">
               {(["in_progress", "pending", "blocked", "completed"] as MilestoneStatus[]).map((s) => {
                 const cfg = STATUS_CONFIG[s];
@@ -121,7 +113,11 @@ export default function DashboardMilestonesPage() {
                     <div key={m.id} className="flex items-start gap-4 px-5 py-4">
                       <div className={cn("mt-0.5 h-2.5 w-2.5 rounded-full shrink-0", cfg.dot)} />
                       <div className="flex-1 min-w-0">
-                        <p className={cn("text-sm font-medium", m.status === "completed" && "line-through text-muted-2", m.status !== "completed" && "text-foreground")}>
+                        <p className={cn(
+                          "text-sm font-medium",
+                          m.status === "completed" && "line-through text-muted-2",
+                          m.status !== "completed" && "text-foreground",
+                        )}>
                           {m.title}
                         </p>
                         {m.description && (

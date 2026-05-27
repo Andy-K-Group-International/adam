@@ -26,7 +26,7 @@ const playfairDisplay = Playfair_Display({
 
 const TITLE = "ADAM — Automated Document & Account Manager | Andy'K Group International LTD";
 const DESCRIPTION =
-  "ADAM by Andy'K Group International LTD — AI-powered system that automates your document management and account workflows. Save time, eliminate manual work.";
+  "ADAM by Andy'K Group International LTD — lifecycle operations platform that manages your entire client journey from first contact to signed contract. No manual processes, no missed deadlines.";
 const CANONICAL = "https://adam.andykgroup.com";
 
 export const metadata: Metadata = {
@@ -37,10 +37,10 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   keywords: [
+    "client lifecycle management",
     "automated document management",
-    "AI account manager",
-    "business document automation",
-    "AI document system",
+    "business operations platform",
+    "client onboarding system",
     "account management automation",
     "Andy'K Group International LTD ADAM",
   ],
@@ -67,7 +67,7 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: "ADAM — Automated Document & Account Manager",
   description:
-    "ADAM by Andy'K Group International LTD — AI-powered system that automates document management, account handling, and client workflows for businesses.",
+    "ADAM by Andy'K Group International LTD — lifecycle operations platform that manages document handling, account workflows, and client engagement end-to-end.",
   keywords:
     "automated document management, AI account manager, business document automation, AI document system, account management automation, Andy'K Group International LTD ADAM",
   url: CANONICAL,

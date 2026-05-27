@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listContractsForClient } from "@/lib/supabase/queries/contracts";
 import { listForCurrentClient } from "@/lib/supabase/queries/activity-log";
+import { getClientById } from "@/lib/supabase/queries/clients";
 import StatusCards from "@/components/dashboard/StatusCards";
 import ContractCard from "@/components/dashboard/ContractCard";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
+import LifecycleProgress from "@/components/dashboard/LifecycleProgress";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import WelcomePopover from "@/components/dashboard/WelcomePopover";
@@ -16,18 +18,21 @@ export default function DashboardPage() {
   const { user, isLoading: userLoading } = useCurrentUser();
   const [contracts, setContracts] = useState<any[] | undefined>(undefined);
   const [activities, setActivities] = useState<any[]>([]);
+  const [clientStage, setClientStage] = useState<string>("questionnaire");
 
   useEffect(() => {
     if (!user?.client_id) return;
     const supabase = createClient();
 
     async function fetchData() {
-      const [contractsData, activitiesData] = await Promise.all([
+      const [contractsData, activitiesData, clientData] = await Promise.all([
         listContractsForClient(supabase, user!.client_id!),
         listForCurrentClient(supabase, user!.client_id!, 10),
+        getClientById(supabase, user!.client_id!),
       ]);
       setContracts(contractsData);
       setActivities(activitiesData);
+      if (clientData?.stage) setClientStage(clientData.stage);
     }
 
     fetchData();
@@ -65,11 +70,15 @@ export default function DashboardPage() {
         <p className="text-muted text-sm mt-1">Welcome back. Here&apos;s your overview.</p>
       </div>
 
-      <StatusCards
-        totalContracts={(contracts || []).length}
-        pendingActions={pendingActions}
-        completed={completed}
-      />
+      <LifecycleProgress stage={clientStage} />
+
+      <div className="mt-6">
+        <StatusCards
+          totalContracts={(contracts || []).length}
+          pendingActions={pendingActions}
+          completed={completed}
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2">

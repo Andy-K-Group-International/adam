@@ -71,31 +71,10 @@ export default function Navbar() {
             <a href="#pricing" className="hover:text-foreground transition-colors">{t.nav.pricing}</a>
             <Link href="/request-demo" className="hover:text-foreground transition-colors">{t.nav.demo}</Link>
             <a href="#contact" className="hover:text-foreground transition-colors">{t.nav.contact}</a>
-            <Link
-              href="/sign-in?role=admin"
-              className="text-muted-2 hover:text-foreground transition-colors text-xs tracking-wide"
-            >
-              Admin
-            </Link>
           </div>
 
-          {/* Desktop right: language + currency + CTA */}
+          {/* Desktop right: currency + Admin + CTA */}
           <div className="hidden md:flex items-center gap-2">
-            {/* Language select */}
-            <select
-              value={locale}
-              onChange={(e) => setLocale(e.target.value as Locale)}
-              aria-label="Select language"
-              className={`${selectCls} w-[52px]`}
-            >
-              <option value="en">EN</option>
-              <option value="sk">SK</option>
-              <option value="de">DE</option>
-              <option value="es">ES</option>
-              <option value="nl">NL</option>
-              <option value="pt">PT</option>
-            </select>
-
             {/* Currency select */}
             <select
               value={currency}
@@ -109,8 +88,15 @@ export default function Navbar() {
             </select>
 
             <Link
+              href="/sign-in?role=admin"
+              className="text-xs text-muted-2 hover:text-foreground transition-colors px-2"
+            >
+              Admin
+            </Link>
+
+            <Link
               href="/questionnaire"
-              className="relative inline-flex items-center justify-center h-9 px-5 ml-1 text-sm font-medium text-foreground btn-primary-gradient"
+              className="relative inline-flex items-center justify-center h-9 px-5 text-sm font-medium text-foreground btn-primary-gradient"
             >
               <span className="relative z-10">{t.nav.applyForAccess}</span>
             </Link>

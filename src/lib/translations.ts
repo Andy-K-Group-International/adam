@@ -49,7 +49,7 @@ const en = {
     annualSavings: "Annual savings",
     planCost: "A.D.A.M. plan cost",
     note: "Based on A.D.A.M. automating ~70% of admin work. Results vary by business.",
-    cta: "Start Your Free Assessment →",
+    cta: "Request Implementation Review →",
   },
   pricing: {
     label: "Pricing",

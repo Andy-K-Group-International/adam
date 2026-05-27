@@ -160,7 +160,7 @@ export default function RoadmapSection() {
         <div className="text-center mt-14">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-grid-500 bg-white text-sm text-muted">
             <span className="w-2 h-2 rounded-full bg-highlight animate-pulse" />
-            A.D.A.M. is live and processing clients
+            A.D.A.M. is live and managing active engagements
           </span>
         </div>
       </div>

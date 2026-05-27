@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "A.D.A.M.",
-  fullName: "AI-Powered Business Development Operating System",
+  fullName: "Lifecycle Operations Platform",
   company: "Andy'K Group International LTD",
   companyReg: "16453500",
   address: "86-90 Paul Street, London, EC2A 4NE",
@@ -111,14 +111,14 @@ export const pricingData = {
           "Questionnaire intake",
           "Email notifications",
         ],
-        cta: "Get Started",
+        cta: "Apply for Access",
         highlighted: false,
       },
       {
         name: "Growth",
         monthlyGBP: 699,
         annualGBP: 419,
-        description: "Scale your operations with AI-powered tools and full pipeline management.",
+        description: "Scale your operations with full pipeline management and structured operational workflows.",
         features: [
           "Up to 50 clients",
           "Everything in Starter",
@@ -126,7 +126,7 @@ export const pricingData = {
           "Strategy editor",
           "Pipeline board",
         ],
-        cta: "Get Started",
+        cta: "Apply for Access",
         highlighted: true,
       },
       {
@@ -140,7 +140,7 @@ export const pricingData = {
           "White-glove onboarding",
           "Priority support",
         ],
-        cta: "Get Started",
+        cta: "Apply for Access",
         highlighted: false,
       },
       {
@@ -175,7 +175,7 @@ export const pricingData = {
           "Questionnaire intake",
           "Email notifications",
         ],
-        cta: "Get Started",
+        cta: "Apply for Access",
         highlighted: false,
       },
       {
@@ -190,7 +190,7 @@ export const pricingData = {
           "Multi-workspace support",
           "Priority support",
         ],
-        cta: "Get Started",
+        cta: "Apply for Access",
         highlighted: true,
       },
       {
@@ -277,7 +277,7 @@ export const integrationFeatures = [
     description:
       "The automation layer that executes. E.V.A. handles emails, generates proposals, triggers notifications, and keeps everything moving.",
     features: [
-      "AI-powered proposals",
+      "Automated proposal generation",
       "Automated email sequences",
       "Smart notifications",
       "Task orchestration",

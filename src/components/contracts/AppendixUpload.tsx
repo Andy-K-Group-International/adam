@@ -79,16 +79,18 @@ export default function AppendixUpload({
           key={appendix.slot}
           className="flex items-center gap-3 p-3 bg-grid-300/30 rounded-lg"
         >
-          <span className="text-xs font-bold text-muted-2 w-6">
-            {appendix.slot}:
+          <span className="text-xs font-bold text-muted-2 shrink-0 w-5 uppercase">
+            {appendix.slot.replace("appendix_", "")}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-foreground truncate">
-              {appendix.label}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm text-foreground truncate">{appendix.label}</p>
               {appendix.required && (
-                <span className="text-error ml-1">*</span>
+                <span className="shrink-0 inline-flex items-center text-xs font-medium bg-warning/10 text-warning px-1.5 py-0.5 rounded">
+                  Mandatory
+                </span>
               )}
-            </p>
+            </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               {statusIcons[appendix.status]}
               <span

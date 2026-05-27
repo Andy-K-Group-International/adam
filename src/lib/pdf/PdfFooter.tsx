@@ -1,32 +1,32 @@
 import { Text, View, StyleSheet } from "@react-pdf/renderer";
-import { colors } from "./styles";
+import { C } from "./styles";
 
-const footerStyles = StyleSheet.create({
+const s = StyleSheet.create({
   footer: {
     position: "absolute",
-    bottom: 30,
+    bottom: 28,
     left: 50,
     right: 50,
     flexDirection: "row",
     justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: colors.gridBorder,
-    paddingTop: 8,
+    paddingTop: 7,
   },
   text: {
     fontSize: 7,
-    color: colors.muted,
   },
 });
 
-export default function PdfFooter() {
+export default function PdfFooter({ dark = false }: { dark?: boolean }) {
+  const color = dark ? "#2a2a50" : C.dimmed;
+  const borderColor = dark ? "#0e0e2a" : C.border;
+
   return (
-    <View style={footerStyles.footer} fixed>
-      <Text style={footerStyles.text}>
+    <View style={[s.footer, { borderTopWidth: 1, borderTopColor: borderColor }]} fixed>
+      <Text style={[s.text, { color }]}>
         Andy'K Group International LTD | Reg: 16453500
       </Text>
       <Text
-        style={footerStyles.text}
+        style={[s.text, { color }]}
         render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
       />
     </View>

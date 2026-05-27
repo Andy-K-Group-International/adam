@@ -1,6 +1,5 @@
 import { StyleSheet, Font } from "@react-pdf/renderer";
 
-// Register IBM Plex Sans from Google Fonts CDN
 Font.register({
   family: "IBM Plex Sans",
   fonts: [
@@ -10,121 +9,152 @@ Font.register({
   ],
 });
 
-// Brand colors matching the design system
+export const C = {
+  navy:   "#01011b",
+  rose:   "#c9707d",
+  cream:  "#faf6f3",
+  muted:  "#525a70",
+  dimmed: "#8b93a8",
+  border: "#ede8e2",
+  white:  "#ffffff",
+};
+
+// Legacy alias used by PdfFooter
 export const colors = {
-  highlight: "#F97316",  // orange brand color
-  foreground: "#1A1A2E",
-  muted: "#6B7280",
-  white: "#FFFFFF",
-  gridLight: "#F3F4F6",
-  gridBorder: "#E5E7EB",
+  highlight:  C.rose,
+  foreground: C.navy,
+  muted:      C.muted,
+  white:      C.white,
+  gridLight:  C.cream,
+  gridBorder: C.border,
 };
 
 export const styles = StyleSheet.create({
+  // ── Cover page (dark navy background) ─────────────────────────────────────
+  coverPage: {
+    fontFamily: "IBM Plex Sans",
+    backgroundColor: C.navy,
+    paddingHorizontal: 60,
+    paddingTop: 70,
+    paddingBottom: 40,
+    flexDirection: "column",
+  },
+  coverInner: {
+    flex: 1,
+    justifyContent: "flex-end",
+    paddingBottom: 48,
+  },
+  coverBrand: {
+    fontSize: 7,
+    fontWeight: 700,
+    color: C.rose,
+    letterSpacing: 2,
+    marginBottom: 14,
+  },
+  coverAccentLine: {
+    height: 2,
+    width: 44,
+    backgroundColor: C.rose,
+    marginBottom: 28,
+  },
+  coverTitle: {
+    fontSize: 26,
+    fontWeight: 700,
+    color: C.cream,
+    lineHeight: 1.3,
+    marginBottom: 10,
+  },
+  coverSubtitle: {
+    fontSize: 12,
+    color: "#7070a0",
+    marginBottom: 4,
+  },
+  coverMeta: {
+    fontSize: 9,
+    color: "#4a4a6a",
+    marginTop: 2,
+  },
+  coverDateRow: {
+    marginTop: 36,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#111130",
+  },
+  coverDateText: {
+    fontSize: 9,
+    color: "#4a4a6a",
+  },
+
+  // ── Content pages (white) ─────────────────────────────────────────────────
   page: {
     fontFamily: "IBM Plex Sans",
     fontSize: 10,
-    color: colors.foreground,
-    paddingTop: 60,
-    paddingBottom: 60,
+    color: C.muted,
+    paddingTop: 50,
+    paddingBottom: 70,
     paddingHorizontal: 50,
+    backgroundColor: C.white,
   },
-  coverPage: {
-    fontFamily: "IBM Plex Sans",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 50,
-  },
-  coverTitle: {
-    fontSize: 28,
-    fontWeight: 700,
-    color: colors.foreground,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  coverSubtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: "center",
-    marginBottom: 40,
-  },
-  coverBrand: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: colors.highlight,
-    textAlign: "center",
-    marginBottom: 4,
+
+  // ── Section ───────────────────────────────────────────────────────────────
+  sectionContainer: {
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 11,
     fontWeight: 700,
-    color: colors.foreground,
-    marginBottom: 12,
-    marginTop: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.highlight,
-    paddingBottom: 6,
+    color: C.navy,
+    marginBottom: 3,
+    paddingBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: C.rose,
   },
   body: {
-    fontSize: 10,
-    lineHeight: 1.6,
-    color: colors.foreground,
-    marginBottom: 8,
+    fontSize: 9.5,
+    lineHeight: 1.75,
+    color: C.muted,
+    marginTop: 6,
   },
-  boldText: {
-    fontWeight: 600,
-  },
-  mutedText: {
-    fontSize: 9,
-    color: colors.muted,
-  },
-  table: {
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: colors.gridBorder,
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gridBorder,
-  },
-  tableHeader: {
-    backgroundColor: colors.gridLight,
-    flexDirection: "row",
-    borderBottomWidth: 2,
-    borderBottomColor: colors.highlight,
-  },
-  tableCell: {
-    padding: 6,
-    fontSize: 9,
-    flex: 1,
-  },
-  tableCellHeader: {
-    padding: 6,
-    fontSize: 9,
-    fontWeight: 600,
-    flex: 1,
-  },
+
+  // ── Signature ─────────────────────────────────────────────────────────────
   signatureBlock: {
-    marginTop: 30,
+    marginTop: 36,
     flexDirection: "row",
     justifyContent: "space-between",
+    gap: 20,
   },
   signatureBox: {
-    width: "45%",
-    borderTopWidth: 1,
-    borderTopColor: colors.foreground,
-    paddingTop: 8,
+    flex: 1,
+    borderTopWidth: 2,
+    borderTopColor: C.navy,
+    paddingTop: 10,
   },
   signatureLabel: {
-    fontSize: 9,
-    color: colors.muted,
-    marginBottom: 4,
+    fontSize: 7,
+    fontWeight: 600,
+    color: C.dimmed,
+    letterSpacing: 1,
+    marginBottom: 6,
   },
   signatureImage: {
     height: 40,
     marginBottom: 4,
   },
+
+  // ── Typography helpers ────────────────────────────────────────────────────
+  boldText: {
+    fontWeight: 600,
+    color: C.navy,
+  },
+  mutedText: {
+    fontSize: 8.5,
+    color: C.dimmed,
+  },
+
+  // ── Table (kept for backward compat) ─────────────────────────────────────
+  table:           { marginVertical: 10 },
+  tableRow:        { flexDirection: "row" },
+  tableHeader:     { flexDirection: "row" },
+  tableCell:       { padding: 6, fontSize: 9, flex: 1 },
+  tableCellHeader: { padding: 6, fontSize: 9, fontWeight: 600, flex: 1 },
 });

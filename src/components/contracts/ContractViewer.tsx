@@ -143,21 +143,19 @@ export default function ContractViewer({
           <div className="bg-white rounded-xl border border-grid-300 p-8">
             {contract.sections && contract.sections.length > 0 ? (
               contract.sections.map((section) => (
-                <div key={section.id} id={section.id} className="mb-8">
-                  <h2 className="text-lg font-bold text-foreground mb-3">
+                <div key={section.id} id={section.id} className="mb-8 scroll-mt-6">
+                  <h2 className="text-base font-semibold text-foreground mb-3 pb-2 border-b border-grid-300">
                     {section.title}
                   </h2>
-                  <div
-                    className="prose prose-sm max-w-none text-muted"
-                    dangerouslySetInnerHTML={{ __html: section.content }}
-                  />
+                  <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                    {section.content}
+                  </p>
                 </div>
               ))
             ) : (
-              <div
-                className="prose prose-sm max-w-none text-muted"
-                dangerouslySetInnerHTML={{ __html: contract.content }}
-              />
+              <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                {contract.content}
+              </p>
             )}
           </div>
 

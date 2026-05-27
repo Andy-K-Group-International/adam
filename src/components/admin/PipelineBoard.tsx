@@ -141,6 +141,10 @@ export default function PipelineBoard() {
           .order("updated_at", { ascending: false }),
       ]);
 
+      if (clientsResult.error) {
+        throw new Error(`Clients query failed: ${clientsResult.error.message}`);
+      }
+
       const clientsData = (clientsResult.data ?? []) as ClientWithExtras[];
 
       const activeLeads = leadsData.filter(

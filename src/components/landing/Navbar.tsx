@@ -71,6 +71,12 @@ export default function Navbar() {
             <a href="#pricing" className="hover:text-foreground transition-colors">{t.nav.pricing}</a>
             <Link href="/request-demo" className="hover:text-foreground transition-colors">{t.nav.demo}</Link>
             <a href="#contact" className="hover:text-foreground transition-colors">{t.nav.contact}</a>
+            <Link
+              href="/sign-in?role=admin"
+              className="text-muted-2 hover:text-foreground transition-colors text-xs tracking-wide"
+            >
+              Admin
+            </Link>
           </div>
 
           {/* Desktop right: language + currency + CTA */}
@@ -160,6 +166,14 @@ export default function Navbar() {
             >
               {t.nav.contact}
             </a>
+            <Link
+              href="/sign-in?role=admin"
+              onClick={closeMobile}
+              className="block py-3 text-sm border-b border-grid-300"
+              style={{ color: "#8b93a8" }}
+            >
+              Admin Access
+            </Link>
 
             {/* Mobile language + currency */}
             <div className="pt-4 pb-2 flex items-center gap-3">

@@ -11,6 +11,7 @@ import IndustrySection from "./IndustrySection";
 import RoiCalculator from "./RoiCalculator";
 import PricingSection from "./PricingSection";
 import CtaSection from "./CtaSection";
+import AccessPortal from "./AccessPortal";
 import Footer from "./Footer";
 
 export default function LandingShell() {
@@ -33,6 +34,8 @@ export default function LandingShell() {
           <PricingSection />
           <TronDivider />
           <CtaSection />
+          <TronDivider />
+          <AccessPortal />
           <Footer />
         </main>
       </CurrencyProvider>

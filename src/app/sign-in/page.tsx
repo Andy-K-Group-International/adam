@@ -5,14 +5,44 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "@/app/actions/auth";
-import { Check } from "lucide-react";
+import { Check, Shield, Briefcase } from "lucide-react";
+
+type PortalRole = "admin" | "client" | null;
+
+function RoleBadge({ role }: { role: PortalRole }) {
+  if (!role) return null;
+
+  if (role === "admin") {
+    return (
+      <div
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-6 mx-auto"
+        style={{ backgroundColor: "#01011b", color: "#faf6f3" }}
+      >
+        <Shield className="h-4 w-4 shrink-0" style={{ color: "#c9707d" }} />
+        <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#c9707d" }}>
+          Admin Panel
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-6 mx-auto bg-foreground/6 text-foreground">
+      <Briefcase className="h-4 w-4 shrink-0 text-foreground" />
+      <span className="text-xs font-semibold tracking-widest uppercase text-muted-2">
+        Client Portal
+      </span>
+    </div>
+  );
+}
 
 function SignInForm() {
   const searchParams = useSearchParams();
   const messageParam = searchParams.get("message");
-  const errorParam = searchParams.get("error");
+  const errorParam   = searchParams.get("error");
+  const role         = (searchParams.get("role") ?? null) as PortalRole;
 
-  const [error, setError] = useState<string | null>(
+  const [error, setError]       = useState<string | null>(
     errorParam === "auth_callback_error" ? "Something went wrong. Please try again." : null
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -22,8 +52,8 @@ function SignInForm() {
     setIsLoading(true);
     setError(null);
 
-    const form = new FormData(e.currentTarget);
-    const email = form.get("email") as string;
+    const form     = new FormData(e.currentTarget);
+    const email    = form.get("email") as string;
     const password = form.get("password") as string;
 
     const result = await signIn(email, password);
@@ -32,6 +62,18 @@ function SignInForm() {
       setIsLoading(false);
     }
   }
+
+  const heading = role === "admin"
+    ? "Admin Sign In"
+    : role === "client"
+    ? "Client Portal"
+    : "Sign in to your account";
+
+  const subheading = role === "admin"
+    ? "Andy’K Group internal access"
+    : role === "client"
+    ? "Access your proposals, contracts and more"
+    : "Enter your credentials to continue";
 
   return (
     <div className="glass-card rounded-2xl border border-grid-300 overflow-hidden">
@@ -42,12 +84,17 @@ function SignInForm() {
         </div>
       )}
 
+      {/* Role accent strip for admin */}
+      {role === "admin" && (
+        <div style={{ height: 3, backgroundColor: "#c9707d" }} />
+      )}
+
       <div className="p-8">
         <div className="mb-6">
           <h1 className="text-lg font-serif font-semibold text-foreground">
-            Sign in to your account
+            {heading}
           </h1>
-          <p className="text-sm text-muted-2 mt-1">Enter your credentials to continue</p>
+          <p className="text-sm text-muted-2 mt-1">{subheading}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,6 +176,11 @@ export default function SignInPage() {
           <p className="label-mono">Automated Document &amp; Account Manager</p>
         </div>
 
+        {/* Role badge rendered inside Suspense since it reads searchParams */}
+        <Suspense fallback={null}>
+          <RoleBadgeFromParams />
+        </Suspense>
+
         <Suspense fallback={<div className="glass-card rounded-2xl p-8 border border-grid-300 h-64" />}>
           <SignInForm />
         </Suspense>
@@ -139,6 +191,16 @@ export default function SignInPage() {
           </Link>
         </p>
       </div>
+    </div>
+  );
+}
+
+function RoleBadgeFromParams() {
+  const searchParams = useSearchParams();
+  const role = (searchParams.get("role") ?? null) as PortalRole;
+  return (
+    <div className="flex justify-center">
+      <RoleBadge role={role} />
     </div>
   );
 }

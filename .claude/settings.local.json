@@ -48,7 +48,8 @@
       "Read(//Users/andrejkneisl/Desktop/**)",
       "Bash(sed -n '1,30p' /Users/andrejkneisl/adam/src/lib/data.ts)",
       "Bash(sed -n '288,330p' /Users/andrejkneisl/adam/src/lib/data.ts)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(python3 *)"
     ]
   }
 }

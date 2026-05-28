@@ -36,7 +36,7 @@ function AdamLogo() {
         style={{ mixBlendMode: "screen", height: "48px", width: "auto" }}
       >
         <source src="/images/adam-logo.mp4" type="video/mp4" />
-        <img src="/images/adam-logo.png" alt="A.D.A.M." />
+        <img src="/images/adam-logo.png" alt="A.D.A.M." style={{ height: "48px" }} />
       </video>
       <span className="text-sm font-bold tracking-tight text-foreground">A.D.A.M.</span>
     </div>

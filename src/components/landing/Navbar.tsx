@@ -73,8 +73,22 @@ export default function Navbar() {
             <a href="#contact" className="hover:text-foreground transition-colors">{t.nav.contact}</a>
           </div>
 
-          {/* Desktop right: currency + Admin + CTA */}
+          {/* Desktop right: language + currency + Admin + CTA */}
           <div className="hidden md:flex items-center gap-2">
+            {/* Language select */}
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+              aria-label="Select language"
+              className={`${selectCls} w-[52px]`}
+            >
+              <option value="en">EN</option>
+              <option value="sk">SK</option>
+              <option value="de">DE</option>
+              <option value="es">ES</option>
+              <option value="nl">NL</option>
+              <option value="pt">PT</option>
+            </select>
             {/* Currency select */}
             <select
               value={currency}

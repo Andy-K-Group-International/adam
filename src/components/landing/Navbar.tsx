@@ -28,16 +28,7 @@ function CloseIcon() {
 function AdamLogo() {
   return (
     <div className="flex items-center gap-2">
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={{ mixBlendMode: "screen", height: "48px", width: "auto" }}
-      >
-        <source src="/images/adam-logo.mp4" type="video/mp4" />
-        <img src="/images/adam-logo.png" alt="A.D.A.M." style={{ height: "48px" }} />
-      </video>
+      <img src="/images/adam-logo.png" alt="A.D.A.M." style={{ height: "44px", width: "auto" }} />
       <span className="text-sm font-bold tracking-tight text-foreground">A.D.A.M.</span>
     </div>
   );

@@ -41,16 +41,7 @@ export default function AdminSidebar() {
       {/* Logo */}
       <div className="px-6 py-5 shrink-0">
         <Link href="/admin" className="flex items-center gap-2">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            style={{ mixBlendMode: "screen", height: "40px", width: "auto" }}
-          >
-            <source src="/images/adam-logo.mp4" type="video/mp4" />
-            <img src="/images/adam-logo.png" alt="A.D.A.M." width={34} height={34} />
-          </video>
+          <img src="/images/adam-logo.png" alt="A.D.A.M." style={{ height: "40px", width: "auto" }} />
           <div>
             <p className="text-foreground font-bold text-base tracking-tight leading-none">A.D.A.M.</p>
             <p className="label-mono mt-0.5">Admin Panel</p>

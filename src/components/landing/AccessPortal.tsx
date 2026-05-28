@@ -11,7 +11,8 @@ export default function AccessPortal() {
         <div className="text-center mb-12">
           <span className="label-mono mb-3 block">Platform Access</span>
           <h2 className="text-[clamp(1.5rem,1.2rem+1vw,2rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-3">
-            Your Access Portal
+            Your{" "}
+            <span className="font-serif font-light italic text-[1.2em]">Access Portal</span>
           </h2>
           <p className="text-base text-muted font-light">
             Select your access level to continue

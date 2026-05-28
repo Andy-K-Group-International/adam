@@ -178,7 +178,8 @@ export default function PricingSection() {
             {t.pricing.label}
           </span>
           <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
-            {t.pricing.title}
+            Simple, transparent{" "}
+            <span className="font-serif font-light italic text-[1.2em]">pricing</span>
           </h2>
         </div>
 

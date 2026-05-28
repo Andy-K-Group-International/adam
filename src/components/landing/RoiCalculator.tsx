@@ -93,8 +93,9 @@ export default function RoiCalculator() {
       <div className="max-w-screen-xl mx-auto">
         <div className="text-center mb-14">
           <p className="label-mono mb-3">{t.roi.label}</p>
-          <h2 className="font-serif text-4xl lg:text-5xl font-semibold text-foreground tracking-tight mb-4">
-            {t.roi.title}
+          <h2 className="text-[clamp(1.875rem,1.52rem+1.25vw,2.5rem)] font-bold tracking-tight leading-[1.2] text-foreground mb-4">
+            Operational Capacity{" "}
+            <span className="font-serif font-light italic text-[1.2em]">Calculator</span>
           </h2>
           <p className="text-muted text-lg max-w-xl mx-auto leading-relaxed">
             {t.roi.subtitle}

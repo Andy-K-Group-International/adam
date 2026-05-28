@@ -24,16 +24,16 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
-const TITLE = "ADAM — Automated Document & Account Manager | Andy'K Group International LTD";
+const TITLE = "A.D.A.M. — Lifecycle Implementation System by Andy'K Group International LTD";
 const DESCRIPTION =
-  "ADAM by Andy'K Group International LTD — lifecycle operations platform that manages your entire client journey from first contact to signed contract. No manual processes, no missed deadlines.";
+  "A.D.A.M. by Andy'K Group International LTD — structured operational platform that manages your entire client lifecycle from strategic application to active implementation.";
 const CANONICAL = "https://adam.andykgroup.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(CANONICAL),
   title: {
     default: TITLE,
-    template: "%s | ADAM by Andy'K Group International LTD",
+    template: "%s | A.D.A.M. by Andy'K Group International LTD",
   },
   description: DESCRIPTION,
   keywords: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_GB",
     url: CANONICAL,
-    siteName: "ADAM by Andy'K Group International LTD",
+    siteName: "A.D.A.M. by Andy'K Group International LTD",
     title: TITLE,
     description: DESCRIPTION,
   },

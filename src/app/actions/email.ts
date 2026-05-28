@@ -70,7 +70,7 @@ function emailHtml(label: string | undefined, body: string): string {
             ${LOGO_SVG_40}
           </td>
           <td style="padding-left:12px;vertical-align:middle;">
-            <span style="font-family:Georgia,'Times New Roman',serif;color:#0E282D;font-size:16px;font-weight:700;letter-spacing:-0.3px;">A.D.A.M.</span>${labelSpan}
+            <span style="font-family:Georgia,'Times New Roman',serif;color:#2F9E9A;font-size:16px;font-weight:700;letter-spacing:-0.3px;">A.D.A.M.</span>${labelSpan}
           </td>
         </tr></table>
       </td></tr>
@@ -84,7 +84,7 @@ function emailHtml(label: string | undefined, body: string): string {
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="vertical-align:middle;width:24px;height:24px;min-width:24px;">${LOGO_SVG_24}</td>
                 <td style="padding-left:7px;vertical-align:middle;">
-                  <span style="font-family:'Courier New',Courier,monospace;font-size:11px;font-weight:700;color:#0E282D;letter-spacing:0.04em;">A.D.A.M.</span>
+                  <span style="font-family:'Courier New',Courier,monospace;font-size:11px;font-weight:700;color:#2F9E9A;letter-spacing:0.04em;">A.D.A.M. &mdash; Lifecycle Implementation System</span>
                 </td>
               </tr></table>
             </td>

@@ -13,6 +13,7 @@ import PricingSection from "./PricingSection";
 import CtaSection from "./CtaSection";
 import AccessPortal from "./AccessPortal";
 import Footer from "./Footer";
+import AmbientMusic from "./AmbientMusic";
 
 export default function LandingShell() {
   return (
@@ -37,6 +38,7 @@ export default function LandingShell() {
           <TronDivider />
           <AccessPortal />
           <Footer />
+          <AmbientMusic src="/audio/adam-theme.wav" credit="DJ Andy'K" creditUrl="https://www.djandykofficial.com" />
         </main>
       </CurrencyProvider>
     </LanguageProvider>

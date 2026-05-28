@@ -12,6 +12,7 @@ import RoiCalculator from "./RoiCalculator";
 import PricingSection from "./PricingSection";
 import CtaSection from "./CtaSection";
 import AccessPortal from "./AccessPortal";
+import FaqSection from "./FaqSection";
 import Footer from "./Footer";
 import AmbientMusic from "./AmbientMusic";
 
@@ -37,6 +38,8 @@ export default function LandingShell() {
           <CtaSection />
           <TronDivider />
           <AccessPortal />
+          <TronDivider />
+          <FaqSection />
           <Footer />
           <AmbientMusic src="/audio/adam-theme.wav" credit="DJ Andy'K" creditUrl="https://www.djandykofficial.com" />
         </main>

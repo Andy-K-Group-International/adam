@@ -252,8 +252,33 @@ export interface Client {
   readiness_score: number | null;
   readiness_score_updated_at: string | null;
   readiness_breakdown: Record<string, unknown> | null;
+  referral_code: string | null;
+  referred_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface WebhookEndpoint {
+  id: string;
+  url: string;
+  secret: string;
+  events: string[];
+  active: boolean;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  endpoint_id: string;
+  event: string;
+  payload: Record<string, unknown>;
+  status: "pending" | "delivered" | "failed";
+  http_status: number | null;
+  error: string | null;
+  delivered_at: string | null;
+  created_at: string;
 }
 
 export interface Invoice {

@@ -38,6 +38,7 @@ import type { StrategyTemplateKey } from "@/lib/strategy-templates";
 import InternalNotes from "@/components/admin/InternalNotes";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import ActivationTab from "@/components/admin/ActivationTab";
+import ReferralTab from "@/components/admin/ReferralTab";
 import ImplementationTimeline from "@/components/admin/ImplementationTimeline";
 import StrategyVersionHistory from "@/components/admin/StrategyVersionHistory";
 import { listStrategyVersions, createStrategyVersion } from "@/lib/supabase/queries/strategy-versions";
@@ -66,7 +67,7 @@ const stageLabels: Record<string, string> = {
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "kyc" | "activation" | "reports" | "activity";
+  | "kickoff" | "kyc" | "activation" | "reports" | "activity" | "referral";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
@@ -243,6 +244,7 @@ export default function ClientDetailPage() {
     { key: "activation",    label: client.stage === "active" ? "Activation ✓" : "Activation" },
     { key: "reports",       label: `Reports${reportCount > 0 ? ` (${reportCount})` : ""}` },
     { key: "activity",      label: "Activity" },
+    { key: "referral",      label: "Referral" },
   ];
 
   // ── Kickoff handlers ────────────────────────────────────────────────────────
@@ -940,6 +942,10 @@ export default function ClientDetailPage() {
         <div className="bg-white rounded-xl border border-grid-300 p-4">
           <ActivityFeed activities={activities || []} />
         </div>
+      )}
+
+      {activeTab === "referral" && (
+        <ReferralTab clientId={clientId} referralCode={client.referral_code ?? null} />
       )}
 
       {/* ── Reactivation Modal ─────────────────────────────────────────────── */}

@@ -1160,6 +1160,153 @@ export async function sendClientRequestResponse({
 
 // ─── Client Activation ───────────────────────────────────────────────────────
 
+// ─── Contract signature reminder ─────────────────────────────────────────────
+
+export async function sendContractSignatureReminder({
+  clientEmail,
+  clientName,
+  contractTitle,
+  contractId,
+}: {
+  clientEmail: string;
+  clientName: string;
+  contractTitle: string;
+  contractId: string;
+}) {
+  const url = `https://adam.andykgroup.com/dashboard/contracts/${contractId}`;
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Your contract is waiting for your signature</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">This is a friendly reminder that your contract <strong>${contractTitle}</strong> has been ready for your signature for over 7 days. Please review and sign at your earliest convenience to keep your project on track.</p>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review &amp; Sign Contract &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    subject: `Reminder: Please sign your contract — ${contractTitle}`,
+    text: `Hi ${clientName},\n\nYour contract "${contractTitle}" has been awaiting your signature for over 7 days.\n\nReview and sign here: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Proposal response reminder ───────────────────────────────────────────────
+
+export async function sendProposalResponseReminder({
+  clientEmail,
+  clientName,
+  proposalTitle,
+  proposalId,
+}: {
+  clientEmail: string;
+  clientName: string;
+  proposalTitle: string;
+  proposalId: string;
+}) {
+  const url = `https://adam.andykgroup.com/dashboard/proposals/${proposalId}`;
+  const html = emailHtml(undefined, `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Your proposal is awaiting your response</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">We&#8217;re following up on proposal <strong>${proposalTitle}</strong>, which has been ready for your review for over 5 days. Please take a moment to confirm or request changes so we can move your project forward.</p>
+    <div style="margin-bottom:32px;">
+      <a href="${url}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Proposal &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    subject: `Reminder: Please respond to your proposal — ${proposalTitle}`,
+    text: `Hi ${clientName},\n\nProposal "${proposalTitle}" has been awaiting your response for over 5 days.\n\nReview it here: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Monthly report email ─────────────────────────────────────────────────────
+
+export async function sendMonthlyReport({
+  clientEmail,
+  clientName,
+  companyName,
+  month,
+  healthScore,
+  milestonesCompleted,
+  invoicesPaid,
+  invoicesOutstanding,
+  recentActivities,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  month: string;
+  healthScore: number;
+  milestonesCompleted: string[];
+  invoicesPaid: number;
+  invoicesOutstanding: number;
+  recentActivities: string[];
+}) {
+  const portalUrl = "https://adam.andykgroup.com/dashboard";
+  const milestoneHtml = milestonesCompleted.length
+    ? milestonesCompleted.map((m) => `<li style="color:#525a70;font-size:14px;line-height:1.8;">${m}</li>`).join("")
+    : `<li style="color:#8b93a8;font-size:14px;font-style:italic;">No milestones completed this month</li>`;
+  const activityHtml = recentActivities.length
+    ? recentActivities.map((a) => `<li style="color:#525a70;font-size:13px;line-height:1.8;">${a}</li>`).join("")
+    : `<li style="color:#8b93a8;font-size:13px;font-style:italic;">No recent activity</li>`;
+
+  const scoreColor = healthScore >= 80 ? "#16a34a" : healthScore >= 60 ? "#d97706" : "#dc2626";
+
+  const html = emailHtml("Monthly Report", `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">${month} Summary</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Your monthly progress report</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Hi ${clientName},<br>Here&#8217;s a summary of ${companyName}&#8217;s progress during <strong>${month}</strong>.</p>
+    <div style="background:#f0f4f4;border:1px solid #ede8e2;border-radius:10px;padding:20px;margin-bottom:24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:8px 12px;text-align:center;border-right:1px solid #ede8e2;">
+            <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Health Score</div>
+            <div style="font-size:28px;font-weight:700;color:${scoreColor};">${healthScore}</div>
+          </td>
+          <td style="padding:8px 12px;text-align:center;border-right:1px solid #ede8e2;">
+            <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Milestones Done</div>
+            <div style="font-size:28px;font-weight:700;color:#0E282D;">${milestonesCompleted.length}</div>
+          </td>
+          <td style="padding:8px 12px;text-align:center;">
+            <div style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Outstanding Invoices</div>
+            <div style="font-size:28px;font-weight:700;color:${invoicesOutstanding > 0 ? "#d97706" : "#0E282D"};">${invoicesOutstanding}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div style="margin-bottom:20px;">
+      <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">Milestones completed this month</p>
+      <ul style="margin:0;padding-left:20px;">${milestoneHtml}</ul>
+    </div>
+    <div style="margin-bottom:24px;">
+      <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">Recent activity</p>
+      <ul style="margin:0;padding-left:20px;">${activityHtml}</ul>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="${portalUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">View Your Portal &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    subject: `${companyName} — ${month} Progress Report`,
+    text: `Hi ${clientName},\n\nHere's your ${month} summary for ${companyName}.\n\nHealth Score: ${healthScore}/100\nMilestones completed: ${milestonesCompleted.length}\nInvoices paid: ${invoicesPaid}\nOutstanding invoices: ${invoicesOutstanding}\n\nView your portal: ${portalUrl}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Client activation email ──────────────────────────────────────────────────
+
 export async function sendClientActivationEmail({
   clientEmail,
   clientName,

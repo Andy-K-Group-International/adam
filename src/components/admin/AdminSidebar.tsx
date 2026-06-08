@@ -17,6 +17,7 @@ import {
   BarChart2,
   LogOut,
   BookOpen,
+  Star,
 } from "lucide-react";
 
 const navItems = [
@@ -31,6 +32,7 @@ const navItems = [
   { label: "Reports", href: "/admin/reports", icon: BarChart2 },
   { label: "Questionnaires", href: "/admin/questionnaires", icon: ClipboardList },
   { label: "Questions", href: "/admin/questions", icon: MessageSquareText },
+  { label: "Founding Clients", href: "/admin/founding-codes", icon: Star },
 ];
 
 export default function AdminSidebar() {

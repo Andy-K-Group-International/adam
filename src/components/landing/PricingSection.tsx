@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { pricingData, siteConfig } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { Loader2 } from "lucide-react";
+
+// ─── Plan key mapping for internal plans ────────────────────────────────────
+
+const PLAN_KEYS: Record<string, string> = {
+  Starter:    "starter",
+  Growth:     "growth",
+  Scale:      "scale",
+  Enterprise: "enterprise",
+};
 
 // ─── Check icon ──────────────────────────────────────────────────────────────
 
@@ -42,16 +51,44 @@ function PricingCard({
   billing,
   billedAnnuallyLabel,
   popularLabel,
+  foundingDiscount,
+  isInternalTab,
+  onCheckout,
+  loadingPlan,
 }: {
   plan: Plan;
   billing: "monthly" | "annual";
   billedAnnuallyLabel: string;
   popularLabel: string;
+  foundingDiscount: number;
+  isInternalTab: boolean;
+  onCheckout: (planKey: string) => void;
+  loadingPlan: string | null;
 }) {
   const { convert } = useCurrency();
-  const isCustom = plan.monthlyGBP === null;
-  const gbpPrice = billing === "annual" ? plan.annualGBP : plan.monthlyGBP;
-  const priceDisplay = isCustom ? "Custom" : convert(gbpPrice!, "GBP");
+  const isCustom  = plan.monthlyGBP === null;
+  const isEnterprise = plan.cta === "Request Quote";
+  const gbpPrice  = billing === "annual" ? plan.annualGBP : plan.monthlyGBP;
+
+  // Apply founding discount (monthly only, internal only)
+  const effectiveGbp =
+    !isCustom && isInternalTab && billing === "monthly" && foundingDiscount > 0
+      ? Math.round(gbpPrice! * (1 - foundingDiscount / 100))
+      : gbpPrice;
+
+  const priceDisplay = isCustom ? "Custom" : convert(effectiveGbp!, "GBP");
+  const originalDisplay =
+    !isCustom && isInternalTab && billing === "monthly" && foundingDiscount > 0
+      ? convert(gbpPrice!, "GBP")
+      : null;
+
+  const planKey = isInternalTab ? (PLAN_KEYS[plan.name] ?? null) : null;
+  const loading = loadingPlan === planKey;
+
+  function handleCta() {
+    if (isEnterprise || !planKey || !isInternalTab) return;
+    onCheckout(planKey);
+  }
 
   return (
     <div
@@ -79,6 +116,11 @@ function PricingCard({
         </h4>
 
         <div className="flex items-end gap-1">
+          {originalDisplay && (
+            <span className={cn("text-base line-through mb-0.5", plan.highlighted ? "text-white/30" : "text-muted-2/60")}>
+              {originalDisplay}
+            </span>
+          )}
           <span
             className={cn(
               "text-3xl font-bold tracking-tight",
@@ -102,6 +144,12 @@ function PricingCard({
         {!isCustom && billing === "annual" && (
           <p className={cn("text-xs mt-1", plan.highlighted ? "text-white/50" : "text-muted-2")}>
             {billedAnnuallyLabel} · save 40%
+          </p>
+        )}
+
+        {!isCustom && isInternalTab && billing === "monthly" && foundingDiscount > 0 && (
+          <p className={cn("text-xs mt-1 font-mono", plan.highlighted ? "text-white/60" : "text-highlight")}>
+            Founding discount −{foundingDiscount}% applied
           </p>
         )}
       </div>
@@ -138,21 +186,45 @@ function PricingCard({
         ))}
       </ul>
 
-      <Link
-        href={
-          plan.cta === "Request Quote"
-            ? `mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan`
-            : "/questionnaire"
-        }
-        className={cn(
-          "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
-          plan.highlighted
-            ? "bg-white text-foreground hover:bg-white/90"
-            : "bg-foreground text-white hover:bg-foreground/90"
-        )}
-      >
-        {plan.cta}
-      </Link>
+      {isEnterprise ? (
+        <a
+          href={`mailto:${siteConfig.email}?subject=Quote Request: ${plan.name} Plan`}
+          className={cn(
+            "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
+            plan.highlighted
+              ? "bg-white text-foreground hover:bg-white/90"
+              : "bg-foreground text-white hover:bg-foreground/90"
+          )}
+        >
+          {plan.cta}
+        </a>
+      ) : isInternalTab ? (
+        <button
+          onClick={handleCta}
+          disabled={loading}
+          className={cn(
+            "flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium transition-all duration-200 disabled:opacity-70",
+            plan.highlighted
+              ? "bg-white text-foreground hover:bg-white/90"
+              : "bg-foreground text-white hover:bg-foreground/90"
+          )}
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading ? "Redirecting…" : "Get Access"}
+        </button>
+      ) : (
+        <a
+          href="/questionnaire"
+          className={cn(
+            "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
+            plan.highlighted
+              ? "bg-white text-foreground hover:bg-white/90"
+              : "bg-foreground text-white hover:bg-foreground/90"
+          )}
+        >
+          {plan.cta}
+        </a>
+      )}
     </div>
   );
 }
@@ -163,10 +235,79 @@ type Tab = "internal" | "whitelabel";
 
 export default function PricingSection() {
   const { t } = useLanguage();
-  const [tab, setTab] = useState<Tab>("internal");
+  const [tab, setTab]         = useState<Tab>("internal");
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
+  // Founding code state
+  const [codeInput, setCodeInput]         = useState("");
+  const [codeApplied, setCodeApplied]     = useState("");
+  const [codeDiscount, setCodeDiscount]   = useState(0);
+  const [codeError, setCodeError]         = useState<string | null>(null);
+  const [codeLoading, setCodeLoading]     = useState(false);
+  const [loadingPlan, setLoadingPlan]     = useState<string | null>(null);
+
   const activeData = tab === "internal" ? pricingData.internal : pricingData.whitelabel;
+
+  async function applyCode() {
+    const trimmed = codeInput.trim().toUpperCase();
+    if (!trimmed) return;
+    setCodeLoading(true);
+    setCodeError(null);
+    try {
+      const res = await fetch("/api/founding-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: trimmed, billing }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setCodeApplied(trimmed);
+        setCodeDiscount(data.discount_percent);
+        setCodeError(null);
+      } else {
+        setCodeError(data.error ?? "Invalid code");
+        setCodeApplied("");
+        setCodeDiscount(0);
+      }
+    } catch {
+      setCodeError("Failed to validate code");
+    }
+    setCodeLoading(false);
+  }
+
+  async function handleCheckout(planKey: string) {
+    setLoadingPlan(planKey);
+    try {
+      const res = await fetch("/api/revolut/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: planKey,
+          billing,
+          founding_code: codeApplied || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        console.error("Checkout error:", data.error);
+      }
+    } catch {
+      console.error("Checkout failed");
+    }
+    setLoadingPlan(null);
+  }
+
+  // Reset code when switching to annual
+  function handleBillingChange(b: "monthly" | "annual") {
+    setBilling(b);
+    if (b === "annual") {
+      setCodeApplied("");
+      setCodeDiscount(0);
+      setCodeError(null);
+    }
+  }
 
   return (
     <section id="pricing" className="relative py-20 px-8">
@@ -209,7 +350,7 @@ export default function PricingSection() {
             {(["monthly", "annual"] as const).map((b) => (
               <button
                 key={b}
-                onClick={() => setBilling(b)}
+                onClick={() => handleBillingChange(b)}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-1.5",
                   billing === b
@@ -236,9 +377,55 @@ export default function PricingSection() {
         </div>
 
         {/* Subtitle */}
-        <p className="text-center text-base text-muted font-light max-w-[560px] mx-auto mb-10">
+        <p className="text-center text-base text-muted font-light max-w-[560px] mx-auto mb-8">
           {activeData.subtitle}
         </p>
+
+        {/* Founding code input — internal + monthly only */}
+        {tab === "internal" && (
+          <div className="max-w-[960px] mx-auto mb-10">
+            {billing === "monthly" ? (
+              <div className="border border-grid-300 bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-xs font-mono text-muted-2 uppercase tracking-wider mb-2">
+                    Have a Founding Client code?
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                      placeholder="FOUNDING-XXXXXX"
+                      className="flex-1 border border-grid-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-highlight/30"
+                      onKeyDown={(e) => e.key === "Enter" && applyCode()}
+                    />
+                    <button
+                      onClick={applyCode}
+                      disabled={codeLoading || !codeInput.trim()}
+                      className="px-4 py-2 bg-foreground text-white text-sm font-medium hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+                    >
+                      {codeLoading ? "Checking…" : "Apply"}
+                    </button>
+                  </div>
+                </div>
+                <div className="min-w-[200px]">
+                  {codeApplied && codeDiscount > 0 && (
+                    <p className="text-sm text-success font-medium">
+                      ✓ Founding discount applied — {codeDiscount}% off monthly billing
+                    </p>
+                  )}
+                  {codeError && (
+                    <p className="text-sm text-error">{codeError}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="border border-grid-300 bg-grid-100 px-4 py-3 text-sm text-muted-2 font-mono text-center">
+                Annual billing already includes 40% discount — Founding codes apply to monthly billing only.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Cards */}
         <div
@@ -256,6 +443,10 @@ export default function PricingSection() {
               billing={billing}
               billedAnnuallyLabel={t.pricing.billedAnnually}
               popularLabel={t.pricing.popular}
+              foundingDiscount={codeApplied ? codeDiscount : 0}
+              isInternalTab={tab === "internal"}
+              onCheckout={handleCheckout}
+              loadingPlan={loadingPlan}
             />
           ))}
         </div>

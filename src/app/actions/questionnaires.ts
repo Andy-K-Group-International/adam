@@ -13,7 +13,8 @@ function generateTempPassword(length = 12): string {
 }
 
 export async function convertToClientAction(
-  questionnaireId: string
+  questionnaireId: string,
+  role: "client" | "company_admin" = "client"
 ): Promise<{ clientId?: string; error?: string }> {
   const supabase = createAdminClient();
 
@@ -100,15 +101,23 @@ export async function convertToClientAction(
     first_name: firstName,
     last_name: lastName,
     image_url: null,
-    role: "client",
+    role,
     client_id: client.id,
-    account_status: "active",
+    account_status: "pending",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
 
   if (userErr) {
     console.error("Users table insert failed:", userErr.message);
+  }
+
+  // For company_admin, link the client record back to this user so scoped queries work
+  if (role === "company_admin") {
+    await supabase
+      .from("clients")
+      .update({ assigned_to: authData.user.id, updated_at: new Date().toISOString() })
+      .eq("id", client.id);
   }
 
   // Send welcome email

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         if (profile?.role === "client") {
           return NextResponse.redirect(`${origin}/dashboard`);
         }
-        if (profile?.role === "admin" || profile?.role === "staff") {
+        if (profile?.role === "admin" || profile?.role === "staff" || profile?.role === "company_admin") {
           return NextResponse.redirect(`${origin}/admin`);
         }
       }

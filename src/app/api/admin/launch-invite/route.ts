@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await adminClient
     .from("users")
     .select("role")
-    .eq("id", user.id)
+    .eq("auth_id", user.id)
     .maybeSingle();
 
   if (profile?.role !== "admin") {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Send the email
-  await sendLaunchInvitation({ name, email, company, plan });
+  await sendLaunchInvitation({ name, email, company, plan, leadId: lead_id });
 
   // Mark invite as sent and update status to qualified
   const now = new Date().toISOString();

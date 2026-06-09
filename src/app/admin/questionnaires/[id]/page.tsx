@@ -56,6 +56,7 @@ export default function QuestionnaireDetailPage() {
   const [isConverting, setIsConverting] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [decisionLoading, setDecisionLoading] = useState<string | null>(null);
+  const [convertRole, setConvertRole] = useState<"client" | "company_admin">("client");
 
   useEffect(() => {
     const supabase = createClient();
@@ -79,7 +80,7 @@ export default function QuestionnaireDetailPage() {
   const handleConvert = async () => {
     setIsConverting(true);
     try {
-      const result = await convertToClientAction(questionnaire.id);
+      const result = await convertToClientAction(questionnaire.id, convertRole);
       if (result.error) throw new Error(result.error);
       router.push(`/admin/clients/${result.clientId}`);
     } catch (err) {
@@ -194,6 +195,14 @@ export default function QuestionnaireDetailPage() {
                   {isEvaluating ? "Re-evaluating…" : "Re-evaluate"}
                 </button>
               )}
+              <select
+                value={convertRole}
+                onChange={(e) => setConvertRole(e.target.value as "client" | "company_admin")}
+                className="h-10 px-3 text-sm border border-grid-300 rounded-lg bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/30"
+              >
+                <option value="client">Client</option>
+                <option value="company_admin">Company Admin</option>
+              </select>
               <button
                 onClick={handleConvert}
                 disabled={isConverting}

@@ -20,8 +20,37 @@ function isBusinessEmail(email: string): boolean {
 const SERVICE_OPTIONS = [
   { value: "b2g",        label: "B2G Government Tenders",          desc: "Access and win public sector contracts" },
   { value: "adam",       label: "A.D.A.M. System Licensing",       desc: "License the ADAM automation platform" },
+  { value: "eve",        label: "E.V.E. Intelligence System",      desc: "Automated business intelligence and market monitoring" },
   { value: "end_to_end", label: "End-to-End Business Development", desc: "Full strategic architecture and implementation" },
   { value: "not_sure",   label: "Not sure yet — help me decide",   desc: "I need guidance on the right approach" },
+];
+
+const EVE_INFO_OPTIONS = [
+  { value: "competition_market",  label: "Competition & Market" },
+  { value: "customer_segments",   label: "Customer Segments" },
+  { value: "regulatory_b2g",      label: "Regulatory & B2G Opportunities" },
+  { value: "all_above",           label: "All of the above" },
+];
+
+const EVE_BI_OPTIONS = [
+  { value: "manually",             label: "Manually (Excel, reports)" },
+  { value: "partially_automated",  label: "Partially automated" },
+  { value: "external_agency",      label: "External agency" },
+  { value: "no_system",            label: "No system yet" },
+];
+
+const EVE_GOAL_OPTIONS = [
+  { value: "faster_decisions",      label: "Faster decision-making" },
+  { value: "competitor_tracking",   label: "Competitor tracking" },
+  { value: "opportunity_id",        label: "Opportunity identification" },
+  { value: "automated_reporting",   label: "Automated reporting" },
+];
+
+const EVE_TIMELINE_OPTIONS = [
+  { value: "immediately", label: "Immediately" },
+  { value: "1_3months",   label: "1–3 months" },
+  { value: "3_6months",   label: "3–6 months" },
+  { value: "exploring",   label: "Just exploring" },
 ];
 
 const STATUS_OPTIONS = [
@@ -146,6 +175,14 @@ export default function QuestionnairePage() {
   const [serverError, setServerError] = useState("");
 
   const isE2E = serviceInterest === "end_to_end";
+  const isEVE = serviceInterest === "eve";
+
+  // E.V.E. follow-up state
+  const [eveInfoType, setEveInfoType]         = useState("");
+  const [eveBiCollection, setEveBiCollection] = useState("");
+  const [eveGoal, setEveGoal]                 = useState("");
+  const [eveSector, setEveSector]             = useState("");
+  const [eveTimeline, setEveTimeline]         = useState("");
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -224,6 +261,13 @@ export default function QuestionnairePage() {
             timeline,
             decision_authority: authority,
             ...(documentUrl ? { document_url: documentUrl } : {}),
+            ...(isEVE ? {
+              eve_info_type:    eveInfoType || undefined,
+              eve_bi_collection: eveBiCollection || undefined,
+              eve_goal:         eveGoal || undefined,
+              eve_sector:       eveSector.trim() || undefined,
+              eve_timeline:     eveTimeline || undefined,
+            } : {}),
           },
         }),
       });
@@ -413,6 +457,90 @@ export default function QuestionnairePage() {
                   }
                 }}
               />
+            </div>
+          )}
+
+          {/* E.V.E. follow-up questions */}
+          {isEVE && (
+            <div className="bg-white rounded-xl border border-grid-300 p-5 space-y-6">
+              <SectionTitle>E.V.E. Intelligence — Tell us more</SectionTitle>
+
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                  What type of information do you need to track?
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {EVE_INFO_OPTIONS.map((opt) => (
+                    <OptionCard
+                      key={opt.value}
+                      label={opt.label}
+                      selected={eveInfoType === opt.value}
+                      onClick={() => setEveInfoType(opt.value)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                  How do you currently collect business intelligence?
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {EVE_BI_OPTIONS.map((opt) => (
+                    <OptionCard
+                      key={opt.value}
+                      label={opt.label}
+                      selected={eveBiCollection === opt.value}
+                      onClick={() => setEveBiCollection(opt.value)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                  What is your main goal with E.V.E.?
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {EVE_GOAL_OPTIONS.map((opt) => (
+                    <OptionCard
+                      key={opt.value}
+                      label={opt.label}
+                      selected={eveGoal === opt.value}
+                      onClick={() => setEveGoal(opt.value)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
+                  What sector do you operate in?
+                </label>
+                <input
+                  type="text"
+                  value={eveSector}
+                  onChange={(e) => setEveSector(e.target.value)}
+                  placeholder="e.g. Healthcare, Logistics, Finance…"
+                  className="w-full text-sm border border-grid-500 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-highlight/30 transition-colors"
+                />
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
+                  When are you planning implementation?
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {EVE_TIMELINE_OPTIONS.map((opt) => (
+                    <OptionCard
+                      key={opt.value}
+                      label={opt.label}
+                      selected={eveTimeline === opt.value}
+                      onClick={() => setEveTimeline(opt.value)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

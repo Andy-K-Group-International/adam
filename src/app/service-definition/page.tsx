@@ -28,7 +28,7 @@ export default function ServiceDefinitionPage() {
         <p className="text-sm text-muted-2 font-mono">(A.D.A.M. Platform — What You Get)</p>
 
         <p className="text-sm text-muted-2 font-mono mt-4 mb-10">
-          Last updated: 8 June 2026
+          Last updated: 9 June 2026
         </p>
 
         <div className="border-t border-grid-300" />
@@ -56,6 +56,16 @@ export default function ServiceDefinitionPage() {
             <p className="mt-3">
               If activation is refused after payment (e.g., due to failed business verification),
               a full refund will be issued within 14 business days.
+            </p>
+            <p className="mt-2">
+              If activation is delayed due to business verification, the service period is not
+              affected — the full subscription period begins from your confirmed activation date.
+            </p>
+            <p className="mt-2">
+              Clients are entitled to a full refund if requested within 14 days of payment,
+              provided that onboarding and activation have not yet started. Once activation has
+              begun, no refund is available except where a verified technical failure prevents
+              access for more than 40% of the active service period.
             </p>
           </section>
 
@@ -133,7 +143,7 @@ export default function ServiceDefinitionPage() {
                 <p className="font-medium text-foreground text-sm mb-1">Standard Support (all plans)</p>
                 <ul className="list-disc pl-5 space-y-1 text-sm">
                   <li>Email support via ceo@andykgroup.com</li>
-                  <li>Target response time: 48 hours on UK business days</li>
+                  <li>Target response time: 48 hours on business days</li>
                   <li>Platform bug reports and account questions</li>
                 </ul>
               </div>
@@ -141,15 +151,16 @@ export default function ServiceDefinitionPage() {
                 <p className="font-medium text-foreground text-sm mb-1">Priority Support (Scale plan + Founding Clients)</p>
                 <ul className="list-disc pl-5 space-y-1 text-sm">
                   <li>Email support via ceo@andykgroup.com</li>
-                  <li>Target response time: 24 hours on UK business days</li>
+                  <li>Target response time: 24 hours on business days</li>
                   <li>Dedicated onboarding assistance</li>
                 </ul>
               </div>
             </div>
             <p className="mt-3 text-sm">
-              Support covers platform usage, account management, and technical issues with A.D.A.M.
-              It does not cover third-party service outages, custom development requests, or
-              business strategy consulting.
+              Response time refers to acknowledgment of support requests. Resolution time depends
+              on issue complexity. Support covers platform usage, account management, and technical
+              issues with A.D.A.M. It does not cover third-party service outages, custom
+              development requests, or business strategy consulting.
             </p>
           </section>
 
@@ -182,7 +193,22 @@ export default function ServiceDefinitionPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-3">9. Platform availability</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">9. Cancellation</h2>
+            <p>
+              Clients must provide 30 days written notice to cancel their subscription. Notice
+              must be sent to ceo@andykgroup.com. Access continues until the end of the current
+              billing period after the notice period expires.
+            </p>
+            <p className="mt-2">
+              Full refund is available if requested within 14 days of payment and before
+              activation begins. Once activation has started, no refund is available except
+              where a verified technical failure prevents access for more than 40% of the active
+              service period.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-foreground mb-3">10. Platform availability</h2>
             <p>
               A.D.A.M. targets 99% uptime, excluding scheduled maintenance windows. Scheduled
               maintenance will be communicated at least 24 hours in advance where operationally
@@ -193,7 +219,7 @@ export default function ServiceDefinitionPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-3">10. Questions</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">11. Questions</h2>
             <p>
               For questions about this Service Definition or what is included in your plan:
             </p>

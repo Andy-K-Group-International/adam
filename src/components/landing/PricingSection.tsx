@@ -497,13 +497,13 @@ export default function PricingSection() {
                 id: "billing",
                 checked: consentBilling,
                 set: setConsentBilling,
-                label: "I agree to the billing terms: monthly and annual service periods begin from my activation date. Annual plans are paid upfront and non-refundable after activation.",
+                label: "I agree to the billing terms: my service period begins from my activation date, not my payment date. I am entitled to a full refund within 14 days of payment if activation has not yet started. Once activation begins, no refund is available except where a verified technical failure prevents access for more than 40% of the service period.",
               },
               {
                 id: "activation",
                 checked: consentActivation,
                 set: setConsentActivation,
-                label: "I understand that payment confirms my intent and reserves my plan. My subscription period begins only after business verification and admin activation are completed. If activation is refused, I will receive a full refund.",
+                label: "I understand that payment confirms my intent and reserves my plan. My subscription period begins only after business verification and admin activation are completed. Cancellation requires 30 days written notice to ceo@andykgroup.com. If activation is refused, I will receive a full refund within 14 business days.",
               },
             ].map(({ id, checked, set, label }) => (
               <label key={id} className="flex items-start gap-3 cursor-pointer group">

@@ -28,7 +28,7 @@ export default function TermsAndConditionsPage() {
         <p className="text-sm text-muted-2 font-mono">(Terms of Use — A.D.A.M. Platform)</p>
 
         <p className="text-sm text-muted-2 font-mono mt-4 mb-10">
-          Last updated: 8 June 2026
+          Last updated: 9 June 2026
         </p>
 
         <div className="border-t border-grid-300" />
@@ -137,19 +137,21 @@ export default function TermsAndConditionsPage() {
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.2 Service periods.</strong>{" "}
-              Annual plans: payment is collected upfront. The 12-month service period begins from
-              your activation date, not the payment date. Monthly plans: the first billing cycle
-              begins from the activation date. Subsequent billing cycles run monthly from that date.
+              Annual plans are paid upfront. The 12-month service period begins from the
+              activation date, not the payment date. If activation is delayed due to business
+              verification, the service period is not affected — the full 12 months begin from
+              confirmed activation. Monthly plans: the first billing cycle begins from the
+              activation date. Subsequent billing cycles run monthly from that date.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.3 Founding Client pricing.</strong>{" "}
-              If you have been granted Founding Client status, your locked pricing applies for the
-              duration of your continuous active subscription. Pricing lock applies to the plan
-              selected at founding client activation. Switching plans (e.g., from Growth to Scale)
-              resets the pricing lock — the new plan is billed at the prevailing standard rate.
-              Pricing lock is also forfeited if you cancel and resubscribe. The locked price
-              is guaranteed for as long as your subscription remains continuously active without
-              plan changes or cancellation.
+              Founding Clients receive a locked pricing guarantee. The monthly rate agreed at
+              founding client activation will not increase for the duration of their continuous
+              active subscription. This guarantee applies to the plan selected at activation.
+              Switching to a different plan resets the pricing lock — the new plan is billed at
+              the prevailing standard rate. The pricing lock is also forfeited if you cancel and
+              resubscribe. The founding client pricing lock is a binding commercial commitment
+              by Andy&apos;K Group International LTD.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.4 Currency.</strong>{" "}
@@ -163,11 +165,10 @@ export default function TermsAndConditionsPage() {
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.6 Payment failure.</strong>{" "}
-              If a monthly payment fails, a 7-day grace period applies during which we will
-              attempt to notify you. If payment is not resolved within 7 days, access will be
-              suspended. After 30 days of suspension without resolution, the account may be
-              terminated. Data is retained for 90 days post-termination unless an earlier
-              deletion is requested.
+              If a monthly payment fails, a 7-day grace period applies. During this period access
+              remains active. After 7 days without successful payment, the account will be
+              suspended. Data is retained for 30 days after suspension before the account may
+              be terminated.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.7 Activation refusal.</strong>{" "}
@@ -180,22 +181,24 @@ export default function TermsAndConditionsPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-3">7. Cancellation and refunds</h2>
             <p>
-              <strong className="text-foreground">7.1 Monthly plans.</strong>{" "}
-              You may cancel at any time by emailing ceo@andykgroup.com with 30 days&rsquo; notice.
-              Access continues until the end of the current billing period. No refund is issued
-              for the partial month following cancellation notice.
+              <strong className="text-foreground">7.1 Cancellation notice.</strong>{" "}
+              Clients must provide 30 days written notice to cancel their subscription. Notice must
+              be sent to ceo@andykgroup.com. Access continues until the end of the current billing
+              period after the notice period expires. No partial refund is issued for unused days
+              within the final billing period.
             </p>
             <p className="mt-2">
-              <strong className="text-foreground">7.2 Annual plans.</strong>{" "}
-              Annual subscriptions are non-refundable once the account has been activated, except
-              where a technical failure caused by Andy&apos;K Group International LTD prevents
-              meaningful access for more than 40% of the billing period. In that case, a pro-rata
-              refund for the affected period will be issued.
+              <strong className="text-foreground">7.2 Refund entitlement.</strong>{" "}
+              Clients are entitled to a full refund if requested within 14 days of payment,
+              provided that onboarding and activation have not yet started. Once activation has
+              begun, no refund is available except where a verified technical failure prevents
+              access for more than 40% of the active service period.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">7.3 Pre-activation refunds.</strong>{" "}
-              If activation is refused after payment due to failed business verification or for
-              any other reason, a full refund will be issued within 14 business days.
+              If activation is refused after payment (e.g., due to failed business verification
+              or any other reason decided by Andy&apos;K Group International LTD), a full refund
+              will be issued within 14 business days.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">7.4 Data on cancellation.</strong>{" "}
@@ -291,24 +294,26 @@ export default function TermsAndConditionsPage() {
             <h2 className="text-lg font-semibold text-foreground mb-3">11. Support and service levels</h2>
             <p>
               <strong className="text-foreground">11.1 Standard support.</strong>{" "}
-              All plans include email support with a target response time of 48 hours on UK
-              business days (Monday–Friday, excluding public holidays).
+              Standard support response time: 48 hours on business days (Monday–Friday,
+              excluding UK public holidays). Applies to all plans.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">11.2 Priority support.</strong>{" "}
-              Scale plan subscribers and Founding Clients receive priority support with a target
-              response time of 24 hours on UK business days.
+              Scale plan subscribers and Founding Clients receive priority support with a
+              24-hour response time on business days.
             </p>
             <p className="mt-2">
-              <strong className="text-foreground">11.3 Platform availability.</strong>{" "}
+              <strong className="text-foreground">11.3 Response vs resolution.</strong>{" "}
+              Response time refers to acknowledgment of support requests. Resolution time
+              depends on issue complexity and cannot be guaranteed. Support contact:
+              ceo@andykgroup.com.
+            </p>
+            <p className="mt-2">
+              <strong className="text-foreground">11.4 Platform availability.</strong>{" "}
               A.D.A.M. targets 99% uptime, excluding scheduled maintenance windows. Scheduled
               maintenance will be communicated at least 24 hours in advance where operationally
               possible. We are not liable for availability issues caused by third-party
               infrastructure providers (see Section 14).
-            </p>
-            <p className="mt-2">
-              <strong className="text-foreground">11.4 Support contact.</strong>{" "}
-              ceo@andykgroup.com
             </p>
           </section>
 
@@ -331,11 +336,19 @@ export default function TermsAndConditionsPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-3">13. White-label</h2>
             <p>
-              White-label access, where A.D.A.M. is used to manage third-party clients on
-              behalf of your organisation, requires a separate white-label agreement with
-              Andy&apos;K Group International LTD. Sub-client data liability, branding rights,
-              and resale restrictions are governed by that agreement. Standard T&amp;C do not
-              cover white-label use. Contact ceo@andykgroup.com to discuss white-label terms.
+              White-label use of A.D.A.M. requires a separate White-Label Agreement with
+              Andy&apos;K Group International LTD. No white-label relationship exists without
+              a signed White-Label Agreement.
+            </p>
+            <p className="mt-2">
+              White-label partners are fully responsible for their sub-clients, data handling,
+              and compliance. Andy&apos;K Group International LTD bears no liability for
+              sub-client data breaches or misuse by white-label partners or their clients.
+              Sub-client data liability, branding rights, and resale restrictions are governed
+              exclusively by the White-Label Agreement.
+            </p>
+            <p className="mt-2">
+              Contact ceo@andykgroup.com to discuss white-label terms.
             </p>
           </section>
 

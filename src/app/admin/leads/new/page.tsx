@@ -55,6 +55,8 @@ export default function NewLeadPage() {
         questionnaire_token: null,
         token_expires_at: null,
         token_sent_at: null,
+        launch_invite_sent: false,
+        launch_invite_sent_at: null,
       });
       router.push(`/admin/leads/${lead.id}`);
     } catch (err) {

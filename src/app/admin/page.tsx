@@ -9,8 +9,9 @@ import { listAll as listAllActivities } from "@/lib/supabase/queries/activity-lo
 import { listPendingClientRequests } from "@/lib/supabase/queries/client-requests";
 import { listAllInvoices } from "@/lib/supabase/queries/invoices";
 import { listKycForClients } from "@/lib/supabase/queries/kyc";
+import { listLeads } from "@/lib/supabase/queries/leads";
 import { detectRisks } from "@/lib/risk-detection";
-import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest, Invoice } from "@/lib/supabase/types";
+import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest, Invoice, Lead } from "@/lib/supabase/types";
 import type { ClientRiskReport } from "@/lib/risk-detection";
 import StatsCards from "@/components/admin/StatsCards";
 import ActionItems from "@/components/admin/ActionItems";
@@ -19,7 +20,7 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import Link from "next/link";
-import { AlertTriangle, AlertCircle, Info, ChevronDown, ChevronRight, X } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, ChevronDown, ChevronRight, X, Send, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Risks widget ────────────────────────────────────────────────────────────
@@ -201,6 +202,175 @@ function AtRiskWidget({ clients }: { clients: ClientWithHealth[] }) {
   );
 }
 
+// ─── Launch Applicants widget ─────────────────────────────────────────────────
+
+const applicantStatusLabel: Record<string, string> = {
+  new:       "Applied",
+  contacted: "Reviewed",
+  qualified: "Approved",
+  rejected:  "Rejected",
+  converted: "Converted",
+};
+
+const applicantStatusCls: Record<string, string> = {
+  new:       "bg-info/10 text-info border-info/20",
+  contacted: "bg-warning/10 text-warning border-warning/20",
+  qualified: "bg-success/10 text-success border-success/20",
+  rejected:  "bg-error/10 text-error border-error/20",
+  converted: "bg-highlight/10 text-highlight border-highlight/20",
+};
+
+function LaunchApplicantsWidget({ leads }: { leads: Lead[] }) {
+  const [sending, setSending] = useState<string | null>(null);
+  const [results, setResults] = useState<Record<string, string>>({});
+  const [localLeads, setLocalLeads] = useState<Lead[]>(leads);
+
+  const active = localLeads.filter((l) => l.status !== "rejected" && l.status !== "converted");
+
+  async function updateStatus(leadId: string, status: string) {
+    const supabase = createClient();
+    await supabase.from("leads").update({ status, updated_at: new Date().toISOString() }).eq("id", leadId);
+    setLocalLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: status as Lead["status"] } : l));
+  }
+
+  async function sendInvite(lead: Lead) {
+    setSending(lead.id);
+    setResults((prev) => ({ ...prev, [lead.id]: "" }));
+    try {
+      const res = await fetch("/api/admin/launch-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: lead.id,
+          email: lead.email,
+          name: lead.name,
+          company: lead.company,
+          plan: (lead.metadata as Record<string, unknown> | null)?.plan as string ?? null,
+        }),
+      });
+      if (res.ok) {
+        setResults((prev) => ({ ...prev, [lead.id]: "sent" }));
+        setLocalLeads((prev) =>
+          prev.map((l) => l.id === lead.id ? { ...l, launch_invite_sent: true, status: "qualified" as Lead["status"] } : l)
+        );
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setResults((prev) => ({ ...prev, [lead.id]: data.error ?? "Failed" }));
+      }
+    } catch {
+      setResults((prev) => ({ ...prev, [lead.id]: "Network error" }));
+    }
+    setSending(null);
+  }
+
+  if (active.length === 0) return null;
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="h-4 w-4 text-highlight" />
+        <h2 className="text-base font-semibold text-foreground">Launch Applicants</h2>
+        <span className="text-xs font-mono text-muted-2">{active.length} applicant{active.length !== 1 ? "s" : ""}</span>
+        <span className="text-xs font-mono text-highlight bg-highlight/5 px-2 py-0.5 rounded border border-highlight/20">
+          Launch: 15 July 2026
+        </span>
+      </div>
+      <div className="bg-white rounded-xl border border-grid-300 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-grid-300 bg-grid-100">
+                <th className="px-4 py-2.5 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Name / Company</th>
+                <th className="px-4 py-2.5 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Email</th>
+                <th className="px-4 py-2.5 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Applied</th>
+                <th className="px-4 py-2.5 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2.5 text-right text-xs font-mono text-muted-2 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-grid-300">
+              {active.map((lead) => {
+                const result = results[lead.id];
+                const isSending = sending === lead.id;
+                const alreadySent = lead.launch_invite_sent;
+                return (
+                  <tr key={lead.id} className="hover:bg-grid-100/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-foreground">{lead.name}</p>
+                      {lead.company && <p className="text-xs text-muted-2">{lead.company}</p>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <a href={`mailto:${lead.email}`} className="text-highlight hover:underline text-xs font-mono">
+                        {lead.email}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-2 font-mono">
+                      {new Date(lead.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("inline-flex text-xs font-semibold px-2 py-0.5 rounded border", applicantStatusCls[lead.status] ?? "bg-grid-100 text-muted border-grid-300")}>
+                          {applicantStatusLabel[lead.status] ?? lead.status}
+                        </span>
+                        {alreadySent && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-highlight bg-highlight/5 px-2 py-0.5 rounded border border-highlight/20">
+                            <Send className="h-3 w-3" /> Invite sent
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
+                        {lead.status === "new" && (
+                          <button
+                            onClick={() => updateStatus(lead.id, "contacted")}
+                            className="text-xs px-2.5 py-1 border border-grid-500 text-muted hover:text-foreground hover:border-foreground transition-colors"
+                          >
+                            Mark Reviewed
+                          </button>
+                        )}
+                        {lead.status === "contacted" && (
+                          <button
+                            onClick={() => updateStatus(lead.id, "qualified")}
+                            className="text-xs px-2.5 py-1 border border-success/30 text-success hover:bg-success/5 transition-colors"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {lead.status === "qualified" && !alreadySent && (
+                          <button
+                            onClick={() => sendInvite(lead)}
+                            disabled={isSending}
+                            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-highlight text-white hover:bg-highlight/90 disabled:opacity-50 transition-colors font-medium"
+                          >
+                            <Send className="h-3 w-3" />
+                            {isSending ? "Sending…" : "Send Launch Invitation"}
+                          </button>
+                        )}
+                        <Link
+                          href={`/admin/leads/${lead.id}`}
+                          className="text-xs text-highlight hover:underline"
+                        >
+                          View
+                        </Link>
+                        {result && result !== "sent" && (
+                          <span className="text-xs text-error font-mono">{result}</span>
+                        )}
+                        {result === "sent" && (
+                          <span className="text-xs text-success font-mono">✓ Sent</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
@@ -211,12 +381,13 @@ export default function AdminDashboardPage() {
   const [activities, setActivities] = useState<ActivityLog[] | undefined>(undefined);
   const [pendingRequests, setPendingRequests] = useState<ClientRequest[]>([]);
   const [risks, setRisks] = useState<ClientRiskReport[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
 
     async function fetchData() {
-      const [clientsData, contractsData, questionnairesData, activitiesData, pendingRequestsData, invoicesData] =
+      const [clientsData, contractsData, questionnairesData, activitiesData, pendingRequestsData, invoicesData, leadsData] =
         await Promise.all([
           listClients(supabase).catch(() => []),
           listAllContracts(supabase).catch(() => []),
@@ -224,6 +395,7 @@ export default function AdminDashboardPage() {
           listAllActivities(supabase, 100).catch(() => []),
           listPendingClientRequests(supabase).catch(() => []),
           listAllInvoices(supabase).catch(() => []),
+          listLeads(supabase).catch(() => []),
         ]);
 
       setClients(clientsData);
@@ -231,6 +403,7 @@ export default function AdminDashboardPage() {
       setQuestionnaires(questionnairesData);
       setActivities(activitiesData);
       setPendingRequests(pendingRequestsData);
+      setLeads(leadsData);
 
       const clientIds = clientsData.map((c) => c.id);
       const kycRows = await listKycForClients(supabase, clientIds).catch(() => []);
@@ -384,6 +557,9 @@ export default function AdminDashboardPage() {
 
       {/* Implementation Risks */}
       <RisksWidget risks={risks} />
+
+      {/* Launch Applicants */}
+      <LaunchApplicantsWidget leads={leads} />
     </div>
   );
 }

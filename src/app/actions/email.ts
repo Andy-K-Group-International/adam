@@ -1351,6 +1351,296 @@ export async function sendSubscriptionActivated({
   });
 }
 
+// ─── Launch invitation ────────────────────────────────────────────────────────
+
+export async function sendLaunchInvitation({
+  name,
+  email,
+  company,
+  plan,
+}: {
+  name: string;
+  email: string;
+  company?: string | null;
+  plan?: string | null;
+}) {
+  const applyUrl = "https://adam.andykgroup.com/questionnaire";
+  const html = emailHtml("Founding Client Access", `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">You&#8217;ve been selected</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. Founding Client<br>invitation is ready</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">After reviewing your application${company ? ` from ${company}` : ""}, we&#8217;re pleased to confirm that you have been selected for <strong style="color:#0E282D;">Founding Client Access</strong> to A.D.A.M. Payment is now open and your access will be activated immediately upon completion.</p>
+    <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">What this means for you</p>
+      <ul style="color:#525a70;font-size:14px;line-height:1.8;margin:0;padding-left:18px;">
+        <li>Founding Client pricing locked for the lifetime of your account</li>
+        <li>Priority onboarding and dedicated support during implementation</li>
+        <li>Direct input into upcoming A.D.A.M. features</li>
+        ${plan ? `<li>Selected plan: <strong style="color:#0E282D;">${plan}</strong></li>` : ""}
+      </ul>
+    </div>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">To complete your application and confirm your place, please proceed via the link below. Availability is limited.</p>
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="${applyUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Confirm Your Place &#8594;</a>
+    </div>
+    <p style="color:#8b93a8;font-size:12px;font-family:'Courier New',Courier,monospace;text-align:center;margin:0 0 24px;">or visit: <a href="${applyUrl}" style="color:#2F9E9A;text-decoration:none;">${applyUrl}</a></p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong><br><span style="color:#8b93a8;font-size:12px;">ceo@andykgroup.com</span></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: "You've been selected — A.D.A.M. Founding Client Access is now open",
+    text: `Hi ${name},\n\nCongratulations — you've been selected for Founding Client Access to A.D.A.M.${company ? ` (${company})` : ""}.\n\nPayment is now open. Founding Client pricing is locked for the lifetime of your account.\n\nConfirm your place here: ${applyUrl}\n\nWarm regards,\nThe Andy'K Group International LTD Team\nceo@andykgroup.com`,
+    html,
+  });
+}
+
+// ─── Payment received (admin notification) ────────────────────────────────────
+
+export async function sendPaymentReceivedAdmin({
+  name,
+  email,
+  company,
+  plan,
+  billingCycle,
+  amountGbp,
+}: {
+  name: string;
+  email: string;
+  company?: string | null;
+  plan?: string | null;
+  billingCycle?: string | null;
+  amountGbp: number;
+}) {
+  const adminUrl = "https://adam.andykgroup.com/admin/clients";
+  const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amountGbp);
+  const html = emailHtml("Payment Received", `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Payment received — pending activation</h1>
+    <div style="background:#f0f4f4;border:1px solid #ede8e2;border-radius:10px;padding:20px;margin-bottom:24px;text-align:center;">
+      <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 8px;">Amount Received</p>
+      <p style="font-family:Georgia,'Times New Roman',serif;font-size:40px;font-weight:700;color:#0E282D;margin:0;line-height:1;">${formattedAmount}</p>
+    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      ${company ? `<tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;width:120px;border-bottom:1px solid #ede8e2;">Company</td><td style="padding:7px 0;color:#0E282D;font-size:13px;font-weight:600;border-bottom:1px solid #ede8e2;">${company}</td></tr>` : ""}
+      <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Name</td><td style="padding:7px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${name}</td></tr>
+      <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Email</td><td style="padding:7px 0;font-size:13px;border-bottom:1px solid #ede8e2;"><a href="mailto:${email}" style="color:#2F9E9A;text-decoration:none;">${email}</a></td></tr>
+      ${plan ? `<tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Plan</td><td style="padding:7px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${plan}${billingCycle ? ` — ${billingCycle}` : ""}</td></tr>` : ""}
+    </table>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 24px;">Business verification is required before activation. Please review the client record and verify documentation.</p>
+    <div style="margin-bottom:32px;">
+      <a href="${adminUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Client &#8594;</a>
+    </div>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#8b93a8;font-size:12px;margin:0;font-family:'Courier New',Courier,monospace;">Automated notification &mdash; A.D.A.M. &middot; Revolut Webhook</p>
+    </div>
+  `);
+  return await sendEmail({
+    to: "ceo@andykgroup.com",
+    from: "info@andykgroup.com",
+    subject: `Payment received: ${formattedAmount} — ${company || name}`,
+    text: `Payment received via Revolut.\n\nCompany: ${company || "—"}\nName: ${name}\nEmail: ${email}\nPlan: ${plan || "—"}${billingCycle ? ` (${billingCycle})` : ""}\nAmount: ${formattedAmount}\n\nBusiness verification required before activation.\n\nReview: ${adminUrl}`,
+    html,
+  });
+}
+
+// ─── Payment confirmation (client) ────────────────────────────────────────────
+
+export async function sendPaymentConfirmation({
+  clientEmail,
+  clientName,
+  companyName,
+  planName,
+  billingCycle,
+  amountGbp,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  planName: string;
+  billingCycle: string;
+  amountGbp: number;
+}) {
+  const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amountGbp);
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Payment Confirmed</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your payment has been received</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you — we&#8217;ve successfully received your payment for <strong>${companyName}</strong>. Your account is now pending activation, which will begin after business verification is completed.</p>
+    <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">Payment summary</p>
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Amount paid:</strong> ${formattedAmount}</p>
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Plan:</strong> ${planName} — ${billingCycle}</p>
+      <p style="color:#525a70;font-size:13px;margin:0 0 4px;">Your billing period will begin from the date of account activation, not the date of payment.</p>
+    </div>
+    <div style="background:#f0f4f4;border-left:2px solid #ede8e2;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#0E282D;font-size:13px;font-weight:600;margin:0 0 4px;">What happens next</p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Our team will review your business verification documents and activate your account within 3&ndash;5 business days. You will receive a separate confirmation when your account goes live.</p>
+    </div>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 24px;">Questions? Contact us at <a href="mailto:ceo@andykgroup.com" style="color:#2F9E9A;text-decoration:none;">ceo@andykgroup.com</a>.</p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Payment confirmed — ${formattedAmount} received for ${companyName}`,
+    text: `Hi ${clientName},\n\nThank you — we've received your payment of ${formattedAmount} for ${companyName}.\n\nPlan: ${planName} — ${billingCycle}\n\nYour account is pending activation. Billing begins from activation date, not payment date.\n\nWe will notify you once your account is live (typically 3–5 business days after verification).\n\nQuestions? ceo@andykgroup.com\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Subscription expiry warning ──────────────────────────────────────────────
+
+export async function sendSubscriptionExpiryWarning({
+  clientEmail,
+  clientName,
+  companyName,
+  planName,
+  paidUntil,
+  daysLeft,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  planName: string;
+  paidUntil: string;
+  daysLeft: number;
+}) {
+  const formattedDate = new Date(paidUntil).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Subscription Expiring Soon</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Your subscription expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"}</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">This is a reminder that the A.D.A.M. subscription for <strong>${companyName}</strong> (${planName}) is due to expire on <strong style="color:#0E282D;">${formattedDate}</strong>.</p>
+    <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Plan:</strong> ${planName}</p>
+      <p style="color:#0E282D;font-size:14px;margin:0;"><strong>Expires:</strong> ${formattedDate}</p>
+    </div>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 24px;">To continue uninterrupted access, please contact us to arrange renewal before the expiry date. Your data and configuration will be retained for 30 days after expiry.</p>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 28px;">Contact us at <a href="mailto:ceo@andykgroup.com" style="color:#2F9E9A;text-decoration:none;">ceo@andykgroup.com</a> to renew or discuss your options.</p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Reminder: Your A.D.A.M. subscription expires in ${daysLeft} day${daysLeft === 1 ? "" : "s"} — ${companyName}`,
+    text: `Hi ${clientName},\n\nYour A.D.A.M. subscription for ${companyName} (${planName}) expires on ${formattedDate} — ${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining.\n\nTo renew, contact us at ceo@andykgroup.com.\n\nYour data will be retained for 30 days after expiry.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Subscription expired ─────────────────────────────────────────────────────
+
+export async function sendSubscriptionExpired({
+  clientEmail,
+  clientName,
+  companyName,
+  planName,
+  expiredOn,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  planName: string;
+  expiredOn: string;
+}) {
+  const formattedDate = new Date(expiredOn).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Subscription Expired</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Your A.D.A.M. subscription has ended</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">The A.D.A.M. subscription for <strong>${companyName}</strong> (${planName}) expired on <strong style="color:#0E282D;">${formattedDate}</strong>. Access to your portal has been suspended.</p>
+    <div style="background:#f0f4f4;border-left:2px solid #ede8e2;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#0E282D;font-size:13px;font-weight:600;margin:0 0 6px;">Your data is retained for 30 days</p>
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Your account data and configuration will be held until <strong>${new Date(new Date(expiredOn).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</strong>. After this date it may be permanently deleted.</p>
+    </div>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 28px;">To reactivate your account or discuss renewal options, contact us at <a href="mailto:ceo@andykgroup.com" style="color:#2F9E9A;text-decoration:none;">ceo@andykgroup.com</a>.</p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Your A.D.A.M. subscription has ended — ${companyName}`,
+    text: `Hi ${clientName},\n\nYour A.D.A.M. subscription for ${companyName} (${planName}) expired on ${formattedDate}.\n\nAccess has been suspended. Your data will be retained for 30 days.\n\nTo reactivate, contact ceo@andykgroup.com.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
+// ─── Payment failed ───────────────────────────────────────────────────────────
+
+export async function sendPaymentFailed({
+  clientEmail,
+  clientName,
+  companyName,
+  planName,
+  amountGbp,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  planName: string;
+  amountGbp: number;
+}) {
+  const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amountGbp);
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Payment Failed</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">We were unable to process your payment</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Unfortunately, we were unable to process a payment of <strong style="color:#0E282D;">${formattedAmount}</strong> for your A.D.A.M. ${planName} subscription (${companyName}).</p>
+    <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#0E282D;font-size:13px;font-weight:600;margin:0 0 6px;">Common reasons for payment failure</p>
+      <ul style="color:#525a70;font-size:13px;line-height:1.8;margin:0;padding-left:18px;">
+        <li>Insufficient funds or card limit</li>
+        <li>Card expired or incorrect billing details</li>
+        <li>Bank security block on the transaction</li>
+      </ul>
+    </div>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 28px;">Your access will remain active during a 7-day grace period. Please contact us to resolve this as soon as possible to avoid interruption to your service.</p>
+    <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 28px;">Contact us at <a href="mailto:ceo@andykgroup.com" style="color:#2F9E9A;text-decoration:none;">ceo@andykgroup.com</a> to arrange payment or update your details.</p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+
+  await Promise.all([
+    sendEmail({
+      to: clientEmail,
+      from: "info@andykgroup.com",
+      subject: `Action required: Payment of ${formattedAmount} failed — ${companyName}`,
+      text: `Hi ${clientName},\n\nWe were unable to process your payment of ${formattedAmount} for your A.D.A.M. ${planName} subscription (${companyName}).\n\nYour access remains active for 7 days. Please contact us at ceo@andykgroup.com to resolve this.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+      html,
+    }),
+    sendEmail({
+      to: "ceo@andykgroup.com",
+      from: "info@andykgroup.com",
+      subject: `⚠️ Payment failed: ${formattedAmount} — ${companyName}`,
+      text: `Payment failed.\n\nCompany: ${companyName}\nClient: ${clientName} (${clientEmail})\nPlan: ${planName}\nAmount: ${formattedAmount}\n\nClient has been notified. 7-day grace period active.\n\nReview: https://adam.andykgroup.com/admin/clients`,
+      html: emailHtml("Payment Failed", `
+        <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.3;">Payment failed — action may be required</h1>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;width:110px;border-bottom:1px solid #ede8e2;">Company</td><td style="padding:7px 0;color:#0E282D;font-size:13px;font-weight:600;border-bottom:1px solid #ede8e2;">${companyName}</td></tr>
+          <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Client</td><td style="padding:7px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${clientName} &lt;${clientEmail}&gt;</td></tr>
+          <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Plan</td><td style="padding:7px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${planName}</td></tr>
+          <tr><td style="padding:7px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;">Amount</td><td style="padding:7px 0;color:#0E282D;font-size:13px;font-weight:600;">${formattedAmount}</td></tr>
+        </table>
+        <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0 0 24px;">Client has been notified. 7-day grace period is active. Access remains unaffected during this window.</p>
+        <a href="https://adam.andykgroup.com/admin/clients" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Client &#8594;</a>
+      `),
+    }),
+  ]);
+}
+
 // ─── Client activation email ──────────────────────────────────────────────────
 
 export async function sendClientActivationEmail({

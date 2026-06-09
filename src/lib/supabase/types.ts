@@ -386,6 +386,8 @@ export interface Lead {
   token_expires_at: string | null;
   token_sent_at: string | null;
   converted_to_client_id: string | null;
+  launch_invite_sent: boolean;
+  launch_invite_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }

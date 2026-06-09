@@ -548,13 +548,16 @@ export default function PricingSection() {
           ))}
         </div>
 
-        {/* Payments inactive notice */}
+        {/* Pre-launch notice */}
         {!paymentsEnabled && (
-          <div className="mt-8 border border-grid-300 bg-grid-100 px-5 py-4 max-w-[680px] mx-auto text-center">
+          <div className="mt-8 border border-grid-300 bg-grid-100 px-5 py-5 max-w-[680px] mx-auto text-center space-y-3">
             <p className="text-sm text-muted leading-relaxed">
-              A.D.A.M. is currently undergoing final commercial and legal readiness review.{" "}
-              <span className="text-foreground font-medium">Payments are not yet publicly active.</span>{" "}
-              Apply through the standard process — access will be confirmed directly.
+              A.D.A.M. is currently accepting applications for{" "}
+              <span className="text-foreground font-medium">Founding Client Access.</span>{" "}
+              Public payments are not yet open. Selected applicants will be notified before launch and invited to complete payment once access opens.
+            </p>
+            <p className="text-xs font-mono text-muted-2 tracking-wide uppercase">
+              Official payment launch: 15 July 2026
             </p>
           </div>
         )}

@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
   // TEMPORARY — internal test bypass. Removed after internal payment test phase.
   const testToken = req.headers.get("X-Internal-Test");
   const internalTestSecret = process.env.INTERNAL_TEST_SECRET;
-  const isInternalTest = !!(testToken && internalTestSecret && testToken === internalTestSecret);
+  const isInternalTest = !!(testToken && internalTestSecret && testToken.trim() === internalTestSecret.trim());
 
   if (!isInternalTest && !verifySignature(rawBody, sigHeader, secret)) {
     console.warn("[revolut/webhook] Invalid signature");

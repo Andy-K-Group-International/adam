@@ -1,237 +1,172 @@
-# A.D.A.M. v2.0 — Multi-Tenant Architecture Plan
+# A.D.A.M. v2.0 — Full Multi-Tenant SaaS Architecture Plan
 
-**Version**: 2.0 (planned)  
-**Target**: Q4 2026  
-**v2.1 follow-on**: Q1 2027  
-**Depends on**: v1.0 launch complete (15 July 2026)
+## Vision
 
----
-
-## Overview
-
-v2.0 transforms A.D.A.M. from a single-operator platform into a **multi-tenant white-label product**. Each Company Admin (a business that licenses A.D.A.M.) operates an isolated tenant. Their end clients see only their own data. Andy'K Group (Super Admin) retains cross-tenant visibility and controls the permission model.
+A.D.A.M. v2.0 enables each licensed company to manage their own clients independently, with full data isolation, company-specific branding, billing and AI settings.
 
 ---
 
-## Three-Tier Permission Model
+## Permission Levels
 
-```
-Super Admin (Andy'K Group — ceo@andykgroup.com)
-  └─ Company Admin (businesses that license A.D.A.M.)
-       └─ End Client (the clients of those businesses)
-```
-
-### Super Admin
-- Full cross-tenant access to all data
-- Controls which AI modes each Company Admin may use (`ai_allow_*`)
-- Can lock AI settings for a Company Admin (`ai_settings_locked`)
-- Manages billing, plan assignments, and activation globally
-- Identified by: `user_roles.role = 'super_admin'` (v2.0 DB role) OR email check as interim measure
-
-### Company Admin
-- Manages their own tenant's clients end-to-end
-- Can access `/admin` scoped to their tenant only (sees no data from other tenants)
-- Can configure AI mode within bounds set by Super Admin
-- Cannot see other tenants' clients, contracts, proposals, or invoices
-- Identified by: `user_roles.role = 'company_admin'` with a `company_id` foreign key
-
-### End Client
-- The client of a Company Admin
-- Accesses `/dashboard` — sees only their own proposals, contracts, invoices
-- No AI settings exposure
-- Identified by: `user_roles.role = 'client'` with `company_id` and `client_id`
+| Level | Who | Access |
+|---|---|---|
+| **Super Admin** | Andy'K Group (`ceo@andykgroup.com`) | Full platform control — all companies, all data |
+| **Company Admin** | Licensed company | Manages own clients only — no cross-tenant visibility |
+| **End Client** | Client of a licensed company | Own portal only — proposals, contracts, invoices |
 
 ---
 
-## New Database Schema
+## New Database Tables Required
 
-### `companies` table
+### `companies` (tenants)
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `name` | text | Company display name |
+| `slug` | text | Unique slug (used in subdomains/URLs) |
+| `plan_tier` | text | starter / growth / scale / enterprise |
+| `status` | text | pending / active / suspended / cancelled |
+| `billing_email` | text | Billing contact |
+| `admin_email` | text | Company Admin primary email |
+| `branding_logo_url` | text | White-label logo |
+| `branding_primary_color` | text | White-label brand colour (hex) |
+| `ai_mode` | text | Current AI mode for this company |
+| `ai_allow_basic` | boolean | Super Admin grants basic AI access |
+| `ai_allow_managed` | boolean | Super Admin grants managed AI access |
+| `ai_allow_openai` | boolean | Super Admin grants OpenAI key mode |
+| `ai_allow_anthropic` | boolean | Super Admin grants Anthropic key mode |
+| `ai_settings_locked` | boolean | Prevents Company Admin changing AI mode |
+| `plan_name` | text | Human-readable plan label |
+| `billing_cycle` | text | monthly / annual |
+| `paid_until` | timestamptz | Subscription expiry |
+| `created_at` | timestamptz | — |
+
+### `user_roles`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | References `auth.users` |
+| `company_id` | uuid | References `companies` — NULL for super_admin |
+| `role` | text | `super_admin` / `company_admin` / `end_client` |
+| `created_at` | timestamptz | — |
+
+---
+
+## Tables Requiring `company_id` (Tenant Isolation)
+
+Every data table must carry a `company_id` foreign key to enforce row-level tenant separation:
+
+- `clients`
+- `leads`
+- `proposals`
+- `contracts`
+- `invoices`
+- `milestones`
+- `meetings`
+- `activity_log`
+- `ai_generation_logs`
+- `founding_codes`
+- `client_agreement_snapshots`
+- `business_verifications`
+- `webhook_endpoints`
+
+---
+
+## RLS Policy Changes
+
+Replace the current binary `admin / client` policies with three-tier tenant-scoped policies on every table:
 
 ```sql
-CREATE TABLE companies (
-  id                  uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name                text NOT NULL,
-  slug                text UNIQUE NOT NULL,           -- used in subdomain / URL path
-  plan_name           text,
-  billing_cycle       text,
-  subscription_status text DEFAULT 'none',
-  paid_until          timestamptz,
-  owner_user_id       uuid REFERENCES users(id),      -- the Company Admin user
-  ai_allow_basic      boolean DEFAULT true,
-  ai_allow_managed    boolean DEFAULT false,
-  ai_allow_openai     boolean DEFAULT false,
-  ai_allow_anthropic  boolean DEFAULT false,
-  ai_settings_locked  boolean DEFAULT false,
-  ai_usage_limit_monthly integer,
-  created_at          timestamptz DEFAULT now(),
-  updated_at          timestamptz DEFAULT now()
-);
+-- Super Admin: cross-tenant full access
+CREATE POLICY "super_admin_all" ON <table>
+  FOR ALL USING (get_my_tenant_role() = 'super_admin');
+
+-- Company Admin: own tenant only
+CREATE POLICY "company_admin_own_tenant" ON <table>
+  FOR ALL USING (
+    get_my_tenant_role() = 'company_admin'
+    AND company_id = get_my_company_id()
+  );
+
+-- End Client: own record only within tenant
+CREATE POLICY "end_client_own_record" ON <table>
+  FOR SELECT USING (
+    get_my_tenant_role() = 'end_client'
+    AND company_id = get_my_company_id()
+    AND client_id = get_my_client_id()
+  );
 ```
 
-### `user_roles` table (replaces `users.role`)
+New DB helper functions required:
 
 ```sql
-CREATE TABLE user_roles (
-  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id     uuid REFERENCES users(id) ON DELETE CASCADE,
-  company_id  uuid REFERENCES companies(id) ON DELETE CASCADE,  -- NULL for super_admin
-  role        text NOT NULL,  -- 'super_admin' | 'company_admin' | 'staff' | 'client'
-  created_at  timestamptz DEFAULT now(),
-  UNIQUE (user_id, company_id)
-);
-```
-
-### `tenant_id` on all data tables
-
-Every data table receives a `company_id` (tenant key) column:
-
-```sql
-ALTER TABLE clients     ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE contracts   ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE proposals   ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE invoices    ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE questionnaires ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE activity_log   ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE ai_generation_logs ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE meetings    ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE milestones  ADD COLUMN company_id uuid REFERENCES companies(id);
-ALTER TABLE contacts    ADD COLUMN company_id uuid REFERENCES companies(id);
--- ... all remaining data tables
-```
-
-Add indexes: `CREATE INDEX ON clients(company_id);` (repeat for each table).
-
-### Updated DB helper functions
-
-```sql
--- Returns the company_id of the calling user (NULL for super_admin)
+-- Returns calling user's company_id (NULL for super_admin)
 CREATE OR REPLACE FUNCTION get_my_company_id()
   RETURNS uuid LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT ur.company_id FROM user_roles ur
   JOIN users u ON u.id = ur.user_id
-  WHERE u.auth_id = auth.uid()::text
-  LIMIT 1;
+  WHERE u.auth_id = auth.uid()::text LIMIT 1;
 $$;
 
--- Returns the role of the calling user within their company
+-- Returns calling user's role within their company
 CREATE OR REPLACE FUNCTION get_my_tenant_role()
   RETURNS text LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT ur.role FROM user_roles ur
   JOIN users u ON u.id = ur.user_id
-  WHERE u.auth_id = auth.uid()::text
-  LIMIT 1;
+  WHERE u.auth_id = auth.uid()::text LIMIT 1;
 $$;
 ```
 
 ---
 
-## RLS Policies (v2.0 pattern)
+## Auth Changes
 
-The v2.0 RLS pattern replaces the binary admin/client split with a three-way tenant-scoped check. Example for `clients` table:
-
-```sql
--- Drop v1 policies
-DROP POLICY clients_admin_staff_all ON clients;
-DROP POLICY clients_client_select_own ON clients;
-
--- Super admin: cross-tenant full access
-CREATE POLICY "clients_super_admin" ON clients
-  FOR ALL USING (get_my_tenant_role() = 'super_admin');
-
--- Company admin / staff: own tenant only
-CREATE POLICY "clients_company_admin" ON clients
-  FOR ALL USING (
-    get_my_tenant_role() IN ('company_admin', 'staff')
-    AND company_id = get_my_company_id()
-  );
-
--- End client: own record only within tenant
-CREATE POLICY "clients_end_client" ON clients
-  FOR SELECT USING (
-    get_my_tenant_role() = 'client'
-    AND company_id = get_my_company_id()
-    AND id = get_my_client_id()
-  );
-```
-
-Apply the same three-policy pattern to every data table.
+- Replace hardcoded `ceo@andykgroup.com` email checks throughout the codebase
+- Update `getCurrentUser()` to return `{ role, company_id, client_id }`
+- Add helper functions: `isSuperAdmin()`, `isCompanyAdmin()`, `isEndClient()`
+- Update `useCurrentUser` hook to expose `companyId` and `tenantRole`
 
 ---
 
-## AI Permission Model (v2.0)
+## New Routes Required
 
-AI permissions move from per-client columns to per-company columns on the `companies` table:
-
-| Column | Description |
-|---|---|
-| `ai_allow_basic` | Company Admin may use built-in A.D.A.M. AI |
-| `ai_allow_managed` | Company Admin may use Andy'K Group-managed AI (env keys) |
-| `ai_allow_openai` | Company Admin may configure their own OpenAI key |
-| `ai_allow_anthropic` | Company Admin may configure their own Anthropic key |
-| `ai_settings_locked` | Company Admin cannot change their own AI mode |
-| `ai_usage_limit_monthly` | Token cap per month across the whole company |
-
-Super Admin controls these via the admin panel. Company Admin sees only the modes Super Admin has enabled. End Clients see no AI settings.
-
-Encrypted key storage uses Supabase Vault (`vault.create_secret`) or pgcrypto — resolved before v2.0 ships.
+| Route | Who | Purpose |
+|---|---|---|
+| `/super-admin` | Super Admin | Cross-tenant platform dashboard |
+| `/super-admin/companies` | Super Admin | List and manage all licensed companies |
+| `/super-admin/companies/[id]` | Super Admin | Per-company settings, AI permissions, billing |
+| `/company-admin` | Company Admin | Scoped admin dashboard (own clients only) |
+| `/company-admin/clients` | Company Admin | Client list within own tenant |
+| `/company-admin/settings` | Company Admin | Branding and AI settings |
+| `/company-admin/billing` | Company Admin | Company subscription and billing |
 
 ---
 
-## Admin Panel Changes (v2.0)
+## White-Label / Branding
 
-### `/admin` — scoped per role
-
-| Role | What `/admin` shows |
-|---|---|
-| Super Admin | All companies, all clients, all data, cross-tenant |
-| Company Admin | Only their own tenant's clients, proposals, contracts |
-
-Implementation: a `CompanyAdminGuard` server component injects `company_id` into all queries. Super Admin bypasses the guard.
-
-### New `/admin/companies` section (Super Admin only)
-
-- List all licensed companies
-- Create / suspend / activate companies
-- Set plan, billing, AI permissions per company
-- View cross-tenant activity log
-
-### `/admin/clients` (Company Admin view)
-
-All existing pages remain — queries add `.eq('company_id', myCompanyId)`.
+- Per-company: logo, primary colour, company name displayed in the client zone
+- Optional custom subdomain: `company.adam.andykgroup.com`
+- Email sender name: `[Company Name] via A.D.A.M.`
+- Branding stored on the `companies` table (`branding_logo_url`, `branding_primary_color`)
 
 ---
 
-## Migration Strategy: v1.0 → v2.0
-
-### Phase 1: Schema (non-breaking, additive)
+## Migration Strategy from v1.0
 
 1. Create `companies` table
-2. Create `user_roles` table
-3. Add `company_id` to all data tables (nullable, no FK enforcement yet)
-4. Insert one row into `companies` for Andy'K Group International LTD
-5. Backfill `company_id` on all existing rows to the Andy'K Group company ID
-6. Add FK constraints (NOT NULL) after backfill
-
-### Phase 2: RLS swap (breaking, requires maintenance window)
-
-7. Replace all v1 RLS policies with v2.0 tenant-scoped policies
-8. Migrate `users.role` values to `user_roles` table
-9. Update `get_my_role()` and `get_my_client_id()` functions, add `get_my_company_id()` and `get_my_tenant_role()`
-10. Smoke-test all three roles against the new policies
-
-### Phase 3: Application layer
-
-11. Update all Supabase queries to include `.eq('company_id', ...)` where needed
-12. Update `useCurrentUser` hook to expose `companyId` and `tenantRole`
-13. Update middleware to route Company Admin users to their scoped admin panel
-14. Add `CompanyAdminGuard` to all admin layouts
-15. Update AI settings to read from `companies` table instead of `clients`
-
-### Phase 4: Onboarding flow
-
-16. Build `/admin/companies/new` wizard (Super Admin creates a new tenant)
-17. Build Company Admin invite flow (email → account creation → linked to company)
-18. Build white-label domain/subdomain routing
+2. Insert Andy'K Group as the default company (all existing data belongs to this tenant)
+3. Add `company_id` to all data tables — default value = Andy'K Group company ID
+4. Create `user_roles` table
+5. Insert `ceo@andykgroup.com` as `super_admin` in `user_roles`
+6. Migrate existing `users.role` values to `user_roles` (admin → company_admin, client → end_client)
+7. Replace all v1.0 RLS policies with the v2.0 three-policy tenant pattern
+8. Update `get_my_role()` / `get_my_client_id()` functions; add `get_my_company_id()` / `get_my_tenant_role()`
+9. Update application auth layer to use `user_roles`
+10. Add Company Admin routes and scoped admin panel
+11. **Test isolation**: confirm Company A cannot read Company B rows
+12. Launch Company Admin self-service onboarding flow
 
 ---
 
@@ -239,32 +174,12 @@ All existing pages remain — queries add `.eq('company_id', myCompanyId)`.
 
 | Milestone | Target |
 |---|---|
-| v1.0 launch (Founding Clients) | 15 July 2026 |
+| **v1.0** — Controlled SaaS License Launch (Founding Clients) | **15 July 2026** |
 | v2.0 schema design finalised | August 2026 |
-| v2.0 Phase 1–2 (schema + RLS) | September 2026 |
-| v2.0 Phase 3 (application layer) | October 2026 |
-| v2.0 Phase 4 (onboarding) | November 2026 |
-| **v2.0 GA** | **Q4 2026** |
-| v2.1 — encrypted key storage + self-service billing | Q1 2027 |
-| v2.1 — automated subscription lifecycle (renewals, expiry, upgrades) | Q1 2027 |
-
----
-
-## v2.1 Additions (Q1 2027)
-
-- **Encrypted API key storage** — Supabase Vault or pgcrypto for `ai_openai_key_encrypted` / `ai_anthropic_key_encrypted`. Remove "saving disabled" notice from UI.
-- **Self-service billing** — Revolut/Stripe integration with automated invoicing, renewal emails, grace periods, and suspension.
-- **Automated subscription lifecycle** — cron jobs for expiry warnings (7 days), suspension on non-renewal, and reactivation on payment.
-- **Audit log per tenant** — Company Admin can view their own activity log without cross-tenant exposure.
-- **White-label domain routing** — `client.mycompany.com` → A.D.A.M. scoped to that company's tenant.
-
----
-
-## What Does NOT Change in v2.0
-
-- The `questionnaire → proposal → strategy → contract → invoice → kickoff` pipeline stages
-- The contract signing, version history, and comment system
-- The email system (Resend, existing templates)
-- The public landing page and questionnaire flow
-- The client dashboard UX (only data scoping changes)
-- `PAYMENTS_ENABLED` guard pattern (still baked at build time)
+| v2.0 — Schema + RLS migration | September 2026 |
+| v2.0 — Application auth + Company Admin routes | October 2026 |
+| v2.0 — Company Admin onboarding flow | November 2026 |
+| **v2.0 GA** — Full multi-tenant, Company Admin, tenant isolation | **Q4 2026** |
+| v2.1 — White-label branding, custom subdomains | Q1 2027 |
+| v2.1 — Encrypted API key storage (Vault / pgcrypto) | Q1 2027 |
+| v2.1 — Self-service onboarding + automated billing lifecycle | Q1 2027 |

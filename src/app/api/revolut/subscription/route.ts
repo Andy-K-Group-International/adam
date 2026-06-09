@@ -46,7 +46,12 @@ async function validateAndRedeemCode(
 }
 
 export async function POST(req: NextRequest) {
-  if (!paymentsEnabled) {
+  // TEMPORARY — internal test bypass. Removed after internal payment test phase.
+  const testToken = req.headers.get("X-Internal-Test");
+  const cronSecret = process.env.CRON_SECRET;
+  const isInternalTest = !!(testToken && cronSecret && testToken === cronSecret);
+
+  if (!paymentsEnabled && !isInternalTest) {
     return NextResponse.json(
       { error: "Payments are not yet active. Please apply for access." },
       { status: 503 }

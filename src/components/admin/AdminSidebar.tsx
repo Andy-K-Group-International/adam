@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/app/actions/auth-signout";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   LayoutDashboard,
   GitBranch,
@@ -18,6 +19,7 @@ import {
   LogOut,
   BookOpen,
   Star,
+  Shield,
 } from "lucide-react";
 
 const navItems = [
@@ -35,8 +37,12 @@ const navItems = [
   { label: "Founding Clients", href: "/admin/founding-codes", icon: Star },
 ];
 
+const SUPER_ADMIN_EMAIL = "ceo@andykgroup.com";
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { user } = useCurrentUser();
+  const isCeo = user?.email === SUPER_ADMIN_EMAIL;
 
   return (
     <aside className="w-64 h-screen sticky top-0 flex flex-col bg-background border-r border-grid-300">
@@ -82,6 +88,32 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
+
+      {isCeo && (
+        <>
+          <div className="mx-4 h-px bg-grid-300 shrink-0" />
+          <div className="px-3 py-3 shrink-0">
+            <p className="label-mono px-3 mb-2">CEO Access</p>
+            <Link
+              href="/super-admin"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all mb-0.5 rounded-lg border-l-2",
+                pathname.startsWith("/super-admin")
+                  ? "bg-[rgba(47,158,154,0.08)] text-highlight border-l-highlight"
+                  : "text-foreground border-l-transparent hover:bg-[rgba(47,158,154,0.05)]"
+              )}
+            >
+              <Shield
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  pathname.startsWith("/super-admin") ? "text-highlight" : "text-[#2F9E9A]"
+                )}
+              />
+              Super Admin
+            </Link>
+          </div>
+        </>
+      )}
 
       <div className="mx-4 h-px bg-grid-300 shrink-0" />
 

@@ -262,6 +262,7 @@ export interface Client {
   paid_until: string | null;
   founding_client: boolean;
   founding_code_used: string | null;
+  license_tier: "trial" | "full" | "founding" | null;
   terms_version_accepted: string | null;
   terms_accepted_at: string | null;
   payment_provider: string | null;

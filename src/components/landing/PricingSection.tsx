@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Loader2 } from "lucide-react";
+import { paymentsEnabled } from "@/lib/payments";
 
 // ─── Plan key mapping for internal plans ────────────────────────────────────
 
@@ -198,7 +199,7 @@ function PricingCard({
         >
           {plan.cta}
         </a>
-      ) : isInternalTab ? (
+      ) : isInternalTab && paymentsEnabled ? (
         <button
           onClick={handleCta}
           disabled={loading}
@@ -212,6 +213,18 @@ function PricingCard({
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {loading ? "Redirecting…" : "Get Access"}
         </button>
+      ) : isInternalTab && !paymentsEnabled ? (
+        <a
+          href="/questionnaire"
+          className={cn(
+            "block text-center py-3 px-4 text-sm font-medium transition-all duration-200 hover:underline underline-offset-4",
+            plan.highlighted
+              ? "bg-white text-foreground hover:bg-white/90"
+              : "bg-foreground text-white hover:bg-foreground/90"
+          )}
+        >
+          Apply for Access →
+        </a>
       ) : (
         <a
           href="/questionnaire"
@@ -381,8 +394,8 @@ export default function PricingSection() {
           {activeData.subtitle}
         </p>
 
-        {/* Founding code input — internal + monthly only */}
-        {tab === "internal" && (
+        {/* Founding code input — internal + monthly + payments active only */}
+        {tab === "internal" && paymentsEnabled && (
           <div className="max-w-[960px] mx-auto mb-10">
             {billing === "monthly" ? (
               <div className="border border-grid-300 bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -450,6 +463,17 @@ export default function PricingSection() {
             />
           ))}
         </div>
+
+        {/* Payments inactive notice */}
+        {!paymentsEnabled && (
+          <div className="mt-8 border border-grid-300 bg-grid-100 px-5 py-4 max-w-[680px] mx-auto text-center">
+            <p className="text-sm text-muted leading-relaxed">
+              A.D.A.M. is currently undergoing final commercial and legal readiness review.{" "}
+              <span className="text-foreground font-medium">Payments are not yet publicly active.</span>{" "}
+              Apply through the standard process — access will be confirmed directly.
+            </p>
+          </div>
+        )}
 
         {/* Implementation note */}
         <p className="text-center text-sm text-muted mt-8 max-w-[580px] mx-auto leading-relaxed">

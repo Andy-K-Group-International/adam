@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { paymentsEnabled } from "@/lib/payments";
 
 const APP_URL = "https://adam.andykgroup.com";
 
@@ -45,6 +46,13 @@ async function validateAndRedeemCode(
 }
 
 export async function POST(req: NextRequest) {
+  if (!paymentsEnabled) {
+    return NextResponse.json(
+      { error: "Payments are not yet active. Please apply for access." },
+      { status: 503 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const { plan, billing, founding_code, company } = body as {
     plan?: string;

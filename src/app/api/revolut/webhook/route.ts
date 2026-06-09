@@ -152,12 +152,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not configured" }, { status: 500 });
   }
 
-  // TEMPORARY — internal test bypass. Removed after internal payment test phase.
-  const testToken = req.headers.get("X-Internal-Test");
-  const internalTestSecret = process.env.INTERNAL_TEST_SECRET;
-  const isInternalTest = !!(testToken && internalTestSecret && testToken.trim() === internalTestSecret.trim());
-
-  if (!isInternalTest && !verifySignature(rawBody, sigHeader, secret)) {
+  if (!verifySignature(rawBody, sigHeader, secret)) {
     console.warn("[revolut/webhook] Invalid signature");
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }

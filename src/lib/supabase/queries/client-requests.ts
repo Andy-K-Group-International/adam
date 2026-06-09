@@ -22,8 +22,11 @@ export async function listClientRequests(
 
 export async function listPendingClientRequests(
   supabase: SupabaseClient,
+  clientIds?: string[]
 ): Promise<ClientRequest[]> {
-  const { data, error } = await supabase
+  if (clientIds && clientIds.length === 0) return [];
+
+  let query = supabase
     .from("client_requests")
     .select(`
       *,
@@ -33,6 +36,11 @@ export async function listPendingClientRequests(
     .order("priority", { ascending: false })
     .order("created_at", { ascending: false });
 
+  if (clientIds && clientIds.length > 0) {
+    query = query.in("client_id", clientIds);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as ClientRequest[];
 }

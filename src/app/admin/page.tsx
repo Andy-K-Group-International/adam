@@ -11,6 +11,7 @@ import { listAllInvoices } from "@/lib/supabase/queries/invoices";
 import { listKycForClients } from "@/lib/supabase/queries/kyc";
 import { listLeads } from "@/lib/supabase/queries/leads";
 import { detectRisks } from "@/lib/risk-detection";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest, Invoice, Lead } from "@/lib/supabase/types";
 import type { ClientRiskReport } from "@/lib/risk-detection";
 import StatsCards from "@/components/admin/StatsCards";
@@ -375,6 +376,8 @@ function LaunchApplicantsWidget({ leads }: { leads: Lead[] }) {
 
 export default function AdminDashboardPage() {
   type ClientWithHealth = Client & { primary_contact: { name: string; email: string } | null };
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
+
   const [clients, setClients] = useState<ClientWithHealth[] | undefined>(undefined);
   const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[] | undefined>(undefined);
@@ -384,19 +387,30 @@ export default function AdminDashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
+    if (userLoading) return;
+
     const supabase = createClient();
+    const userId = isCompanyAdmin ? user?.auth_id : undefined;
 
     async function fetchData() {
-      const [clientsData, contractsData, questionnairesData, activitiesData, pendingRequestsData, invoicesData, leadsData] =
+      // Step 1: fetch clients + other data in parallel (clients needed first for clientIds scoping)
+      const [clientsData, contractsData, questionnairesData, invoicesData, leadsData] =
         await Promise.all([
-          listClients(supabase).catch(() => []),
-          listAllContracts(supabase).catch(() => []),
-          listQuestionnaires(supabase, { status: "submitted" }).catch(() => []),
-          listAllActivities(supabase, 100).catch(() => []),
-          listPendingClientRequests(supabase).catch(() => []),
-          listAllInvoices(supabase).catch(() => []),
-          listLeads(supabase).catch(() => []),
+          listClients(supabase, { userId }).catch(() => []),
+          listAllContracts(supabase, { userId }).catch(() => []),
+          isCompanyAdmin ? Promise.resolve([] as Questionnaire[]) : listQuestionnaires(supabase, { status: "submitted" }).catch(() => [] as Questionnaire[]),
+          listAllInvoices(supabase, { userId }).catch(() => []),
+          isCompanyAdmin ? Promise.resolve([] as Lead[]) : listLeads(supabase).catch(() => [] as Lead[]),
         ]);
+
+      const clientIds = clientsData.map((c) => c.id);
+
+      // Step 2: fetch activity, requests, and kyc scoped by clientIds
+      const [activitiesData, pendingRequestsData, kycRows] = await Promise.all([
+        listAllActivities(supabase, 100, isCompanyAdmin ? clientIds : undefined).catch(() => []),
+        listPendingClientRequests(supabase, isCompanyAdmin ? clientIds : undefined).catch(() => []),
+        clientIds.length > 0 ? listKycForClients(supabase, clientIds).catch(() => []) : Promise.resolve([]),
+      ]);
 
       setClients(clientsData);
       setContracts(contractsData);
@@ -405,8 +419,6 @@ export default function AdminDashboardPage() {
       setPendingRequests(pendingRequestsData);
       setLeads(leadsData);
 
-      const clientIds = clientsData.map((c) => c.id);
-      const kycRows = await listKycForClients(supabase, clientIds).catch(() => []);
       const kycMap: Record<string, string> = {};
       for (const row of kycRows) kycMap[row.client_id] = row.status;
 
@@ -414,7 +426,7 @@ export default function AdminDashboardPage() {
     }
 
     fetchData();
-  }, []);
+  }, [userLoading, isCompanyAdmin, user?.auth_id]);
 
   if (clients === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;
@@ -505,12 +517,18 @@ export default function AdminDashboardPage() {
     });
   });
 
+  const companyLabel = isCompanyAdmin
+    ? (clients?.[0]?.company_name ?? "Your Company")
+    : "Andy'K Group International LTD — A.D.A.M.";
+
   return (
     <div>
       <div className="mb-8">
-        <p className="label-mono mb-2">Andy'K Group International LTD — A.D.A.M.</p>
+        <p className="label-mono mb-2">{companyLabel}</p>
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-serif font-semibold text-foreground">Admin Dashboard</h1>
+          <h1 className="text-2xl font-serif font-semibold text-foreground">
+            {isCompanyAdmin ? "Dashboard" : "Admin Dashboard"}
+          </h1>
           <ContextualHelp
             id="admin-dashboard"
             title="Admin Dashboard"
@@ -518,7 +536,9 @@ export default function AdminDashboardPage() {
             position="right"
           />
         </div>
-        <p className="text-muted text-sm mt-1">Overview of all operations.</p>
+        <p className="text-muted text-sm mt-1">
+          {isCompanyAdmin ? "Overview of your client operations." : "Overview of all operations."}
+        </p>
       </div>
 
       <StatsCards
@@ -558,8 +578,8 @@ export default function AdminDashboardPage() {
       {/* Implementation Risks */}
       <RisksWidget risks={risks} />
 
-      {/* Launch Applicants */}
-      <LaunchApplicantsWidget leads={leads} />
+      {/* Launch Applicants — admin only */}
+      {!isCompanyAdmin && <LaunchApplicantsWidget leads={leads} />}
     </div>
   );
 }

@@ -39,13 +39,22 @@ export async function listForCurrentClient(
 
 export async function listAll(
   supabase: SupabaseClient,
-  limit: number = 100
+  limit: number = 100,
+  clientIds?: string[]
 ): Promise<ActivityLog[]> {
-  const { data, error } = await supabase
+  if (clientIds && clientIds.length === 0) return [];
+
+  let query = supabase
     .from('activity_log')
     .select('*')
     .order('created_at', { ascending: false })
     .limit(limit);
+
+  if (clientIds && clientIds.length > 0) {
+    query = query.in('client_id', clientIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`Failed to list all activity logs: ${error.message}`);

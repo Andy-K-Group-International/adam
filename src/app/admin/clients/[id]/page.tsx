@@ -39,6 +39,7 @@ import InternalNotes from "@/components/admin/InternalNotes";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import ActivationTab from "@/components/admin/ActivationTab";
 import ReferralTab from "@/components/admin/ReferralTab";
+import BillingTab from "@/components/admin/BillingTab";
 import ImplementationTimeline from "@/components/admin/ImplementationTimeline";
 import StrategyVersionHistory from "@/components/admin/StrategyVersionHistory";
 import { listStrategyVersions, createStrategyVersion } from "@/lib/supabase/queries/strategy-versions";
@@ -67,7 +68,7 @@ const stageLabels: Record<string, string> = {
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "kyc" | "activation" | "reports" | "activity" | "referral";
+  | "kickoff" | "kyc" | "activation" | "reports" | "activity" | "referral" | "billing";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
@@ -245,6 +246,14 @@ export default function ClientDetailPage() {
     { key: "reports",       label: `Reports${reportCount > 0 ? ` (${reportCount})` : ""}` },
     { key: "activity",      label: "Activity" },
     { key: "referral",      label: "Referral" },
+    {
+      key: "billing",
+      label: client.subscription_status === "paid_pending_verification"
+        ? "Billing ⚡"
+        : client.subscription_status === "active"
+          ? "Billing ✓"
+          : "Billing",
+    },
   ];
 
   // ── Kickoff handlers ────────────────────────────────────────────────────────
@@ -946,6 +955,13 @@ export default function ClientDetailPage() {
 
       {activeTab === "referral" && (
         <ReferralTab clientId={clientId} referralCode={client.referral_code ?? null} />
+      )}
+
+      {activeTab === "billing" && (
+        <BillingTab
+          client={client}
+          onUpdate={(updated) => setClient((prev) => prev ? { ...prev, ...updated } : prev)}
+        />
       )}
 
       {/* ── Reactivation Modal ─────────────────────────────────────────────── */}

@@ -54,11 +54,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { plan, billing, founding_code, company } = body as {
+  const { plan, billing, founding_code, company, terms_version, terms_accepted_at } = body as {
     plan?: string;
     billing?: "monthly" | "annual";
     founding_code?: string;
     company?: string;
+    terms_version?: string;
+    terms_accepted_at?: string;
   };
 
   if (!plan || !billing) {
@@ -101,7 +103,14 @@ export async function POST(req: NextRequest) {
       description: planConfig.description,
       redirect_url: `${APP_URL}/payment-success?plan=${plan}&billing=${billing}`,
       cancel_url:   `${APP_URL}/payment-failed`,
-      metadata: { plan, billing, company: company ?? null },
+      metadata: {
+        plan,
+        billing,
+        company: company ?? null,
+        terms_version: terms_version ?? "v2.0",
+        terms_accepted_at: terms_accepted_at ?? new Date().toISOString(),
+        ...(founding_code ? { founding_code } : {}),
+      },
     }),
   });
 

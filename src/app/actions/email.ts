@@ -1305,6 +1305,52 @@ export async function sendMonthlyReport({
   });
 }
 
+// ─── Subscription activated email ────────────────────────────────────────────
+
+export async function sendSubscriptionActivated({
+  clientEmail,
+  clientName,
+  companyName,
+  planName,
+  billingCycle,
+  activationDate,
+  paidUntil,
+}: {
+  clientEmail: string;
+  clientName: string;
+  companyName: string;
+  planName: string;
+  billingCycle: string;
+  activationDate: string;
+  paidUntil: string;
+}) {
+  const html = emailHtml(undefined, `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Subscription Active</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. subscription<br>is now active</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${clientName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Your payment has been verified and your A.D.A.M. subscription for <strong>${companyName}</strong> is now active. Your service period has begun.</p>
+    <div style="background:#f0f4f4;border-left:3px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
+      <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">Subscription details</p>
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Plan:</strong> ${planName}</p>
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Billing cycle:</strong> ${billingCycle}</p>
+      <p style="color:#0E282D;font-size:14px;margin:0 0 4px;"><strong>Service start:</strong> ${new Date(activationDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+      <p style="color:#0E282D;font-size:14px;margin:0;"><strong>Service period ends:</strong> ${new Date(paidUntil).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+    </div>
+    <div style="margin-bottom:32px;">
+      <a href="https://adam.andykgroup.com/dashboard" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Go to Your Portal &#8594;</a>
+    </div>
+    <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">For billing questions contact us at ceo@andykgroup.com.<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+  `);
+
+  return await sendEmail({
+    to: clientEmail,
+    from: "info@andykgroup.com",
+    subject: `Your A.D.A.M. subscription is now active — ${companyName}`,
+    text: `Hi ${clientName},\n\nYour A.D.A.M. subscription for ${companyName} is now active.\n\nPlan: ${planName}\nBilling cycle: ${billingCycle}\nService start: ${activationDate}\nService period ends: ${paidUntil}\n\nLog in to your portal: https://adam.andykgroup.com/dashboard\n\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
 // ─── Client activation email ──────────────────────────────────────────────────
 
 export async function sendClientActivationEmail({

@@ -26,19 +26,99 @@ function extractField(data: Record<string, unknown>, ...keys: string[]): string 
   return "";
 }
 
+async function sendAdminPaymentAlert({
+  company,
+  plan,
+  billing,
+  email,
+  orderId,
+  foundingCode,
+}: {
+  company: string | null;
+  plan: string;
+  billing: string;
+  email: string;
+  orderId: string;
+  foundingCode?: string;
+}) {
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  if (!RESEND_API_KEY) return;
+
+  const subject = `[A.D.A.M.] Payment received — ${company ?? email} — ${plan} (${billing}) — awaiting activation`;
+  const text = [
+    "New payment received on A.D.A.M.",
+    "",
+    `Company: ${company ?? "(not provided)"}`,
+    `Email: ${email}`,
+    `Plan: ${plan} — ${billing}`,
+    `Revolut Order ID: ${orderId}`,
+    foundingCode ? `Founding code: ${foundingCode}` : null,
+    "",
+    "Status: paid_pending_verification",
+    "Action required: verify business documents and activate subscription in admin panel.",
+    "",
+    "Admin panel: https://adam.andykgroup.com/admin/clients",
+  ].filter(Boolean).join("\n");
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "Andy'K Group International LTD <info@andykgroup.com>",
+      to: ["ceo@andykgroup.com"],
+      subject,
+      text,
+    }),
+  }).catch((err) => console.error("[revolut/webhook] admin email error", err));
+}
+
 async function handleOrderCompleted(order: Record<string, unknown>) {
   const supabase = createAdminClient();
   const email = extractField(order, "email", "customer_email");
   const meta  = (order.metadata as Record<string, string> | undefined) ?? {};
-  const plan    = meta.plan    ?? "";
-  const billing = meta.billing ?? "monthly";
-  const company = meta.company ?? null;
+  const plan           = meta.plan    ?? "";
+  const billing        = meta.billing ?? "monthly";
+  const company        = meta.company ?? null;
+  const termsVersion   = meta.terms_version ?? null;
+  const termsAcceptedAt = meta.terms_accepted_at ?? null;
+  const foundingCode   = meta.founding_code ?? null;
+  const orderId        = String(order.id ?? "");
+
+  const now = new Date().toISOString();
+
+  if (email) {
+    const { data: existingClient } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("contact_email", email)
+      .maybeSingle();
+
+    if (existingClient?.id) {
+      void supabase.from("clients").update({
+        plan_name: plan || null,
+        billing_cycle: billing || null,
+        subscription_status: "paid_pending_verification",
+        payment_date: now,
+        payment_provider: "revolut",
+        revolut_order_id: orderId || null,
+        terms_version_accepted: termsVersion,
+        terms_accepted_at: termsAcceptedAt,
+        founding_client: !!foundingCode,
+        founding_code_used: foundingCode,
+      }).eq("id", existingClient.id);
+    }
+  }
 
   void supabase.from("activity_log").insert({
     action: "payment_completed",
-    description: `Revolut payment completed: ${plan} (${billing})${company ? ` — ${company}` : ""}${email ? ` — ${email}` : ""}`,
-    created_at: new Date().toISOString(),
+    description: `Revolut payment received — ${plan} (${billing})${company ? ` — ${company}` : ""}${email ? ` — ${email}` : ""} — pending admin verification and activation`,
+    created_at: now,
   });
+
+  await sendAdminPaymentAlert({ company, plan, billing, email, orderId, foundingCode: foundingCode ?? undefined });
 }
 
 export async function POST(req: NextRequest) {

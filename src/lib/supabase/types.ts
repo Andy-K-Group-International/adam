@@ -254,6 +254,18 @@ export interface Client {
   readiness_breakdown: Record<string, unknown> | null;
   referral_code: string | null;
   referred_by: string | null;
+  plan_name: string | null;
+  billing_cycle: "monthly" | "annual" | null;
+  subscription_status: "none" | "paid_pending_verification" | "active" | "suspended" | "cancelled" | null;
+  payment_date: string | null;
+  activation_date: string | null;
+  paid_until: string | null;
+  founding_client: boolean;
+  founding_code_used: string | null;
+  terms_version_accepted: string | null;
+  terms_accepted_at: string | null;
+  payment_provider: string | null;
+  revolut_order_id: string | null;
   created_at: string;
   updated_at: string;
 }

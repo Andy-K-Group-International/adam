@@ -1,0 +1,270 @@
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { sendSubscriptionActivated } from "@/app/actions/email";
+import type { Client } from "@/lib/supabase/types";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, AlertCircle, Clock, XCircle, CreditCard, RefreshCw } from "lucide-react";
+
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  none:                       { label: "No subscription",         color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
+  paid_pending_verification:  { label: "Paid — Pending Verification", color: "text-warning bg-warning/8 border-warning/25", icon: Clock },
+  active:                     { label: "Active",                  color: "text-success bg-success/8 border-success/25", icon: CheckCircle2 },
+  suspended:                  { label: "Suspended",               color: "text-error bg-error/8 border-error/25",       icon: AlertCircle },
+  cancelled:                  { label: "Cancelled",               color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
+};
+
+function fmt(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function StatusBadge({ status }: { status: string | null }) {
+  const cfg = STATUS_CONFIG[status ?? "none"] ?? STATUS_CONFIG.none;
+  const Icon = cfg.icon;
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 border", cfg.color)}>
+      <Icon className="h-3.5 w-3.5" />
+      {cfg.label}
+    </span>
+  );
+}
+
+interface Props {
+  client: Client;
+  onUpdate: (updated: Partial<Client>) => void;
+}
+
+export default function BillingTab({ client, onUpdate }: Props) {
+  const [activating, setActivating] = useState(false);
+  const [suspending, setSuspending] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [paidUntilOverride, setPaidUntilOverride] = useState(client.paid_until ? client.paid_until.slice(0, 10) : "");
+  const [savingOverride, setSavingOverride] = useState(false);
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+  async function handleActivate() {
+    setActivating(true);
+    setMsg(null);
+    try {
+      const supabase = createClient();
+      const now = new Date();
+      const activationDate = now.toISOString();
+      const billingCycle = client.billing_cycle ?? "monthly";
+      const paidUntil = new Date(
+        billingCycle === "annual"
+          ? now.setFullYear(now.getFullYear() + 1)
+          : now.setDate(now.getDate() + 30)
+      ).toISOString();
+
+      const { error } = await supabase
+        .from("clients")
+        .update({
+          subscription_status: "active",
+          activation_date: activationDate,
+          paid_until: paidUntil,
+        })
+        .eq("id", client.id);
+
+      if (error) throw error;
+
+      await supabase.from("activity_log").insert({
+        client_id: client.id,
+        action: "subscription_activated",
+        description: `Subscription activated by admin — ${client.plan_name ?? "unknown plan"} (${billingCycle}). Service period: ${activationDate} → ${paidUntil}`,
+        created_at: new Date().toISOString(),
+      });
+
+      if (client.contact_email && client.plan_name) {
+        await sendSubscriptionActivated({
+          clientEmail: client.contact_email,
+          clientName: client.contact_name,
+          companyName: client.company_name,
+          planName: client.plan_name,
+          billingCycle,
+          activationDate,
+          paidUntil,
+        }).catch(() => {});
+      }
+
+      onUpdate({ subscription_status: "active", activation_date: activationDate, paid_until: paidUntil });
+      setMsg({ text: "Subscription activated. Welcome email sent.", ok: true });
+    } catch (err: unknown) {
+      setMsg({ text: err instanceof Error ? err.message : "Activation failed", ok: false });
+    }
+    setActivating(false);
+  }
+
+  async function handleStatusChange(newStatus: "suspended" | "cancelled") {
+    if (newStatus === "suspended") setSuspending(true);
+    else setCancelling(true);
+    setMsg(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("clients")
+        .update({ subscription_status: newStatus })
+        .eq("id", client.id);
+      if (error) throw error;
+
+      await supabase.from("activity_log").insert({
+        client_id: client.id,
+        action: `subscription_${newStatus}`,
+        description: `Subscription ${newStatus} by admin`,
+        created_at: new Date().toISOString(),
+      });
+
+      onUpdate({ subscription_status: newStatus });
+      setMsg({ text: `Subscription marked as ${newStatus}.`, ok: true });
+    } catch (err: unknown) {
+      setMsg({ text: err instanceof Error ? err.message : "Update failed", ok: false });
+    }
+    setSuspending(false);
+    setCancelling(false);
+  }
+
+  async function handleSavePaidUntil() {
+    if (!paidUntilOverride) return;
+    setSavingOverride(true);
+    setMsg(null);
+    try {
+      const supabase = createClient();
+      const iso = new Date(paidUntilOverride).toISOString();
+      const { error } = await supabase.from("clients").update({ paid_until: iso }).eq("id", client.id);
+      if (error) throw error;
+      onUpdate({ paid_until: iso });
+      setMsg({ text: "Paid until date updated.", ok: true });
+    } catch (err: unknown) {
+      setMsg({ text: err instanceof Error ? err.message : "Save failed", ok: false });
+    }
+    setSavingOverride(false);
+  }
+
+  const status = client.subscription_status ?? "none";
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <h3 className="text-base font-semibold text-foreground mb-1">Subscription billing</h3>
+        <p className="text-sm text-muted-2">Manage payment status, service period, and activation for this client.</p>
+      </div>
+
+      {/* Status + fields */}
+      <div className="bg-white border border-grid-300 divide-y divide-grid-300">
+        {[
+          { label: "Status",         value: <StatusBadge status={status} /> },
+          { label: "Plan",           value: client.plan_name ?? "—" },
+          { label: "Billing cycle",  value: client.billing_cycle ?? "—" },
+          { label: "Payment date",   value: fmt(client.payment_date) },
+          { label: "Activation date",value: fmt(client.activation_date) },
+          { label: "Service ends",   value: fmt(client.paid_until) },
+          { label: "Revolut order",  value: client.revolut_order_id ?? "—" },
+          { label: "Founding client",value: client.founding_client ? "Yes" : "No" },
+          { label: "Founding code",  value: client.founding_code_used ?? "—" },
+          { label: "Terms accepted", value: client.terms_accepted_at ? `${fmt(client.terms_accepted_at)} (${client.terms_version_accepted ?? "unknown version"})` : "—" },
+        ].map(({ label, value }) => (
+          <div key={label} className="flex items-start gap-4 px-5 py-3">
+            <span className="w-36 shrink-0 text-xs font-mono text-muted-2 pt-0.5">{label}</span>
+            <span className="text-sm text-foreground">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Manual paid_until override */}
+      <div className="border border-grid-300 bg-white p-5 space-y-3">
+        <p className="text-xs font-mono text-muted-2 uppercase tracking-wider">Manual override — service end date</p>
+        <div className="flex items-center gap-3">
+          <input
+            type="date"
+            value={paidUntilOverride}
+            onChange={(e) => setPaidUntilOverride(e.target.value)}
+            className="border border-grid-500 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-highlight/30"
+          />
+          <button
+            onClick={handleSavePaidUntil}
+            disabled={savingOverride || !paidUntilOverride}
+            className="flex items-center gap-2 px-4 py-2 bg-foreground text-white text-sm font-medium hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+          >
+            {savingOverride && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+            Save
+          </button>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="border border-grid-300 bg-white p-5 space-y-4">
+        <p className="text-xs font-mono text-muted-2 uppercase tracking-wider">Actions</p>
+
+        {status === "paid_pending_verification" && (
+          <div className="border border-success/25 bg-success/5 p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Activate subscription</p>
+            <p className="text-xs text-muted-2 mb-3">
+              Sets activation_date to now, calculates paid_until ({client.billing_cycle === "annual" ? "12 months" : "30 days"}), sends welcome email to client.
+            </p>
+            <button
+              onClick={handleActivate}
+              disabled={activating}
+              className="flex items-center gap-2 px-4 py-2 bg-success text-white text-sm font-medium hover:bg-success/90 disabled:opacity-50 transition-colors"
+            >
+              {activating && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+              <CheckCircle2 className="h-4 w-4" />
+              Activate Subscription
+            </button>
+          </div>
+        )}
+
+        {(status === "active" || status === "paid_pending_verification") && (
+          <div className="border border-warning/25 bg-warning/5 p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Suspend access</p>
+            <p className="text-xs text-muted-2 mb-3">Suspends access without cancelling the contract. Data is retained.</p>
+            <button
+              onClick={() => handleStatusChange("suspended")}
+              disabled={suspending}
+              className="flex items-center gap-2 px-4 py-2 bg-warning text-white text-sm font-medium hover:bg-warning/90 disabled:opacity-50 transition-colors"
+            >
+              {suspending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+              <AlertCircle className="h-4 w-4" />
+              Suspend
+            </button>
+          </div>
+        )}
+
+        {status !== "cancelled" && status !== "none" && (
+          <div className="border border-error/25 bg-error/5 p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Cancel subscription</p>
+            <p className="text-xs text-muted-2 mb-3">Marks the subscription as cancelled. Does not delete data.</p>
+            <button
+              onClick={() => handleStatusChange("cancelled")}
+              disabled={cancelling}
+              className="flex items-center gap-2 px-4 py-2 bg-error text-white text-sm font-medium hover:bg-error/90 disabled:opacity-50 transition-colors"
+            >
+              {cancelling && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+              <XCircle className="h-4 w-4" />
+              Cancel Subscription
+            </button>
+          </div>
+        )}
+
+        {(status === "none" || status === "cancelled" || status === "suspended") && (
+          <p className="text-xs text-muted-2 font-mono">
+            {status === "none" && "No payment recorded for this client."}
+            {status === "suspended" && "Account is suspended. Activate to restore access."}
+            {status === "cancelled" && "Subscription is cancelled."}
+          </p>
+        )}
+      </div>
+
+      {msg && (
+        <p className={cn("text-sm font-mono", msg.ok ? "text-success" : "text-error")}>
+          {msg.ok ? "✓ " : "✗ "}{msg.text}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 text-xs text-muted-2 font-mono border-t border-grid-300 pt-4">
+        <CreditCard className="h-3.5 w-3.5" />
+        Payment processor: {client.payment_provider ?? "revolut"}
+      </div>
+    </div>
+  );
+}

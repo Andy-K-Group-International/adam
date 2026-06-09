@@ -259,6 +259,14 @@ export default function PricingSection() {
   const [codeLoading, setCodeLoading]     = useState(false);
   const [loadingPlan, setLoadingPlan]     = useState<string | null>(null);
 
+  // Consent checkboxes
+  const [consentTc, setConsentTc]           = useState(false);
+  const [consentBiz, setConsentBiz]         = useState(false);
+  const [consentAi, setConsentAi]           = useState(false);
+  const [consentBilling, setConsentBilling] = useState(false);
+  const [consentActivation, setConsentActivation] = useState(false);
+  const [consentError, setConsentError]     = useState<string | null>(null);
+
   const activeData = tab === "internal" ? pricingData.internal : pricingData.whitelabel;
 
   async function applyCode() {
@@ -289,6 +297,11 @@ export default function PricingSection() {
   }
 
   async function handleCheckout(planKey: string) {
+    setConsentError(null);
+    if (!consentTc || !consentBiz || !consentAi || !consentBilling || !consentActivation) {
+      setConsentError("Please accept all terms before continuing.");
+      return;
+    }
     setLoadingPlan(planKey);
     try {
       const res = await fetch("/api/revolut/subscription", {
@@ -298,6 +311,8 @@ export default function PricingSection() {
           plan: planKey,
           billing,
           founding_code: codeApplied || undefined,
+          terms_version: "v2.0",
+          terms_accepted_at: new Date().toISOString(),
         }),
       });
       const data = await res.json();
@@ -436,6 +451,73 @@ export default function PricingSection() {
               <div className="border border-grid-300 bg-grid-100 px-4 py-3 text-sm text-muted-2 font-mono text-center">
                 Annual billing already includes 40% discount — Founding codes apply to monthly billing only.
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Consent checkboxes — internal tab + payments enabled only */}
+        {tab === "internal" && paymentsEnabled && (
+          <div className="max-w-[960px] mx-auto mb-8 border border-grid-300 bg-white p-5 space-y-3">
+            <p className="text-xs font-mono text-muted-2 uppercase tracking-wider mb-3">
+              Required — please confirm before proceeding
+            </p>
+            {[
+              {
+                id: "tc",
+                checked: consentTc,
+                set: setConsentTc,
+                label: (
+                  <>
+                    I have read and agree to the{" "}
+                    <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                      Terms &amp; Conditions
+                    </a>{" "}
+                    and{" "}
+                    <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                      Privacy Policy
+                    </a>.
+                  </>
+                ),
+              },
+              {
+                id: "biz",
+                checked: consentBiz,
+                set: setConsentBiz,
+                label: "I confirm that A.D.A.M. is a B2B platform for registered businesses only, and I am authorised to represent my company.",
+              },
+              {
+                id: "ai",
+                checked: consentAi,
+                set: setConsentAi,
+                label: "I understand that AI-generated content is for assistance only and must be reviewed by a qualified human before use.",
+              },
+              {
+                id: "billing",
+                checked: consentBilling,
+                set: setConsentBilling,
+                label: "I agree to the billing terms: monthly and annual service periods begin from my activation date. Annual plans are paid upfront and non-refundable after activation.",
+              },
+              {
+                id: "activation",
+                checked: consentActivation,
+                set: setConsentActivation,
+                label: "I understand that payment confirms my intent and reserves my plan. My subscription period begins only after business verification and admin activation are completed. If activation is refused, I will receive a full refund.",
+              },
+            ].map(({ id, checked, set, label }) => (
+              <label key={id} className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => set(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 border border-grid-500 accent-foreground cursor-pointer"
+                />
+                <span className="text-xs font-mono text-muted leading-relaxed group-hover:text-foreground transition-colors">
+                  {label}
+                </span>
+              </label>
+            ))}
+            {consentError && (
+              <p className="text-xs font-mono text-error mt-2">{consentError}</p>
             )}
           </div>
         )}

@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/supabase/queries/users";
 import { getKycByClientId } from "@/lib/supabase/queries/kyc";
 import { submitKycAction } from "@/app/actions/kyc";
 import type { KycVerification, KycDocumentType, KycDocument } from "@/lib/supabase/types";
-import { User, Mail, ShieldCheck, ShieldX, Clock, Upload, FileText, X, AlertTriangle } from "lucide-react";
+import { User, Mail, ShieldCheck, ShieldX, Clock, Upload, FileText, X, AlertTriangle, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContextualHelp from "@/components/ui/ContextualHelp";
@@ -62,6 +62,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any | undefined>(undefined);
   const [kyc, setKyc] = useState<KycVerification | null | undefined>(undefined);
   const [kycLoading, setKycLoading] = useState(true);
+  const [clientRecord, setClientRecord] = useState<any | null>(null);
 
   // Form state
   const [companyName, setCompanyName] = useState("");
@@ -88,6 +89,17 @@ export default function ProfilePage() {
     getCurrentUser(supabase).then((data) => {
       setUser(data ?? null);
       if (data?.client_id) {
+        void (async () => {
+          try {
+            const { data: c } = await supabase
+              .from("clients")
+              .select("plan_name,billing_cycle,subscription_status,payment_date,activation_date,paid_until,founding_client")
+              .eq("id", data.client_id)
+              .maybeSingle();
+            setClientRecord(c ?? null);
+          } catch { /* silent */ }
+        })();
+
         getKycByClientId(supabase, data.client_id)
           .then((kycData) => {
             setKyc(kycData);
@@ -192,6 +204,65 @@ export default function ProfilePage() {
           <span className="text-foreground">{user.email}</span>
         </div>
       </div>
+
+      {/* My Plan — only for clients */}
+      {user.role === "client" && clientRecord && (
+        <div>
+          <div className="mb-4">
+            <h2 className="text-lg font-serif font-semibold text-foreground">My Plan</h2>
+            <p className="text-sm text-muted-2 mt-0.5">Your current subscription and service period.</p>
+          </div>
+          <div className="bg-white rounded-xl border border-grid-300 divide-y divide-grid-300">
+            {[
+              {
+                label: "Status",
+                value: (() => {
+                  const statusMap: Record<string, { label: string; color: string }> = {
+                    none:                       { label: "No active subscription",     color: "text-muted-2" },
+                    paid_pending_verification:  { label: "Paid — Pending Verification", color: "text-warning font-medium" },
+                    active:                     { label: "Active",                      color: "text-success font-medium" },
+                    suspended:                  { label: "Suspended",                   color: "text-error font-medium" },
+                    cancelled:                  { label: "Cancelled",                   color: "text-muted-2" },
+                  };
+                  const s = statusMap[clientRecord.subscription_status ?? "none"] ?? statusMap.none;
+                  return <span className={cn("text-sm", s.color)}>{s.label}</span>;
+                })(),
+              },
+              { label: "Plan",           value: clientRecord.plan_name ?? "—" },
+              { label: "Billing cycle",  value: clientRecord.billing_cycle ?? "—" },
+              { label: "Payment date",   value: clientRecord.payment_date ? new Date(clientRecord.payment_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+              { label: "Activation date",value: clientRecord.activation_date ? new Date(clientRecord.activation_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+              { label: "Service ends",   value: clientRecord.paid_until ? new Date(clientRecord.paid_until).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—" },
+              ...(clientRecord.founding_client ? [{ label: "Founding client", value: <span className="text-sm text-highlight font-medium">Yes — pricing locked</span> }] : []),
+            ].map(({ label, value }) => (
+              <div key={label} className="flex items-start gap-4 px-6 py-3">
+                <span className="w-36 shrink-0 text-xs font-mono text-muted-2 pt-0.5">{label}</span>
+                <span className="text-sm text-foreground">{value}</span>
+              </div>
+            ))}
+            <div className="px-6 py-4">
+              <p className="text-xs text-muted-2">
+                For billing questions contact{" "}
+                <a href="mailto:ceo@andykgroup.com" className="text-highlight hover:underline underline-offset-2">
+                  ceo@andykgroup.com
+                </a>
+              </p>
+            </div>
+          </div>
+          {clientRecord.subscription_status === "paid_pending_verification" && (
+            <div className="mt-3 border border-warning/25 bg-warning/5 rounded-xl px-5 py-4 flex items-start gap-3">
+              <Clock className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Awaiting activation</p>
+                <p className="text-xs text-muted-2 mt-0.5">
+                  Payment received. Your account is currently being verified. You will receive an
+                  email once your subscription is activated. This typically takes 1–2 business days.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* KYC section — only for clients */}
       {user.role === "client" && (

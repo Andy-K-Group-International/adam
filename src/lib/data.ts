@@ -298,6 +298,7 @@ export const footerLinks = {
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Terms of Service", href: "/terms-and-conditions" },
     { label: "Cookie Policy", href: "/cookies-policy" },
+    { label: "Service Definition", href: "/service-definition" },
   ],
   connect: [
     { label: "LinkedIn", href: "https://www.linkedin.com/company/andyk-group-international" },

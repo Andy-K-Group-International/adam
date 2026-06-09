@@ -48,8 +48,8 @@ async function validateAndRedeemCode(
 export async function POST(req: NextRequest) {
   // TEMPORARY — internal test bypass. Removed after internal payment test phase.
   const testToken = req.headers.get("X-Internal-Test");
-  const cronSecret = process.env.CRON_SECRET;
-  const isInternalTest = !!(testToken && cronSecret && testToken === cronSecret);
+  const internalTestSecret = process.env.INTERNAL_TEST_SECRET;
+  const isInternalTest = !!(testToken && internalTestSecret && testToken === internalTestSecret);
 
   if (!paymentsEnabled && !isInternalTest) {
     return NextResponse.json(

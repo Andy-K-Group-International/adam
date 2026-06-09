@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { sendSubscriptionActivated } from "@/app/actions/email";
 import type { Client } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, AlertCircle, Clock, XCircle, CreditCard, RefreshCw } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, XCircle, CreditCard, RefreshCw, ShieldCheck } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  none:                       { label: "No subscription",         color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
+  none:                       { label: "No subscription",             color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
   paid_pending_verification:  { label: "Paid — Pending Verification", color: "text-warning bg-warning/8 border-warning/25", icon: Clock },
-  active:                     { label: "Active",                  color: "text-success bg-success/8 border-success/25", icon: CheckCircle2 },
-  suspended:                  { label: "Suspended",               color: "text-error bg-error/8 border-error/25",       icon: AlertCircle },
-  cancelled:                  { label: "Cancelled",               color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
+  active:                     { label: "Active",                      color: "text-success bg-success/8 border-success/25", icon: CheckCircle2 },
+  suspended:                  { label: "Suspended",                   color: "text-error bg-error/8 border-error/25",       icon: AlertCircle },
+  cancelled:                  { label: "Cancelled",                   color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
 };
 
 function fmt(iso: string | null): string {
@@ -43,8 +43,25 @@ export default function BillingTab({ client, onUpdate }: Props) {
   const [paidUntilOverride, setPaidUntilOverride] = useState(client.paid_until ? client.paid_until.slice(0, 10) : "");
   const [savingOverride, setSavingOverride] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [bizVerified, setBizVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("business_verifications")
+      .select("status")
+      .eq("client_id", client.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setBizVerified(data?.status === "verified");
+      });
+  }, [client.id]);
 
   async function handleActivate() {
+    if (!bizVerified) {
+      setMsg({ text: "Business verification required before activation. Complete verification in the Business Verification tab.", ok: false });
+      return;
+    }
     setActivating(true);
     setMsg(null);
     try {
@@ -71,8 +88,13 @@ export default function BillingTab({ client, onUpdate }: Props) {
 
       await supabase.from("activity_log").insert({
         client_id: client.id,
-        action: "subscription_activated",
-        description: `Subscription activated by admin — ${client.plan_name ?? "unknown plan"} (${billingCycle}). Service period: ${activationDate} → ${paidUntil}`,
+        type: "subscription_activated",
+        metadata: {
+          plan: client.plan_name ?? "unknown",
+          billing_cycle: billingCycle,
+          activation_date: activationDate,
+          paid_until: paidUntil,
+        },
         created_at: new Date().toISOString(),
       });
 
@@ -110,8 +132,8 @@ export default function BillingTab({ client, onUpdate }: Props) {
 
       await supabase.from("activity_log").insert({
         client_id: client.id,
-        action: `subscription_${newStatus}`,
-        description: `Subscription ${newStatus} by admin`,
+        type: `subscription_${newStatus}`,
+        metadata: { by: "admin" },
         created_at: new Date().toISOString(),
       });
 
@@ -142,6 +164,7 @@ export default function BillingTab({ client, onUpdate }: Props) {
   }
 
   const status = client.subscription_status ?? "none";
+  const canActivate = status === "paid_pending_verification";
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -160,7 +183,7 @@ export default function BillingTab({ client, onUpdate }: Props) {
           { label: "Activation date",value: fmt(client.activation_date) },
           { label: "Service ends",   value: fmt(client.paid_until) },
           { label: "Revolut order",  value: client.revolut_order_id ?? "—" },
-          { label: "Founding client",value: client.founding_client ? "Yes" : "No" },
+          { label: "Founding client",value: client.founding_client ? "⭐ Yes" : "No" },
           { label: "Founding code",  value: client.founding_code_used ?? "—" },
           { label: "Terms accepted", value: client.terms_accepted_at ? `${fmt(client.terms_accepted_at)} (${client.terms_version_accepted ?? "unknown version"})` : "—" },
         ].map(({ label, value }) => (
@@ -196,20 +219,29 @@ export default function BillingTab({ client, onUpdate }: Props) {
       <div className="border border-grid-300 bg-white p-5 space-y-4">
         <p className="text-xs font-mono text-muted-2 uppercase tracking-wider">Actions</p>
 
-        {status === "paid_pending_verification" && (
-          <div className="border border-success/25 bg-success/5 p-4">
+        {canActivate && (
+          <div className={cn("border p-4", bizVerified === false ? "border-warning/25 bg-warning/5" : "border-success/25 bg-success/5")}>
             <p className="text-sm font-medium text-foreground mb-1">Activate subscription</p>
-            <p className="text-xs text-muted-2 mb-3">
-              Sets activation_date to now, calculates paid_until ({client.billing_cycle === "annual" ? "12 months" : "30 days"}), sends welcome email to client.
-            </p>
+            {bizVerified === false ? (
+              <div className="flex items-start gap-2 mb-3">
+                <ShieldCheck className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs text-warning">
+                  Business verification required before activation. Go to the Business Verification tab and verify this client's documents first.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-2 mb-3">
+                Sets activation_date to now, calculates paid_until ({client.billing_cycle === "annual" ? "12 months" : "30 days"}), sends welcome email to client.
+              </p>
+            )}
             <button
               onClick={handleActivate}
-              disabled={activating}
+              disabled={activating || bizVerified === false}
               className="flex items-center gap-2 px-4 py-2 bg-success text-white text-sm font-medium hover:bg-success/90 disabled:opacity-50 transition-colors"
             >
               {activating && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
               <CheckCircle2 className="h-4 w-4" />
-              Activate Subscription
+              {bizVerified === false ? "Verification Required" : "Activate Subscription"}
             </button>
           </div>
         )}

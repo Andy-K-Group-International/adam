@@ -159,7 +159,7 @@ export default function ClientsPage() {
                     className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                   >
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           href={`/admin/clients/${client.id}`}
                           className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
@@ -168,6 +168,12 @@ export default function ClientsPage() {
                         </Link>
                         {(client as any).archived && (
                           <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium">Archived</span>
+                        )}
+                        {(client as any).founding_client && (
+                          <span className="text-xs font-mono text-highlight" title="Founding Client">⭐</span>
+                        )}
+                        {(client as any).free_email_warning && (
+                          <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium" title="Free email domain detected — verify business identity manually">⚠️ Free email</span>
                         )}
                       </div>
                     </td>

@@ -67,13 +67,7 @@ export async function POST(req: NextRequest) {
   const normalizedEmail = email.trim().toLowerCase();
   const serviceInterest = answers.service_interest ? String(answers.service_interest) : null;
   const isEndToEnd = serviceInterest === "end_to_end";
-
-  if (!isEndToEnd && !isBusinessEmail(normalizedEmail)) {
-    return NextResponse.json(
-      { success: false, error: "Please use your business email address" },
-      { status: 400, headers }
-    );
-  }
+  const freeEmailWarning = !isBusinessEmail(normalizedEmail);
 
   const documentUrl = answers.document_url ? String(answers.document_url) : null;
   const documentUploaded = !!documentUrl;
@@ -160,17 +154,19 @@ export async function POST(req: NextRequest) {
     ...(serviceInterest ? { service_interest: serviceInterest } : {}),
     ...(documentUrl ? { document_url: documentUrl } : {}),
     ...(requiresManualReview ? { requires_manual_review: true } : {}),
+    ...(freeEmailWarning ? { free_email_warning: true } : {}),
   };
 
   const baseData = {
-    name:             name.trim(),
-    phone:            phone?.trim() || null,
-    company:          company?.trim() || null,
-    source:           source || "website",
-    status:           initialStatus,
-    service_interest: serviceInterest,
+    name:              name.trim(),
+    phone:             phone?.trim() || null,
+    company:           company?.trim() || null,
+    source:            source || "website",
+    status:            initialStatus,
+    service_interest:  serviceInterest,
+    free_email_warning: freeEmailWarning,
     metadata,
-    updated_at:       new Date().toISOString(),
+    updated_at:        new Date().toISOString(),
     ...(autoRejected
       ? {
           rejected_at:          new Date().toISOString(),

@@ -144,8 +144,12 @@ export default function TermsAndConditionsPage() {
             <p className="mt-2">
               <strong className="text-foreground">6.3 Founding Client pricing.</strong>{" "}
               If you have been granted Founding Client status, your locked pricing applies for the
-              duration of your continuous subscription. Pricing lock is forfeited if you cancel
-              and resubscribe.
+              duration of your continuous active subscription. Pricing lock applies to the plan
+              selected at founding client activation. Switching plans (e.g., from Growth to Scale)
+              resets the pricing lock — the new plan is billed at the prevailing standard rate.
+              Pricing lock is also forfeited if you cancel and resubscribe. The locked price
+              is guaranteed for as long as your subscription remains continuously active without
+              plan changes or cancellation.
             </p>
             <p className="mt-2">
               <strong className="text-foreground">6.4 Currency.</strong>{" "}

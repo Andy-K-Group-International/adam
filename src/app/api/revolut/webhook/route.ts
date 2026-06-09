@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createAgreementSnapshot } from "@/lib/snapshots";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +110,22 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
         founding_client: !!foundingCode,
         founding_code_used: foundingCode,
       }).eq("id", existingClient.id);
+
+      await createAgreementSnapshot({
+        clientId: existingClient.id,
+        email,
+        planName: plan || "",
+        billingCycle: billing || "monthly",
+        priceGbp: null,
+        termsVersion: termsVersion ?? "v2.0",
+        serviceDefinitionVersion: "v1.0",
+        aiMode: null,
+        acceptedByEmail: email,
+        businessVerificationStatus: "pending",
+        foundingClient: !!foundingCode,
+        foundingCode: foundingCode,
+        eventType: "payment",
+      }).catch((err) => console.error("[revolut/webhook] snapshot error", err));
 
       await supabase.from("activity_log").insert({
         type: "payment_completed",

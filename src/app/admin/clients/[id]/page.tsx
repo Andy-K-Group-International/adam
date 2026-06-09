@@ -40,6 +40,10 @@ import ContextualHelp from "@/components/ui/ContextualHelp";
 import ActivationTab from "@/components/admin/ActivationTab";
 import ReferralTab from "@/components/admin/ReferralTab";
 import BillingTab from "@/components/admin/BillingTab";
+import AiSettingsTab from "@/components/admin/AiSettingsTab";
+import BusinessVerificationTab from "@/components/admin/BusinessVerificationTab";
+import AgreementHistoryTab from "@/components/admin/AgreementHistoryTab";
+import EnterpriseTab from "@/components/admin/EnterpriseTab";
 import ImplementationTimeline from "@/components/admin/ImplementationTimeline";
 import StrategyVersionHistory from "@/components/admin/StrategyVersionHistory";
 import { listStrategyVersions, createStrategyVersion } from "@/lib/supabase/queries/strategy-versions";
@@ -68,7 +72,8 @@ const stageLabels: Record<string, string> = {
 type Tab =
   | "overview" | "contacts" | "milestones" | "meetings"
   | "analysis" | "strategy" | "contracts" | "questionnaire"
-  | "kickoff" | "kyc" | "activation" | "reports" | "activity" | "referral" | "billing";
+  | "kickoff" | "kyc" | "activation" | "reports" | "activity" | "referral" | "billing"
+  | "ai" | "business-verification" | "agreement-history" | "enterprise";
 
 type ChecklistItem = { id: string; label: string; checked: boolean };
 
@@ -254,6 +259,10 @@ export default function ClientDetailPage() {
           ? "Billing ✓"
           : "Billing",
     },
+    { key: "ai",                    label: "AI Settings" },
+    { key: "business-verification", label: "Business Verification" },
+    { key: "agreement-history",     label: "Agreement History" },
+    { key: "enterprise",            label: "Enterprise" },
   ];
 
   // ── Kickoff handlers ────────────────────────────────────────────────────────
@@ -963,6 +972,14 @@ export default function ClientDetailPage() {
           onUpdate={(updated) => setClient((prev) => prev ? { ...prev, ...updated } : prev)}
         />
       )}
+
+      {activeTab === "ai" && <AiSettingsTab clientId={clientId} />}
+
+      {activeTab === "business-verification" && <BusinessVerificationTab clientId={clientId} />}
+
+      {activeTab === "agreement-history" && <AgreementHistoryTab clientId={clientId} />}
+
+      {activeTab === "enterprise" && <EnterpriseTab />}
 
       {/* ── Reactivation Modal ─────────────────────────────────────────────── */}
       {reactivateOpen && (

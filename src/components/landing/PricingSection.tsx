@@ -471,10 +471,12 @@ export default function PricingSection() {
                     I have read and agree to the{" "}
                     <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
                       Terms &amp; Conditions
-                    </a>{" "}
-                    and{" "}
+                    </a>,{" "}
                     <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
                       Privacy Policy
+                    </a>, and{" "}
+                    <a href="/service-definition" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                      Service Definition
                     </a>.
                   </>
                 ),

@@ -64,8 +64,9 @@ export default function FoundingClientSection() {
                 Apply for Founding Client Access →
               </Link>
               <p className="text-white/30 text-xs font-mono text-center leading-relaxed">
-                Limited to 20 companies. No discount codes required.<br />
-                Apply through the standard process.
+                Founding Client Program &mdash; Limited to 20 companies.<br />
+                Applications are manually reviewed by Andy&apos;K Group International LTD.<br />
+                Selected companies will be contacted with a license activation invitation.
               </p>
             </div>
           </div>

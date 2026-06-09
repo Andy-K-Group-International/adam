@@ -111,7 +111,7 @@ export const pricingData = {
           "Questionnaire intake",
           "Email notifications",
         ],
-        cta: "Apply for Access",
+        cta: "Apply for License Access",
         highlighted: false,
       },
       {
@@ -126,7 +126,7 @@ export const pricingData = {
           "Strategy editor",
           "Pipeline board",
         ],
-        cta: "Apply for Access",
+        cta: "Apply for License Access",
         highlighted: true,
       },
       {
@@ -140,7 +140,7 @@ export const pricingData = {
           "White-glove onboarding",
           "Priority support",
         ],
-        cta: "Apply for Access",
+        cta: "Apply for License Access",
         highlighted: false,
       },
       {
@@ -175,7 +175,7 @@ export const pricingData = {
           "Questionnaire intake",
           "Email notifications",
         ],
-        cta: "Apply for Access",
+        cta: "Apply for License Access",
         highlighted: false,
       },
       {
@@ -190,7 +190,7 @@ export const pricingData = {
           "Multi-workspace support",
           "Priority support",
         ],
-        cta: "Apply for Access",
+        cta: "Apply for License Access",
         highlighted: true,
       },
       {

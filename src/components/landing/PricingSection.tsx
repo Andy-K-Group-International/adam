@@ -223,7 +223,7 @@ function PricingCard({
               : "bg-foreground text-white hover:bg-foreground/90"
           )}
         >
-          Apply for Access →
+          Apply for License Access →
         </a>
       ) : (
         <a
@@ -552,12 +552,12 @@ export default function PricingSection() {
         {!paymentsEnabled && (
           <div className="mt-8 border border-grid-300 bg-grid-100 px-5 py-5 max-w-[680px] mx-auto text-center space-y-3">
             <p className="text-sm text-muted leading-relaxed">
-              A.D.A.M. is currently accepting applications for{" "}
-              <span className="text-foreground font-medium">Founding Client Access.</span>{" "}
-              Public payments are not yet open. Selected applicants will be notified before launch and invited to complete payment once access opens.
+              A.D.A.M. is currently accepting applications for its{" "}
+              <span className="text-foreground font-medium">Controlled License Launch.</span>{" "}
+              Selected companies will be reviewed by Andy&rsquo;K Group International LTD and invited to activate their license when access opens.
             </p>
             <p className="text-xs font-mono text-muted-2 tracking-wide uppercase">
-              Official payment launch: 15 July 2026
+              Founding Client Program &mdash; Limited to 20 companies &middot; License activation: 15 July 2026
             </p>
           </div>
         )}

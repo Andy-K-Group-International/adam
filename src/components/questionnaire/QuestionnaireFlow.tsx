@@ -437,11 +437,12 @@ export default function QuestionnaireFlow() {
             </div>
           </div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">
-            Congratulations!
+            Application Received
           </h2>
           <p className="text-muted leading-relaxed mb-8">
-            Your questionnaire has been submitted successfully. Create your
-            account to track progress and access your dashboard.
+            Your application has been received. Andy&rsquo;K Group International LTD
+            will review your submission and contact you if you are selected for
+            the Founding Client Program.
           </p>
           <div
             className={cn(

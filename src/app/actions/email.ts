@@ -572,7 +572,7 @@ export async function sendLeadConfirmation({
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for reaching out to Andy&#8217;K Group International LTD. We&#8217;ve received your application and our team will review it carefully.</p>
     <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:24px;">
       <p style="color:#0E282D;font-size:13px;font-weight:600;margin:0 0 6px;">What happens next</p>
-      <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">Our team will review your details within 48 hours. If we&#8217;re the right fit for each other, you&#8217;ll hear from us directly with next steps.</p>
+      <p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">Andy&#8217;K Group International LTD will review your submission. If your company is selected for the Founding Client Program, you&#8217;ll receive a license activation invitation directly.</p>
     </div>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 32px;">In the meantime, feel free to explore our work at <a href="https://andykgroup.com" style="color:#2F9E9A;text-decoration:none;">andykgroup.com</a>.</p>
     <div style="border-top:1px solid #ede8e2;padding-top:20px;">
@@ -583,7 +583,7 @@ export async function sendLeadConfirmation({
     to: email,
     from: "info@andykgroup.com",
     subject: "Your application has been received — Andy'K Group International LTD",
-    text: `Hi ${name},\n\nThank you for reaching out to Andy'K Group International LTD. We've received your application and our team will review it within 48 hours.\n\nIf we're the right fit, you'll hear from us directly with next steps.\n\nWarm regards,\nThe Andy'K Group International LTD Team\nhttps://andykgroup.com`,
+    text: `Hi ${name},\n\nThank you for your application. Andy'K Group International LTD will review your submission carefully.\n\nIf your company is selected for the Founding Client Program, you'll receive a license activation invitation directly.\n\nWarm regards,\nThe Andy'K Group International LTD Team\nhttps://andykgroup.com`,
     html,
   });
 }
@@ -1365,21 +1365,21 @@ export async function sendLaunchInvitation({
   plan?: string | null;
 }) {
   const applyUrl = "https://adam.andykgroup.com/questionnaire";
-  const html = emailHtml("Founding Client Access", `
-    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">You&#8217;ve been selected</p>
-    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. Founding Client<br>invitation is ready</h1>
+  const html = emailHtml("Founding Client Program", `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">License Activation Invitation</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. license activation<br>invitation is ready</h1>
     <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${name},</p>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">After reviewing your application${company ? ` from ${company}` : ""}, we&#8217;re pleased to confirm that you have been selected for <strong style="color:#0E282D;">Founding Client Access</strong> to A.D.A.M. Payment is now open and your access will be activated immediately upon completion.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">After reviewing your application${company ? ` from ${company}` : ""}, we&#8217;re pleased to confirm that you have been selected for the <strong style="color:#0E282D;">Founding Client Program</strong>. Payment is now open. Your license will be activated by our team following business verification.</p>
     <div style="background:#f0f4f4;border-left:2px solid #2F9E9A;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:28px;">
       <p style="color:#8b93a8;font-family:'Courier New',Courier,monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 10px;">What this means for you</p>
       <ul style="color:#525a70;font-size:14px;line-height:1.8;margin:0;padding-left:18px;">
-        <li>Founding Client pricing locked for the lifetime of your account</li>
+        <li>Founding Client pricing locked for the lifetime of your license</li>
         <li>Priority onboarding and dedicated support during implementation</li>
         <li>Direct input into upcoming A.D.A.M. features</li>
         ${plan ? `<li>Selected plan: <strong style="color:#0E282D;">${plan}</strong></li>` : ""}
       </ul>
     </div>
-    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">To complete your application and confirm your place, please proceed via the link below. Availability is limited.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">To confirm your place and proceed with payment, use the link below. Availability is limited to 20 companies.</p>
     <div style="text-align:center;margin-bottom:32px;">
       <a href="${applyUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Confirm Your Place &#8594;</a>
     </div>
@@ -1391,8 +1391,8 @@ export async function sendLaunchInvitation({
   return await sendEmail({
     to: email,
     from: "info@andykgroup.com",
-    subject: "You've been selected — A.D.A.M. Founding Client Access is now open",
-    text: `Hi ${name},\n\nCongratulations — you've been selected for Founding Client Access to A.D.A.M.${company ? ` (${company})` : ""}.\n\nPayment is now open. Founding Client pricing is locked for the lifetime of your account.\n\nConfirm your place here: ${applyUrl}\n\nWarm regards,\nThe Andy'K Group International LTD Team\nceo@andykgroup.com`,
+    subject: "Your A.D.A.M. License Activation Invitation — Founding Client Program",
+    text: `Hi ${name},\n\nAfter reviewing your application${company ? ` from ${company}` : ""}, we're pleased to confirm that you have been selected for the A.D.A.M. Founding Client Program.\n\nPayment is now open. Your license will be activated by our team following business verification. Founding Client pricing is locked for the lifetime of your license.\n\nConfirm your place here: ${applyUrl}\n\nWarm regards,\nThe Andy'K Group International LTD Team\nceo@andykgroup.com`,
     html,
   });
 }

@@ -215,7 +215,7 @@ export default function ReviewPage({
               Are you sure you want to submit?
             </p>
             <p className="text-xs text-muted-2 mb-4">
-              Once submitted, your answers will be sent for processing.
+              Once submitted, your application will be reviewed by Andy&rsquo;K Group International LTD.
             </p>
             <div className="flex items-center justify-center gap-3">
               <Button

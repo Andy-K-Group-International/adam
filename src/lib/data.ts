@@ -24,10 +24,10 @@ export const heroData = {
 };
 
 export const statsData = [
-  { value: "12+", label: "Countries served", flag: "🌍" },
-  { value: "200+", label: "Clients onboarded", flag: "🤝" },
-  { value: "98%", label: "Client satisfaction", flag: "⭐" },
-  { value: "24h", label: "Average response time", flag: "⚡" },
+  { value: "20", label: "Founding client slots", flag: "🎯" },
+  { value: "48h", label: "Application review", flag: "⚡" },
+  { value: "EU", label: "Data stored in EU", flag: "🔒" },
+  { value: "24h", label: "Priority support", flag: "🤝" },
 ];
 
 export const roadmapSteps = [
@@ -270,20 +270,20 @@ export const integrationFeatures = [
       "Pipeline management",
       "Document verification",
     ],
+    comingSoon: false,
   },
   {
     name: "E.V.E.",
-    tagline: "Efficient Virtual Executor",
+    tagline: "Intelligence System",
     description:
-      "The automation layer that executes. E.V.E. handles emails, generates proposals, triggers notifications, and keeps everything moving.",
+      "Market and competitive intelligence, automated. E.V.E. monitors competitors, tracks regulatory changes, surfaces opportunities, and delivers actionable intelligence to your team.",
     features: [
-      "Automated proposal generation",
-      "Automated email sequences",
-      "Smart notifications",
-      "Task orchestration",
-      "Coming soon",
+      "Competitor & market monitoring",
+      "Regulatory & B2G intelligence",
+      "Automated intelligence reports",
+      "Custom dashboards & alerts",
+      "Now accepting applications",
     ],
-    comingSoon: true,
   },
 ];
 

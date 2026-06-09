@@ -25,7 +25,7 @@ async function sendEmail({
     return null;
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch("https://api.eu.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,

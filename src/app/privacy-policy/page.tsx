@@ -66,6 +66,7 @@ export default function PrivacyPolicyPage() {
               <li>Invoice and payment information (amounts, payment terms, billing contact)</li>
               <li>Account credentials (email address, hashed password — managed via Supabase Auth)</li>
               <li>Activity data (login events, document views, submission timestamps)</li>
+              <li>KYC verification documents (company registry extract, director identity document, power of attorney where applicable, company registration number, VAT number, country of incorporation)</li>
             </ul>
           </section>
 
@@ -101,7 +102,16 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-foreground">Supabase (EU-West-1, Ireland):</strong> database storage, authentication, and file storage. All data is stored within the European Economic Area.
               </li>
               <li>
-                <strong className="text-foreground">Resend:</strong> transactional email delivery (notifications, contract links, invoice emails).
+                <strong className="text-foreground">Resend:</strong> transactional email delivery (notifications, contract links, invoice emails). Email processing may occur within the EEA via Resend&apos;s EU infrastructure.
+              </li>
+              <li>
+                <strong className="text-foreground">Revolut Business:</strong> payment processing and subscription billing. Revolut acts as a data controller for payment card data; we do not store card details. Subject to Revolut&apos;s own privacy policy.
+              </li>
+              <li>
+                <strong className="text-foreground">Anthropic (Claude AI):</strong> AI-powered evaluation and document generation features. Questionnaire content and client data may be sent to Anthropic&apos;s API for processing. Data is not retained for AI model training under our agreement with Anthropic.
+              </li>
+              <li>
+                <strong className="text-foreground">Vercel:</strong> application hosting and infrastructure. HTTP request metadata (IP address, request headers) is processed by Vercel to serve the platform. Vercel does not access application data stored in Supabase.
               </li>
             </ul>
             <p className="mt-2">

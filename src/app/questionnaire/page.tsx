@@ -735,7 +735,11 @@ export default function QuestionnairePage() {
               </span>
             </button>
             <p className="text-xs text-muted-2 text-center mt-3">
-              All applications are reviewed manually. We do not share your information.
+              By submitting this form you agree to our{" "}
+              <a href="/privacy-policy" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                Privacy Policy
+              </a>
+              . Your data is processed by Andy&rsquo;K Group International LTD under UK GDPR solely to review your application.
             </p>
           </div>
         </form>

@@ -51,11 +51,29 @@ export const metadata: Metadata = {
     siteName: "A.D.A.M. by Andy'K Group International LTD",
     title: TITLE,
     description: DESCRIPTION,
+    images: [
+      {
+        url: "/ADAM.png",
+        width: 1080,
+        height: 1080,
+        alt: "A.D.A.M. — Lifecycle Implementation System",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ["/ADAM.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   alternates: {
     canonical: CANONICAL,

@@ -65,6 +65,7 @@ export default function RequestDemoPage() {
   const [globalError, setGlobalError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [freeEmailWarning, setFreeEmailWarning] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [docName, setDocName] = useState("");
 
@@ -73,6 +74,7 @@ export default function RequestDemoPage() {
   function set(field: keyof DemoRequestFormData, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: undefined }));
+    if (field === "email") setFreeEmailWarning(false);
   }
 
   function validate(): boolean {
@@ -80,7 +82,10 @@ export default function RequestDemoPage() {
     if (!form.full_name.trim())    e.full_name    = "Required";
     if (!form.email.trim())        e.email        = "Required";
     else if (!form.email.includes("@")) e.email   = "Enter a valid email";
-    else if (!isBusinessEmail(form.email)) e.email = "Please use your business email";
+    // Soft-flag only — free email does not block submission
+    if (form.email.includes("@") && !isBusinessEmail(form.email)) {
+      setFreeEmailWarning(true);
+    }
     if (!form.company.trim())      e.company      = "Required";
     if (!form.website.trim())      e.website      = "Required";
     if (!form.role.trim())         e.role         = "Required";
@@ -196,6 +201,9 @@ export default function RequestDemoPage() {
                   className={`${inputCls} ${errors.email ? errorInputCls : ""}`}
                 />
                 {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
+                {!errors.email && freeEmailWarning && (
+                  <p className="text-xs text-warning mt-1">We recommend using your business email for faster processing.</p>
+                )}
               </div>
               <div>
                 <Label required>Role / Position</Label>

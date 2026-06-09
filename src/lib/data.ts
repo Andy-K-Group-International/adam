@@ -296,7 +296,7 @@ export const footerLinks = {
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms of Service", href: "/terms-and-conditions" },
+    { label: "Terms & Conditions", href: "/terms-and-conditions" },
     { label: "Cookie Policy", href: "/cookies-policy" },
     { label: "Service Definition", href: "/service-definition" },
     { label: "Company Information", href: "/company-information" },

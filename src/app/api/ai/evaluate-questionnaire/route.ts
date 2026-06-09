@@ -47,7 +47,7 @@ function buildQuestionnaireText(q: Record<string, unknown>): string {
   return lines.join("\n");
 }
 
-const DEFAULT_SYSTEM_PROMPT = `You are a senior business development analyst at Andy K Group International.
+const DEFAULT_SYSTEM_PROMPT = `You are a senior business development analyst at Andy'K Group International LTD.
 Your role is to evaluate client questionnaire responses and assess whether we should proceed with a proposal,
 flag the lead for further qualification, or reject it outright.
 

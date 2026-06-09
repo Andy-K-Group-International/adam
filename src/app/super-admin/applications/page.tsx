@@ -1,14 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { listLeads, updateLead } from "@/lib/supabase/queries/leads";
+import { convertLeadToClientAction } from "@/app/actions/leads";
 import type { Lead, LeadStatus } from "@/lib/supabase/types";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import Link from "next/link";
-import { Send, ExternalLink } from "lucide-react";
+import { Send, ExternalLink, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
+
+const INTEREST_CONFIG: Record<string, { label: string; style: React.CSSProperties }> = {
+  adam:       { label: "A.D.A.M.",    style: { background: "rgba(13,148,136,0.1)",  color: "#0d9488",  border: "1px solid rgba(13,148,136,0.25)"  } },
+  eve:        { label: "E.V.E.",      style: { background: "rgba(138,137,220,0.1)", color: "#8A89DC",  border: "1px solid rgba(138,137,220,0.25)"  } },
+  end_to_end: { label: "End-to-End",  style: { background: "rgba(59,130,246,0.1)",  color: "#3b82f6",  border: "1px solid rgba(59,130,246,0.25)"   } },
+  b2g:        { label: "B2G",         style: { background: "rgba(249,115,22,0.1)",  color: "#f97316",  border: "1px solid rgba(249,115,22,0.25)"   } },
+  not_sure:   { label: "Not sure",    style: { background: "rgba(0,0,0,0.05)",       color: "#8b93a8",  border: "1px solid rgba(0,0,0,0.1)"         } },
+};
+
+function InterestBadge({ value }: { value: string | null }) {
+  if (!value) return <span className="text-xs text-muted-2">—</span>;
+  const cfg = INTEREST_CONFIG[value] ?? INTEREST_CONFIG.not_sure;
+  return (
+    <span className="inline-flex text-xs font-semibold px-2 py-0.5 rounded" style={cfg.style}>
+      {cfg.label}
+    </span>
+  );
+}
 
 const STATUS_LABEL: Record<LeadStatus, string> = {
   new:       "New",
@@ -38,10 +58,14 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
 ];
 
 export default function SuperAdminApplicationsPage() {
+  const router = useRouter();
   const [leads, setLeads] = useState<Lead[] | undefined>(undefined);
   const [filter, setFilter] = useState<StatusFilter>("");
   const [sending, setSending] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, string>>({});
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+  const [convertRole, setConvertRole] = useState<Record<string, "client" | "company_admin">>({});
+  const [converting, setConverting] = useState<string | null>(null);;
 
   useEffect(() => {
     const supabase = createClient();
@@ -90,6 +114,19 @@ export default function SuperAdminApplicationsPage() {
     setSending(null);
   };
 
+  const handleConvert = async (leadId: string) => {
+    setConverting(leadId);
+    const role = convertRole[leadId] ?? "client";
+    const result = await convertLeadToClientAction(leadId, role);
+    setConverting(null);
+    if (result.error) {
+      setResults((prev) => ({ ...prev, [leadId]: result.error! }));
+      return;
+    }
+    setConvertingId(null);
+    if (result.clientId) router.push(`/admin/clients/${result.clientId}`);
+  };
+
   if (leads === undefined) return <LoadingSpinner className="min-h-[60vh]" />;
 
   const filtered = filter ? leads.filter((l) => l.status === filter) : leads;
@@ -135,6 +172,7 @@ export default function SuperAdminApplicationsPage() {
               <thead>
                 <tr className="border-b border-grid-300 bg-grid-100">
                   <th className="px-4 py-3 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Company / Contact</th>
+                  <th className="px-4 py-3 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Interest</th>
                   <th className="px-4 py-3 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Email</th>
                   <th className="px-4 py-3 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Submitted</th>
                   <th className="px-4 py-3 text-left text-xs font-mono text-muted-2 uppercase tracking-wider">Status</th>
@@ -150,6 +188,9 @@ export default function SuperAdminApplicationsPage() {
                       <td className="px-4 py-3">
                         <p className="font-medium text-foreground">{lead.company || "—"}</p>
                         <p className="text-xs text-muted-2">{lead.name}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <InterestBadge value={lead.service_interest} />
                       </td>
                       <td className="px-4 py-3">
                         <a
@@ -215,6 +256,42 @@ export default function SuperAdminApplicationsPage() {
                               <Send className="h-3 w-3" />
                               {isSending ? "Sending…" : "Send Invite"}
                             </button>
+                          )}
+                          {/* Convert to Client */}
+                          {lead.status === "qualified" && (
+                            convertingId === lead.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <select
+                                  value={convertRole[lead.id] ?? "client"}
+                                  onChange={(e) => setConvertRole((prev) => ({ ...prev, [lead.id]: e.target.value as "client" | "company_admin" }))}
+                                  className="h-7 px-2 text-xs border border-grid-300 rounded bg-white text-foreground focus:outline-none"
+                                >
+                                  <option value="company_admin">License Client (company_admin)</option>
+                                  <option value="client">Service Client (client)</option>
+                                </select>
+                                <button
+                                  onClick={() => handleConvert(lead.id)}
+                                  disabled={converting === lead.id}
+                                  className="text-xs px-2 py-1 bg-highlight text-white rounded hover:bg-highlight/90 disabled:opacity-50 transition-colors font-medium"
+                                >
+                                  {converting === lead.id ? "…" : "Confirm"}
+                                </button>
+                                <button
+                                  onClick={() => setConvertingId(null)}
+                                  className="text-xs text-muted-2 hover:text-foreground transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConvertingId(lead.id)}
+                                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 border border-highlight/30 text-highlight hover:bg-highlight/5 transition-colors rounded font-medium"
+                              >
+                                <UserPlus className="h-3 w-3" />
+                                Convert
+                              </button>
+                            )
                           )}
                           <Link
                             href={`/admin/leads/${lead.id}`}

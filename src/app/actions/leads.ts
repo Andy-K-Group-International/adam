@@ -1,7 +1,7 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendLeadRejection, sendQuestionnaireInvite } from "./email";
+import { sendLeadRejection, sendQuestionnaireInvite, sendWelcomeEmail } from "./email";
 
 // ─── Demo request: Approve for NDA ───────────────────────────────────────────
 
@@ -139,6 +139,117 @@ export async function rejectLead(leadId: string, reason: string): Promise<void> 
     email: lead.email,
     reason: reason.trim() || undefined,
   });
+}
+
+// ─── Convert lead directly to client + auth user ─────────────────────────────
+
+function generateTempPassword(length = 12): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let pass = "";
+  for (let i = 0; i < length; i++) {
+    pass += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return pass;
+}
+
+export async function convertLeadToClientAction(
+  leadId: string,
+  role: "client" | "company_admin" = "client"
+): Promise<{ clientId?: string; error?: string }> {
+  const supabase = createAdminClient();
+
+  const { data: lead, error: leadErr } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("id", leadId)
+    .single();
+
+  if (leadErr || !lead) return { error: "Lead not found" };
+
+  const year = new Date().getFullYear();
+  const { count } = await supabase
+    .from("clients")
+    .select("*", { count: "exact", head: true });
+  const seq = String((count ?? 0) + 1).padStart(4, "0");
+  const clientRef = `AK-${year}-${seq}`;
+
+  const { data: client, error: clientErr } = await supabase
+    .from("clients")
+    .insert({
+      client_ref: clientRef,
+      company_name: lead.company || lead.name,
+      contact_name: lead.name,
+      contact_email: lead.email,
+      contact_phone: lead.phone ?? null,
+      stage: "questionnaire",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+
+  if (clientErr || !client) {
+    return { error: clientErr?.message ?? "Failed to create client" };
+  }
+
+  await supabase
+    .from("leads")
+    .update({
+      status: "converted",
+      converted_to_client_id: client.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", leadId);
+
+  const tempPassword = generateTempPassword();
+  const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+    email: lead.email,
+    password: tempPassword,
+    email_confirm: true,
+  });
+
+  if (authErr || !authData.user) {
+    console.error("Auth user creation failed:", authErr?.message);
+    return { clientId: client.id };
+  }
+
+  const nameParts = (lead.name ?? "").trim().split(/\s+/);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ") || firstName;
+
+  await supabase.from("users").insert({
+    auth_id: authData.user.id,
+    email: lead.email,
+    first_name: firstName,
+    last_name: lastName,
+    image_url: null,
+    role,
+    client_id: client.id,
+    account_status: "pending",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  if (role === "company_admin") {
+    await supabase
+      .from("clients")
+      .update({ assigned_to: authData.user.id, updated_at: new Date().toISOString() })
+      .eq("id", client.id);
+  }
+
+  try {
+    await sendWelcomeEmail({
+      clientEmail: lead.email,
+      clientName: firstName || lead.name,
+      companyName: lead.company || lead.name,
+      clientRef,
+      tempPassword,
+    });
+  } catch (emailErr) {
+    console.error("Welcome email failed:", emailErr);
+  }
+
+  return { clientId: client.id };
 }
 
 export async function approveLeadWithToken(leadId: string): Promise<void> {

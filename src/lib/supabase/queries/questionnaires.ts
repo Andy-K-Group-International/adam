@@ -3,8 +3,10 @@ import type { Questionnaire } from '@/lib/supabase/types';
 
 export async function listQuestionnaires(
   supabase: SupabaseClient,
-  options: { status?: string } = {}
+  options: { status?: string; questionnaireIds?: string[] } = {}
 ): Promise<Questionnaire[]> {
+  if (options.questionnaireIds && options.questionnaireIds.length === 0) return [];
+
   let query = supabase
     .from('questionnaires')
     .select('*')
@@ -12,6 +14,10 @@ export async function listQuestionnaires(
 
   if (options.status) {
     query = query.eq('status', options.status);
+  }
+
+  if (options.questionnaireIds && options.questionnaireIds.length > 0) {
+    query = query.in('id', options.questionnaireIds);
   }
 
   const { data, error } = await query;

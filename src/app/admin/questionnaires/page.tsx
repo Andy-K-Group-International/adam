@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { listQuestionnaires } from "@/lib/supabase/queries/questionnaires";
-import { convertFromQuestionnaire } from "@/lib/supabase/queries/clients";
+import { listClients, convertFromQuestionnaire } from "@/lib/supabase/queries/clients";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import type { Questionnaire } from "@/lib/supabase/types";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -52,13 +53,29 @@ export default function QuestionnairesPage() {
   const router = useRouter();
   const [convertingId, setConvertingId] = useState<string | null>(null);
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
 
   useEffect(() => {
+    if (userLoading) return;
+
     const supabase = createClient();
-    listQuestionnaires(supabase)
-      .then(setQuestionnaires)
-      .catch(() => setQuestionnaires([]));
-  }, []);
+
+    async function fetchQuestionnaires() {
+      if (isCompanyAdmin) {
+        const clients = await listClients(supabase, { userId: user?.auth_id });
+        const questionnaireIds = clients
+          .map((c) => c.questionnaire_id)
+          .filter((id): id is string => !!id);
+        const data = await listQuestionnaires(supabase, { questionnaireIds });
+        setQuestionnaires(data);
+      } else {
+        const data = await listQuestionnaires(supabase);
+        setQuestionnaires(data);
+      }
+    }
+
+    fetchQuestionnaires().catch(() => setQuestionnaires([]));
+  }, [userLoading, isCompanyAdmin, user?.auth_id]);
 
   if (questionnaires === undefined) {
     return <LoadingSpinner className="min-h-[60vh]" />;

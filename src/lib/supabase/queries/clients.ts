@@ -12,7 +12,7 @@ async function generateClientRef(supabase: SupabaseClient): Promise<string> {
 
 export async function listClients(
   supabase: SupabaseClient,
-  options: { stage?: string; search?: string; showArchived?: boolean } = {}
+  options: { stage?: string; search?: string; showArchived?: boolean; userId?: string } = {}
 ): Promise<(Client & { primary_contact: { name: string; email: string } | null })[]> {
   let query = supabase
     .from('clients')
@@ -29,6 +29,10 @@ export async function listClients(
 
   if (options.search) {
     query = query.textSearch('company_name', options.search);
+  }
+
+  if (options.userId) {
+    query = query.eq('assigned_to', options.userId);
   }
 
   const { data, error } = await query;

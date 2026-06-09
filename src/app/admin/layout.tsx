@@ -21,7 +21,7 @@ export default async function AdminLayout({
     .eq("auth_id", user.id)
     .single();
 
-  if (!profile || !['admin', 'staff'].includes(profile.role)) {
+  if (!profile || !['admin', 'staff', 'company_admin'].includes(profile.role)) {
     redirect("/sign-in");
   }
 

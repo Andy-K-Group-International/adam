@@ -136,6 +136,11 @@ export default function ClientDetailPage() {
   const [isConfirmingKickoff, setIsConfirmingKickoff] = useState(false);
   const [kickoffMsg, setKickoffMsg] = useState("");
 
+  // Email sender override
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [isSavingSender, setIsSavingSender] = useState(false);
+
   const handleFounderNotesChange = (value: string) => {
     setFounderNotes(value);
     if (founderSaveTimer.current) clearTimeout(founderSaveTimer.current);
@@ -156,6 +161,20 @@ export default function ClientDetailPage() {
         setFounderNotesSaving(false);
       }
     }, 2000);
+  };
+
+  const handleSaveSender = async () => {
+    setIsSavingSender(true);
+    try {
+      const supabase = createClient();
+      await updateClient(supabase, clientId, {
+        sender_name: senderName.trim() || null,
+        sender_email: senderEmail.trim() || null,
+      });
+      setClient((prev) => prev ? { ...prev, sender_name: senderName.trim() || null, sender_email: senderEmail.trim() || null } : prev);
+    } catch { /* silent */ } finally {
+      setIsSavingSender(false);
+    }
   };
 
   const recalculateHealthScore = async () => {
@@ -203,6 +222,8 @@ export default function ClientDetailPage() {
         setKickoffDate(clientData.kickoff_date ? clientData.kickoff_date.slice(0, 16) : "");
         setKickoffNotes(clientData.kickoff_notes ?? "");
         setChecklist(clientData.kickoff_checklist ?? []);
+        setSenderName(clientData.sender_name ?? "");
+        setSenderEmail(clientData.sender_email ?? "");
 
         listStrategyVersions(supabase, clientId).then(setStrategyVersions).catch(() => {});
 
@@ -658,6 +679,45 @@ export default function ClientDetailPage() {
                   <p className="text-sm text-foreground whitespace-pre-wrap">{client.notes}</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "overview" && (
+        <div className="mt-6 max-w-xl">
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Email Sender Override</h3>
+            <p className="text-xs text-muted-2 mb-4">Used for outbound emails to this company's clients. Leave empty to use Andy'K Group defaults.</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-muted-2 mb-1">Company Sender Name</label>
+                <input
+                  type="text"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  className="w-full h-9 rounded-lg border border-grid-500 bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-2 mb-1">Company Sender Email</label>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  placeholder="e.g. hello@acme.com"
+                  className="w-full h-9 rounded-lg border border-grid-500 bg-white px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/30 focus:border-highlight transition-colors"
+                />
+              </div>
+              <button
+                onClick={handleSaveSender}
+                disabled={isSavingSender}
+                className="relative inline-flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium text-foreground btn-primary-gradient disabled:opacity-50"
+              >
+                <Save className="h-3.5 w-3.5" />
+                {isSavingSender ? "Saving…" : "Save"}
+              </button>
             </div>
           </div>
         </div>

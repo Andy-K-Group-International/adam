@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContextualHelp from "@/components/ui/ContextualHelp";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 function statusStyle(status: InvoiceStatus): string {
   switch (status) {
@@ -50,23 +51,27 @@ export default function AdminInvoicesPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (userLoading) return;
     const supabase = createClient();
+    const userId = isCompanyAdmin ? (user?.auth_id ?? undefined) : undefined;
     try {
       const [invData, clientData] = await Promise.all([
         listAllInvoices(supabase, {
           ...(statusFilter ? { status: statusFilter } : {}),
           ...(clientFilter ? { clientId: clientFilter } : {}),
+          userId,
         }),
-        listClients(supabase),
+        listClients(supabase, { userId }),
       ]);
       setInvoices(invData);
       setClients(clientData);
     } catch {
       setInvoices([]);
     }
-  }, [statusFilter, clientFilter]);
+  }, [statusFilter, clientFilter, userLoading, isCompanyAdmin, user?.auth_id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

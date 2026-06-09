@@ -24,7 +24,7 @@ export async function generateProposalRef(
 
 export async function listProposals(
   supabase: SupabaseClient,
-  options: { status?: string; clientId?: string; questionnaireId?: string } = {}
+  options: { status?: string; clientId?: string; questionnaireId?: string; userId?: string } = {}
 ): Promise<Proposal[]> {
   let query = supabase
     .from('proposals')
@@ -41,6 +41,16 @@ export async function listProposals(
 
   if (options.questionnaireId) {
     query = query.eq('questionnaire_id', options.questionnaireId);
+  }
+
+  if (options.userId) {
+    const { data: clientRows } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('assigned_to', options.userId);
+    const clientIds = (clientRows ?? []).map((r: any) => r.id);
+    if (clientIds.length === 0) return [];
+    query = query.in('client_id', clientIds);
   }
 
   const { data, error } = await query;

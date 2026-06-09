@@ -12,6 +12,7 @@ import ReadinessScoreBadge from "@/components/admin/ReadinessScoreBadge";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const KYC_BADGE: Record<KycStatus, { label: string; cls: string }> = {
   pending:  { label: "KYC Pending",  cls: "bg-warning/10 text-warning" },
@@ -44,13 +45,17 @@ export default function ClientsPage() {
   type ClientWithPrimary = Client & { primary_contact: { name: string; email: string } | null };
   const [clients, setClients] = useState<ClientWithPrimary[] | undefined>(undefined);
   const [kycMap, setKycMap] = useState<Record<string, KycStatus>>({});
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
 
   const fetchClients = useCallback(async () => {
+    if (userLoading) return;
     const supabase = createClient();
+    const userId = isCompanyAdmin ? (user?.auth_id ?? undefined) : undefined;
     try {
       const data = await listClients(supabase, {
         ...(search.trim().length > 0 ? { search: search.trim() } : {}),
         showArchived,
+        userId,
       });
       setClients(data);
       if (data.length > 0) {
@@ -62,7 +67,7 @@ export default function ClientsPage() {
     } catch {
       setClients([]);
     }
-  }, [search, showArchived]);
+  }, [search, showArchived, userLoading, isCompanyAdmin, user?.auth_id]);
 
   useEffect(() => {
     fetchClients();

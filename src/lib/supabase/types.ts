@@ -1,7 +1,7 @@
 // Database types for Supabase — generated from migration schema
 // These types mirror the PostgreSQL tables created in supabase_migration.sql
 
-export type UserRole = "admin" | "staff" | "client";
+export type UserRole = "admin" | "staff" | "client" | "company_admin";
 export type AccountStatus = "pending" | "active";
 
 export type ClientStage =
@@ -267,6 +267,8 @@ export interface Client {
   terms_accepted_at: string | null;
   payment_provider: string | null;
   revolut_order_id: string | null;
+  sender_name: string | null;
+  sender_email: string | null;
   created_at: string;
   updated_at: string;
 }

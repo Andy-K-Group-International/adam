@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import StatusBadge from "@/components/contracts/StatusBadge";
 import ContextualHelp from "@/components/ui/ContextualHelp";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 function contractTypeStyle(type: ContractType | undefined): string {
   switch (type) {
@@ -50,23 +51,26 @@ export default function ContractsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [contracts, setContracts] = useState<Contract[] | undefined>(undefined);
   const [clients, setClients] = useState<Client[]>([]);
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (userLoading) return;
     const supabase = createClient();
+    const userId = isCompanyAdmin ? (user?.auth_id ?? undefined) : undefined;
     try {
       const [contractsData, clientsData] = await Promise.all([
         listAllContracts(
           supabase,
-          statusFilter ? { status: statusFilter } : {}
+          statusFilter ? { status: statusFilter, userId } : { userId }
         ),
-        listClients(supabase),
+        listClients(supabase, { userId }),
       ]);
       setContracts(contractsData);
       setClients(clientsData);
     } catch {
       setContracts([]);
     }
-  }, [statusFilter]);
+  }, [statusFilter, userLoading, isCompanyAdmin, user?.auth_id]);
 
   useEffect(() => {
     fetchData();

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ContextualHelp from "@/components/ui/ContextualHelp";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type StatusFilter = "" | ProposalStatus;
 
@@ -42,20 +43,23 @@ export default function ProposalsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [proposals, setProposals] = useState<Proposal[] | undefined>(undefined);
   const [clients, setClients] = useState<Client[]>([]);
+  const { user, isCompanyAdmin, isLoading: userLoading } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (userLoading) return;
     const supabase = createClient();
+    const userId = isCompanyAdmin ? (user?.auth_id ?? undefined) : undefined;
     try {
       const [proposalsData, clientsData] = await Promise.all([
-        listProposals(supabase, statusFilter ? { status: statusFilter } : {}),
-        listClients(supabase),
+        listProposals(supabase, statusFilter ? { status: statusFilter, userId } : { userId }),
+        listClients(supabase, { userId }),
       ]);
       setProposals(proposalsData);
       setClients(clientsData);
     } catch {
       setProposals([]);
     }
-  }, [statusFilter]);
+  }, [statusFilter, userLoading, isCompanyAdmin, user?.auth_id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

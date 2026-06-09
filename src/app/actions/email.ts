@@ -5,12 +5,16 @@
 async function sendEmail({
   to,
   from = "info@andykgroup.com",
+  fromName = "Andy'K Group International LTD",
+  replyTo,
   subject,
   text,
   html,
 }: {
   to: string;
   from?: string;
+  fromName?: string;
+  replyTo?: string;
   subject: string;
   text: string;
   html?: string;
@@ -28,10 +32,11 @@ async function sendEmail({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `Andy'K Group International LTD <${from}>`,
+      from: `${fromName} <${from}>`,
       to: [to],
       subject,
       text,
+      ...(replyTo ? { reply_to: replyTo } : {}),
       ...(html ? { html } : {}),
     }),
   });
@@ -114,11 +119,15 @@ export async function sendContractPublished({
   clientName,
   contractTitle,
   contractId,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
   contractTitle: string;
   contractId: string;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/contracts`;
   const html = emailHtml(undefined, `
@@ -138,6 +147,8 @@ export async function sendContractPublished({
   `);
   return await sendEmail({
     to: clientEmail,
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { from: senderEmail, replyTo: senderEmail } : {}),
     subject: `New Contract Available: ${contractTitle}`,
     text: `Hi ${clientName},\n\nA new contract "${contractTitle}" has been published for your review.\n\nLog in to your portal to view and take action: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
@@ -219,11 +230,15 @@ export async function sendContractFinalized({
   clientName,
   contractTitle,
   contractId,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
   contractTitle: string;
   contractId: string;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/contracts`;
   const html = emailHtml(undefined, `
@@ -239,6 +254,8 @@ export async function sendContractFinalized({
   `);
   return await sendEmail({
     to: clientEmail,
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { from: senderEmail, replyTo: senderEmail } : {}),
     subject: `Contract Finalized: ${contractTitle}`,
     text: `Hi ${clientName},\n\nGreat news! "${contractTitle}" has been fully executed and is now finalized.\n\nView it in your portal: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
@@ -343,6 +360,8 @@ export async function sendProposalPublished({
   proposalRef,
   proposalId,
   validUntil,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
@@ -350,6 +369,8 @@ export async function sendProposalPublished({
   proposalRef: string | null;
   proposalId: string;
   validUntil: string | null;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/proposals/${proposalId}`;
   const validStr = validUntil
@@ -373,6 +394,8 @@ export async function sendProposalPublished({
   `);
   return await sendEmail({
     to: clientEmail,
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { from: senderEmail, replyTo: senderEmail } : {}),
     subject: `Your Proposal is Ready: ${proposalTitle}`,
     text: `Hi ${clientName},\n\nYour proposal "${proposalTitle}" is ready for review.${validStr ? `\nValid until: ${validStr}` : ""}\n\nLog in to read and respond: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
@@ -486,11 +509,15 @@ export async function sendProposalSent({
   clientName,
   proposalTitle,
   proposalId,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
   proposalTitle: string;
   proposalId: string;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/proposals/${proposalId}`;
   const html = emailHtml(undefined, `
@@ -510,6 +537,8 @@ export async function sendProposalSent({
   `);
   return await sendEmail({
     to: clientEmail,
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { from: senderEmail, replyTo: senderEmail } : {}),
     subject: `Proposal Ready for Review: ${proposalTitle}`,
     text: `Hi ${clientName},\n\nA proposal "${proposalTitle}" is ready for your review.\n\nLog in to read and respond: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
@@ -826,6 +855,8 @@ export async function sendInvoiceSent({
   totalAmount,
   currency,
   dueDate,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
@@ -835,6 +866,8 @@ export async function sendInvoiceSent({
   totalAmount: number;
   currency: string;
   dueDate: string | null;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/invoices/${invoiceId}`;
   const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(totalAmount);
@@ -869,7 +902,9 @@ export async function sendInvoiceSent({
 
   return await sendEmail({
     to: clientEmail,
-    from: "info@andykgroup.com",
+    from: senderEmail || "info@andykgroup.com",
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { replyTo: senderEmail } : {}),
     subject: `Invoice ${invoiceNumber} — ${formattedAmount}${formattedDue ? ` due ${formattedDue}` : ""}`,
     text: `Hi ${clientName},\n\nInvoice ${invoiceNumber} for ${formattedAmount} has been issued for ${companyName}.${formattedDue ? `\nDue: ${formattedDue}` : ""}\n\nView your invoice: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,
@@ -884,6 +919,8 @@ export async function sendInvoiceOverdue({
   totalAmount,
   currency,
   dueDate,
+  senderName,
+  senderEmail,
 }: {
   clientEmail: string;
   clientName: string;
@@ -892,6 +929,8 @@ export async function sendInvoiceOverdue({
   totalAmount: number;
   currency: string;
   dueDate: string | null;
+  senderName?: string | null;
+  senderEmail?: string | null;
 }) {
   const url = `https://adam.andykgroup.com/dashboard/invoices/${invoiceId}`;
   const formattedAmount = new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(totalAmount);
@@ -926,7 +965,9 @@ export async function sendInvoiceOverdue({
 
   return await sendEmail({
     to: clientEmail,
-    from: "info@andykgroup.com",
+    from: senderEmail || "info@andykgroup.com",
+    ...(senderName ? { fromName: senderName } : {}),
+    ...(senderEmail ? { replyTo: senderEmail } : {}),
     subject: `Overdue: Invoice ${invoiceNumber} — ${formattedAmount}`,
     text: `Hi ${clientName},\n\nInvoice ${invoiceNumber} for ${formattedAmount} is now overdue.${formattedDue ? `\nIt was due on ${formattedDue}.` : ""}\n\nView your invoice: ${url}\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
     html,

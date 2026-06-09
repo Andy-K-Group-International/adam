@@ -20,7 +20,7 @@ export async function listContractsForClient(
 
 export async function listAllContracts(
   supabase: SupabaseClient,
-  options: { status?: string } = {}
+  options: { status?: string; userId?: string } = {}
 ): Promise<Contract[]> {
   let query = supabase
     .from('contracts')
@@ -29,6 +29,16 @@ export async function listAllContracts(
 
   if (options.status) {
     query = query.eq('status', options.status);
+  }
+
+  if (options.userId) {
+    const { data: clientRows } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('assigned_to', options.userId);
+    const clientIds = (clientRows ?? []).map((r: any) => r.id);
+    if (clientIds.length === 0) return [];
+    query = query.in('client_id', clientIds);
   }
 
   const { data, error } = await query;

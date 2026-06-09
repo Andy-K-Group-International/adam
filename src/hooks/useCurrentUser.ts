@@ -13,6 +13,7 @@ interface CurrentUser {
   isAdmin: boolean;
   isStaff: boolean;
   isClient: boolean;
+  isCompanyAdmin: boolean;
   clientId: string | null;
 }
 
@@ -84,6 +85,7 @@ export function useCurrentUser(): CurrentUser {
     isAdmin: effectiveUser?.role === "admin",
     isStaff: effectiveUser?.role === "staff",
     isClient: effectiveUser?.role === "client",
+    isCompanyAdmin: effectiveUser?.role === "company_admin",
     clientId: effectiveUser?.client_id ?? null,
   };
 }

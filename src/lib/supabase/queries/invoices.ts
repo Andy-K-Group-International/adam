@@ -3,7 +3,7 @@ import type { Invoice } from "@/lib/supabase/types";
 
 export async function listAllInvoices(
   supabase: SupabaseClient,
-  options: { status?: string; clientId?: string } = {}
+  options: { status?: string; clientId?: string; userId?: string } = {}
 ): Promise<Invoice[]> {
   let query = supabase
     .from("invoices")
@@ -12,6 +12,16 @@ export async function listAllInvoices(
 
   if (options.status) query = query.eq("status", options.status);
   if (options.clientId) query = query.eq("client_id", options.clientId);
+
+  if (options.userId) {
+    const { data: clientRows } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("assigned_to", options.userId);
+    const clientIds = (clientRows ?? []).map((r: any) => r.id);
+    if (clientIds.length === 0) return [];
+    query = query.in("client_id", clientIds);
+  }
 
   const { data, error } = await query;
   if (error) throw new Error(`Failed to list invoices: ${error.message}`);

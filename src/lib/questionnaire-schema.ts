@@ -31,6 +31,7 @@ export interface Question {
 
 export interface QuestionSection {
   id: string;
+  section_id: string;
   title: string;
   subsections: { id: string; title: string }[];
 }

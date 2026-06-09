@@ -21,6 +21,7 @@ const SECTION_ORDER = [
   "b2b",
   "b2g",
   "adam",
+  "eve",
   "end-to-end",
   "proposal-readiness",
   "attachments",
@@ -182,6 +183,9 @@ export default function QuestionnaireFlow() {
     if (selectedSegments.includes("END_TO_END")) {
       segmentQuestions.push(...allQuestions.filter((q) => q.section === "end-to-end"));
     }
+    if (selectedSegments.includes("EVE")) {
+      segmentQuestions.push(...allQuestions.filter((q) => q.section === "eve"));
+    }
 
     const combined = [...base, ...segmentQuestions];
 
@@ -197,6 +201,7 @@ export default function QuestionnaireFlow() {
       if (sectionId === "b2b") return selectedSegments.includes("B2B");
       if (sectionId === "b2g") return selectedSegments.includes("B2G");
       if (sectionId === "adam") return selectedSegments.includes("ADAM");
+      if (sectionId === "eve") return selectedSegments.includes("EVE");
       if (sectionId === "end-to-end") return selectedSegments.includes("END_TO_END");
       return true;
     });
@@ -210,6 +215,7 @@ export default function QuestionnaireFlow() {
     b2b: "B2B",
     b2g: "B2G",
     adam: "A.D.A.M.",
+    eve: "E.V.E.",
     "end-to-end": "End-to-End",
     "proposal-readiness": "Proposal",
     attachments: "Uploads",
@@ -220,7 +226,7 @@ export default function QuestionnaireFlow() {
     const result: PageData[] = [];
 
     activeSections.forEach((sectionId) => {
-      const section = questionSections.find((s) => s.id === sectionId);
+      const section = questionSections.find((s) => s.section_id === sectionId);
       if (!section) return;
 
       const sectionQuestions = filteredQuestions.filter(

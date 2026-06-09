@@ -97,7 +97,7 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
       .maybeSingle();
 
     if (existingClient?.id) {
-      void supabase.from("clients").update({
+      await supabase.from("clients").update({
         plan_name: plan || null,
         billing_cycle: billing || null,
         subscription_status: "paid_pending_verification",
@@ -109,14 +109,35 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
         founding_client: !!foundingCode,
         founding_code_used: foundingCode,
       }).eq("id", existingClient.id);
+
+      await supabase.from("activity_log").insert({
+        type: "payment_completed",
+        client_id: existingClient.id,
+        metadata: {
+          plan,
+          billing,
+          company,
+          order_id: orderId,
+          source: "revolut_webhook",
+        },
+        created_at: now,
+      });
+    } else {
+      await supabase.from("activity_log").insert({
+        type: "payment_completed",
+        metadata: {
+          plan,
+          billing,
+          company,
+          email,
+          order_id: orderId,
+          note: "No matching client found for email",
+          source: "revolut_webhook",
+        },
+        created_at: now,
+      });
     }
   }
-
-  void supabase.from("activity_log").insert({
-    action: "payment_completed",
-    description: `Revolut payment received — ${plan} (${billing})${company ? ` — ${company}` : ""}${email ? ` — ${email}` : ""} — pending admin verification and activation`,
-    created_at: now,
-  });
 
   await sendAdminPaymentAlert({ company, plan, billing, email, orderId, foundingCode: foundingCode ?? undefined });
 }

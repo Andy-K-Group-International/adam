@@ -76,7 +76,10 @@
       "Bash(cp \"/Users/andrejkneisl/Desktop/BUSINES MUSIC/EVE.wav\" /Users/andrejkneisl/adam/public/audio/eve-theme.wav)",
       "Bash(mkdir -p /Users/andrejkneisl/andyk-landing/public/audio)",
       "Bash(cp /Users/andrejkneisl/adam/public/audio/andyk-theme.wav /Users/andrejkneisl/andyk-landing/public/audio/)",
-      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(sips -z 1200 1200 /Users/andrejkneisl/adam/public/ADAM.png --out /Users/andrejkneisl/adam/public/ADAM.png)",
+      "Bash(open *)"
     ]
   }
 }

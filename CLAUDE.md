@@ -152,6 +152,8 @@ src/
 
 ## Build & Deploy
 ```bash
-cd /root/adam && npm run build   # Build check
-# Deployment handled by Dokploy
+npm run build   # Build check
+vercel --prod   # Deploy to production
 ```
+Deployment is handled by **Vercel** (project: `adam`, team: `andrej-kneisls-projects`).
+Git pushes to `main` auto-deploy via Vercel Git integration. `.vercel/project.json` is present locally for CLI use.

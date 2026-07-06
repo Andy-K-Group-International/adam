@@ -91,13 +91,37 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
   const now = new Date().toISOString();
 
   if (email) {
+    // Primary lookup: clients.contact_email
     const { data: existingClient } = await supabase
       .from("clients")
       .select("id")
       .eq("contact_email", email)
       .maybeSingle();
 
-    if (existingClient?.id) {
+    let clientId: string | null = existingClient?.id ?? null;
+    let matchPath: "contact_email" | "contacts_fallback" | "no_match" =
+      clientId ? "contact_email" : "no_match";
+
+    // Fallback: contacts table (primary contact email → client_id)
+    if (!clientId) {
+      try {
+        const { data: contactRow } = await supabase
+          .from("contacts")
+          .select("client_id")
+          .eq("email", email)
+          .eq("is_primary", true)
+          .maybeSingle();
+        if (contactRow?.client_id) {
+          clientId = contactRow.client_id;
+          matchPath = "contacts_fallback";
+          console.log(`[revolut/webhook] contact_email miss — matched via contacts table for ${email}`);
+        }
+      } catch (err) {
+        console.error("[revolut/webhook] contacts fallback lookup failed", err);
+      }
+    }
+
+    if (clientId) {
       await supabase.from("clients").update({
         plan_name: plan || null,
         billing_cycle: billing || null,
@@ -109,10 +133,10 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
         terms_accepted_at: termsAcceptedAt,
         founding_client: !!foundingCode,
         founding_code_used: foundingCode,
-      }).eq("id", existingClient.id);
+      }).eq("id", clientId);
 
       await createAgreementSnapshot({
-        clientId: existingClient.id,
+        clientId,
         email,
         planName: plan || "",
         billingCycle: billing || "monthly",
@@ -129,12 +153,13 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
 
       await supabase.from("activity_log").insert({
         type: "payment_completed",
-        client_id: existingClient.id,
+        client_id: clientId,
         metadata: {
           plan,
           billing,
           company,
           order_id: orderId,
+          match_path: matchPath,
           source: "revolut_webhook",
         },
         created_at: now,
@@ -148,6 +173,7 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
           company,
           email,
           order_id: orderId,
+          match_path: "no_match",
           note: "No matching client found for email",
           source: "revolut_webhook",
         },

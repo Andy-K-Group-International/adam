@@ -284,6 +284,7 @@ export const integrationFeatures = [
       "Custom dashboards & alerts",
       "Now accepting applications",
     ],
+    comingSoon: false,
   },
 ];
 

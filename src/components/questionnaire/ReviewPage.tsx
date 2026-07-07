@@ -217,6 +217,10 @@ export default function ReviewPage({
             <p className="text-xs text-muted-2 mb-4">
               Once submitted, your application will be reviewed by Andy&rsquo;K Group International LTD.
             </p>
+            <p className="text-xs text-muted-2 mb-4">
+              By submitting, you confirm your answers are accurate and agree to our{" "}
+              <a href="/privacy-policy" className="underline underline-offset-2 hover:text-foreground transition-colors">Privacy Policy</a>.
+            </p>
             <div className="flex items-center justify-center gap-3">
               <Button
                 variant="secondary"

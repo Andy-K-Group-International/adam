@@ -207,6 +207,7 @@ export async function submitDraft(
       answers: data.answers,
       selected_segments: data.selectedSegments,
       status: 'submitted',
+      privacy_policy_agreed: true,
       updated_at: new Date().toISOString(),
     })
     .eq('id', draft.id)

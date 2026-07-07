@@ -608,11 +608,13 @@ export default function QuestionnairePage() {
               </span>
             </button>
             <p className="text-xs text-muted-2 text-center mt-3">
-              By submitting this form you agree to our{" "}
+              By submitting this questionnaire, you confirm that the information provided is accurate and may
+              be processed by Andy&rsquo;K Group International LTD for business verification, onboarding, service
+              preparation and A.D.A.M. implementation purposes, in line with our{" "}
               <a href="/privacy-policy" className="underline underline-offset-2 hover:text-foreground transition-colors">
                 Privacy Policy
               </a>
-              . Your data is processed by Andy&rsquo;K Group International LTD under UK GDPR solely to review your application.
+              .
             </p>
           </div>
         </form>

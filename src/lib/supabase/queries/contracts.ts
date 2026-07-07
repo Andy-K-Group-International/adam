@@ -88,9 +88,10 @@ export async function createContract(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_created',
     client_id: contract.client_id,
-    action: 'contract_created',
-    description: `Contract ${contract.title} was created`,
+    contract_id: contract.id,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 
@@ -174,10 +175,11 @@ export async function publishContract(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_published',
     client_id: contract.client_id,
-    action: 'contract_published',
-    description: `Contract ${contract.title} was published`,
-    user_id: userId,
+    contract_id: id,
+    actor_id: userId,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 
@@ -226,10 +228,11 @@ export async function markViewed(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_viewed',
     client_id: contract.client_id,
-    action: 'contract_viewed',
-    description: `Contract ${contract.title} was viewed by client`,
-    user_id: userId,
+    contract_id: id,
+    actor_id: userId,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 
@@ -275,10 +278,11 @@ export async function requestChanges(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_changes_requested',
     client_id: contract.client_id,
-    action: 'changes_requested',
-    description: `Changes requested on contract ${contract.title}`,
-    user_id: userId,
+    contract_id: id,
+    actor_id: userId,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 
@@ -314,10 +318,11 @@ export async function clientSign(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_client_signed',
     client_id: contract.client_id,
-    action: 'contract_client_signed',
-    description: `Contract ${contract.title} was signed by client`,
-    user_id: userId,
+    contract_id: id,
+    actor_id: userId,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 
@@ -420,10 +425,11 @@ export async function countersign(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'contract_countersigned',
     client_id: contract.client_id,
-    action: 'contract_countersigned',
-    description: `Contract ${contract.title} was countersigned and finalized`,
-    user_id: userId,
+    contract_id: id,
+    actor_id: userId,
+    metadata: { contract_title: contract.title },
     created_at: new Date().toISOString(),
   });
 

@@ -61,7 +61,7 @@ async function sendAdminPaymentAlert({
     "Admin panel: https://adam.andykgroup.com/admin/clients",
   ].filter(Boolean).join("\n");
 
-  await fetch("https://api.resend.com/emails", {
+  await fetch("https://api.eu.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,

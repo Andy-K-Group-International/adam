@@ -93,9 +93,9 @@ export async function createClient(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'client_created',
     client_id: client.id,
-    action: 'client_created',
-    description: `Client ${client.company_name} was created`,
+    metadata: { company_name: client.company_name },
     created_at: new Date().toISOString(),
   });
 
@@ -149,9 +149,9 @@ export async function updateClientStage(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'client_stage_changed',
     client_id: client.id,
-    action: 'stage_changed',
-    description: `Client stage changed to ${stage}`,
+    metadata: { stage },
     created_at: new Date().toISOString(),
   });
 
@@ -215,9 +215,9 @@ export async function convertFromQuestionnaire(
 
   // Log activity
   const { error: activityError } = await supabase.from('activity_log').insert({
+    type: 'client_created',
     client_id: client.id,
-    action: 'converted_from_questionnaire',
-    description: `Client created from questionnaire submission`,
+    metadata: { company_name: client.company_name, source: 'questionnaire_conversion', questionnaire_id: questionnaireId },
     created_at: new Date().toISOString(),
   });
 

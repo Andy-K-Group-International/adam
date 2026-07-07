@@ -65,9 +65,10 @@ export async function verifyAppendix(
 
   if (contract) {
     const { error: activityError } = await supabase.from('activity_log').insert({
+      type: 'appendix_verified',
       client_id: contract.client_id,
-      action: 'appendix_verified',
-      description: `Appendix ${slot} verified for contract ${contract.title}`,
+      contract_id: contractId,
+      metadata: { slot, contract_title: contract.title },
       created_at: new Date().toISOString(),
     });
 
@@ -108,9 +109,10 @@ export async function rejectAppendix(
 
   if (contract) {
     const { error: activityError } = await supabase.from('activity_log').insert({
+      type: 'appendix_rejected',
       client_id: contract.client_id,
-      action: 'appendix_rejected',
-      description: `Appendix ${slot} rejected for contract ${contract.title}: ${rejectionNote}`,
+      contract_id: contractId,
+      metadata: { slot, contract_title: contract.title, rejection_note: rejectionNote },
       created_at: new Date().toISOString(),
     });
 

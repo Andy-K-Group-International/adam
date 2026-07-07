@@ -91,7 +91,6 @@ export default function NewProposalPage() {
         addons: defaultInvestment(),
         status: "draft",
         sections: sections.map(({ locked: _locked, ...s }) => s),
-        ai_evaluation: null,
         admin_notes: adminNotes.trim() || null,
         client_comment: null,
         approved_by_admin_at: null,

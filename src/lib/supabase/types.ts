@@ -597,12 +597,6 @@ export interface Proposal {
   addons: ProposalInvestment | null;
   status: ProposalStatus;
   sections: { key: string; title: string; content: string; order: number; isVisible: boolean }[];
-  ai_evaluation: {
-    recommendation: string;
-    reasoning: string;
-    qualityScore: number;
-    evaluatedAt: string;
-  } | null;
   admin_notes: string | null;
   client_comment: string | null;
   approved_by_admin_at: string | null;

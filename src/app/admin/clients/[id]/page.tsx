@@ -387,7 +387,6 @@ export default function ClientDetailPage() {
         addons: defaultInvestment(),
         status: "draft" as const,
         sections: [{ key: "strategy", title: "Strategy Overview", content: strategyNotes.trim(), order: 0, isVisible: true }],
-        ai_evaluation: null,
         admin_notes: strategyType ? `Strategy type: ${strategyType}` : null,
         client_comment: null,
         approved_by_admin_at: null,

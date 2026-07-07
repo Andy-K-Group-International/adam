@@ -159,6 +159,9 @@ export default function CompaniesPage() {
   const isActivated = (c: CompanyRow) =>
     c.onboarding_status === "activated" || c.onboarding_status === "completed";
 
+  const canActivate = (c: CompanyRow) =>
+    c.onboarding_status === "pending";
+
   const canSubmit =
     modal !== null &&
     modal.confirmed &&
@@ -288,7 +291,7 @@ export default function CompaniesPage() {
                             </span>
                           )}
                         </span>
-                      ) : (
+                      ) : canActivate(company) ? (
                         <button
                           onClick={() => openModal(company)}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-highlight/10 text-highlight border border-highlight/30 hover:bg-highlight/20 transition-colors"
@@ -296,6 +299,8 @@ export default function CompaniesPage() {
                           <Zap className="h-3 w-3" />
                           Activate Company
                         </button>
+                      ) : (
+                        <span className="text-xs text-muted-2">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">

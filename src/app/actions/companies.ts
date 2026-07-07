@@ -83,7 +83,10 @@ export async function activateCompanyAction(
   });
 
   if (userErr) {
-    await supabase.auth.admin.deleteUser(authId).catch(() => {});
+    const { error: rollbackAuthErr } = await supabase.auth.admin.deleteUser(authId);
+    if (rollbackAuthErr) {
+      console.error("[activateCompanyAction] rollback failed: orphaned auth user", authId, rollbackAuthErr.message);
+    }
     return { error: `Failed to create user record: ${userErr.message}` };
   }
 
@@ -103,8 +106,14 @@ export async function activateCompanyAction(
     .eq("id", clientId);
 
   if (clientErr) {
-    try { await supabase.from("users").delete().eq("auth_id", authId); } catch {}
-    await supabase.auth.admin.deleteUser(authId).catch(() => {});
+    const { error: rollbackUserErr } = await supabase.from("users").delete().eq("auth_id", authId);
+    if (rollbackUserErr) {
+      console.error("[activateCompanyAction] rollback failed: orphaned users row", authId, rollbackUserErr.message);
+    }
+    const { error: rollbackAuthErr } = await supabase.auth.admin.deleteUser(authId);
+    if (rollbackAuthErr) {
+      console.error("[activateCompanyAction] rollback failed: orphaned auth user", authId, rollbackAuthErr.message);
+    }
     return { error: `Failed to update client record: ${clientErr.message}` };
   }
 

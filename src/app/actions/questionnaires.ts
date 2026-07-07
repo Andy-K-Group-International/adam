@@ -116,7 +116,11 @@ export async function convertToClientAction(
   if (role === "company_admin") {
     await supabase
       .from("clients")
-      .update({ assigned_to: authData.user.id, updated_at: new Date().toISOString() })
+      .update({
+        assigned_to: authData.user.id,
+        onboarding_status: "activated",
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", client.id);
   }
 

@@ -370,8 +370,13 @@ export default function RequestDemoPage() {
               {submitting ? "Submitting…" : "Submit Application"}
             </button>
             <p className="text-xs text-muted-2 leading-relaxed pt-1">
-              By submitting, you agree that your information will be reviewed by
-              Andy&#8217;K Group International LTD. Access is at our discretion.
+              By submitting this form, you confirm that the information provided is accurate and may
+              be processed by Andy&rsquo;K Group International LTD for review, demo access provisioning,
+              and business verification purposes, in line with our{" "}
+              <a href="/privacy-policy" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                Privacy Policy
+              </a>
+              .
             </p>
           </div>
         </form>

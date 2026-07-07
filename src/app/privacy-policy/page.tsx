@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-muted-2 font-mono">Registered Company Number: 16453500</p>
           <p className="text-sm text-muted-2 font-mono">86&ndash;90 Paul Street, London, EC2A 4NE, United Kingdom</p>
           <p className="text-sm text-muted-2 font-mono">Email: info@andykgroup.com</p>
-          <p className="text-sm text-muted-2 font-mono mt-2">Last updated: 25 May 2026</p>
+          <p className="text-sm text-muted-2 font-mono mt-2">Last updated: 7 July 2026</p>
         </div>
 
         <div className="border-t border-grid-300" />
@@ -133,9 +133,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-3">6. International Transfers</h2>
             <p>
-              Your data is stored on Supabase infrastructure in EU-West-1 (Ireland) and remains
-              within the EEA. Email delivery via Resend may involve processing outside the EEA;
-              in such cases, appropriate safeguards (Standard Contractual Clauses) are in place.
+              Your data is stored and processed within the European Economic Area (EEA).
             </p>
           </section>
 

@@ -61,7 +61,7 @@ async function sendEmail({
 }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) { console.error("RESEND_API_KEY not set"); return null; }
-  const res = await fetch("https://api.eu.resend.com/emails", {
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({

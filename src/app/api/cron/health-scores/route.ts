@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   if (atRisk.length > 0) {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (RESEND_API_KEY) {
-      await fetch("https://api.eu.resend.com/emails", {
+      await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,

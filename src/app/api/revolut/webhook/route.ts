@@ -68,7 +68,7 @@ async function sendAdminPaymentAlert({
     clientId ? "" : "Admin panel: https://adam.andykgroup.com/admin/clients",
   ].filter((line) => line !== null && line !== undefined).join("\n");
 
-  await fetch("https://api.eu.resend.com/emails", {
+  await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,

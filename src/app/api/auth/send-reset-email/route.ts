@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
   // Send via Resend
   const key = process.env.RESEND_API_KEY;
   if (key) {
-    const res = await fetch("https://api.eu.resend.com/emails", {
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({

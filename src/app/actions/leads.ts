@@ -63,7 +63,7 @@ export async function rejectDemoRequest(leadId: string, reason?: string): Promis
 async function sendEmail(to: string, subject: string, text: string, html: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
-  await fetch("https://api.eu.resend.com/emails", {
+  await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: "Andy'K Group International LTD <info@andykgroup.com>", to: [to], subject, text, html }),

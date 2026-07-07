@@ -216,7 +216,7 @@ export async function saveMarketAnalysisAction(
 async function resendEmail({ to, subject, text, html }: { to: string; subject: string; text: string; html?: string }) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
-  await fetch("https://api.eu.resend.com/emails", {
+  await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({

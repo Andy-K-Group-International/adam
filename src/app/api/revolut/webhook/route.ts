@@ -34,6 +34,7 @@ async function sendAdminPaymentAlert({
   email,
   orderId,
   foundingCode,
+  clientId,
 }: {
   company: string | null;
   plan: string;
@@ -41,9 +42,14 @@ async function sendAdminPaymentAlert({
   email: string;
   orderId: string;
   foundingCode?: string;
+  clientId?: string | null;
 }) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) return;
+
+  const clientUrl = clientId
+    ? `https://adam.andykgroup.com/admin/clients/${clientId}`
+    : "https://adam.andykgroup.com/admin/clients";
 
   const subject = `[A.D.A.M.] Payment received — ${company ?? email} — ${plan} (${billing}) — awaiting activation`;
   const text = [
@@ -58,8 +64,9 @@ async function sendAdminPaymentAlert({
     "Status: paid_pending_verification",
     "Action required: verify business documents and activate subscription in admin panel.",
     "",
-    "Admin panel: https://adam.andykgroup.com/admin/clients",
-  ].filter(Boolean).join("\n");
+    clientId ? `Client: ${clientUrl}` : "Client: no matching client found for this email — create one manually.",
+    clientId ? "" : "Admin panel: https://adam.andykgroup.com/admin/clients",
+  ].filter((line) => line !== null && line !== undefined).join("\n");
 
   await fetch("https://api.eu.resend.com/emails", {
     method: "POST",
@@ -89,6 +96,7 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
   const orderId        = String(order.id ?? "");
 
   const now = new Date().toISOString();
+  let clientId: string | null = null;
 
   if (email) {
     // Primary lookup: clients.contact_email
@@ -98,7 +106,7 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
       .eq("contact_email", email)
       .maybeSingle();
 
-    let clientId: string | null = existingClient?.id ?? null;
+    clientId = existingClient?.id ?? null;
     let matchPath: "contact_email" | "contacts_fallback" | "no_match" =
       clientId ? "contact_email" : "no_match";
 
@@ -182,7 +190,7 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
     }
   }
 
-  await sendAdminPaymentAlert({ company, plan, billing, email, orderId, foundingCode: foundingCode ?? undefined });
+  await sendAdminPaymentAlert({ company, plan, billing, email, orderId, foundingCode: foundingCode ?? undefined, clientId });
 }
 
 export async function POST(req: NextRequest) {

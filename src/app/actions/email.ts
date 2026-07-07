@@ -1407,7 +1407,7 @@ export async function sendLaunchInvitation({
   plan?: string | null;
   leadId?: string | null;
 }) {
-  const applyUrl = `https://adam.andykgroup.com/apply${leadId ? `?ref=${leadId}` : ""}`;
+  const applyUrl = `https://adam.andykgroup.com/#pricing`;
   const html = emailHtml("Founding Client Program", `
     <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">License Activation Invitation</p>
     <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">Your A.D.A.M. license activation<br>invitation is ready</h1>

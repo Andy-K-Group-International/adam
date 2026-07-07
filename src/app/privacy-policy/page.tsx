@@ -102,7 +102,7 @@ export default function PrivacyPolicyPage() {
                 <strong className="text-foreground">Supabase (EU-West-1, Ireland):</strong> database storage, authentication, and file storage. All data is stored within the European Economic Area.
               </li>
               <li>
-                <strong className="text-foreground">Resend:</strong> transactional email delivery (notifications, contract links, invoice emails). Email processing may occur within the EEA via Resend&apos;s EU infrastructure.
+                <strong className="text-foreground">Resend:</strong> transactional email delivery (notifications, contract links, invoice emails). Email processing may occur outside the EEA; appropriate safeguards (Standard Contractual Clauses) are in place.
               </li>
               <li>
                 <strong className="text-foreground">Revolut Business:</strong> payment processing and subscription billing. Revolut acts as a data controller for payment card data; we do not store card details. Subject to Revolut&apos;s own privacy policy.
@@ -133,7 +133,9 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-3">6. International Transfers</h2>
             <p>
-              Your data is stored and processed within the European Economic Area (EEA).
+              Your data is stored on Supabase infrastructure in EU-West-1 (Ireland) and remains
+              within the EEA. Email delivery via Resend may involve processing outside the EEA;
+              in such cases, appropriate safeguards (Standard Contractual Clauses) are in place.
             </p>
           </section>
 

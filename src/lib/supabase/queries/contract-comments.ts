@@ -44,10 +44,11 @@ export async function createComment(
 
   if (contract) {
     const { error: activityError } = await supabase.from('activity_log').insert({
+      type: 'comment_added',
       client_id: contract.client_id,
-      action: 'comment_added',
-      description: `Comment added on contract ${contract.title}`,
-      user_id: data.author_id,
+      contract_id: data.contract_id,
+      actor_id: data.author_id,
+      metadata: { contract_title: contract.title },
       created_at: new Date().toISOString(),
     });
 

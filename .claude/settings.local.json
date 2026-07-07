@@ -79,7 +79,21 @@
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(pkill -f \"next dev\")",
       "Bash(sips -z 1200 1200 /Users/andrejkneisl/adam/public/ADAM.png --out /Users/andrejkneisl/adam/public/ADAM.png)",
-      "Bash(open *)"
+      "Bash(open *)",
+      "Bash(pnpm install *)",
+      "Bash(git commit -m ' *)",
+      "Bash(curl -sI https://adam.andykgroup.com)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "Bash(vercel whoami *)",
+      "Bash(vercel ls *)",
+      "mcp__claude_ai_Supabase__list_migrations",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm build *)",
+      "Bash(npx eslint *)",
+      "Bash(git diff *)",
+      "Bash(identify /Users/andrejkneisl/Projects/adam/public/ADAM.png)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/andrejkneisl/Projects/adam/public/ADAM.png)"
     ]
   }
 }

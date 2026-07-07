@@ -10,9 +10,10 @@ import { listPendingClientRequests } from "@/lib/supabase/queries/client-request
 import { listAllInvoices } from "@/lib/supabase/queries/invoices";
 import { listKycForClients } from "@/lib/supabase/queries/kyc";
 import { listLeads } from "@/lib/supabase/queries/leads";
+import { listProposals } from "@/lib/supabase/queries/proposals";
 import { detectRisks } from "@/lib/risk-detection";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest, Invoice, Lead } from "@/lib/supabase/types";
+import type { Client, Contract, Questionnaire, ActivityLog, ClientRequest, Invoice, Lead, Proposal } from "@/lib/supabase/types";
 import type { ClientRiskReport } from "@/lib/risk-detection";
 import StatsCards from "@/components/admin/StatsCards";
 import ActionItems from "@/components/admin/ActionItems";
@@ -21,7 +22,7 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import HealthScoreBadge from "@/components/admin/HealthScoreBadge";
 import ContextualHelp from "@/components/ui/ContextualHelp";
 import Link from "next/link";
-import { AlertTriangle, AlertCircle, Info, ChevronDown, ChevronRight, X, Send, Users } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, ChevronDown, ChevronRight, X, Send, Users, CheckCircle2, Circle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Risks widget ────────────────────────────────────────────────────────────
@@ -372,6 +373,133 @@ function LaunchApplicantsWidget({ leads }: { leads: Lead[] }) {
   );
 }
 
+// ─── Onboarding checklist (company_admin first login) ────────────────────────
+
+const ONBOARDING_DISMISS_KEY = (authId: string) => `adam_onboarding_done_${authId}`;
+
+function OnboardingChecklist({
+  authId,
+  companyName,
+  proposals,
+  contracts,
+}: {
+  authId: string;
+  companyName: string;
+  proposals: Proposal[];
+  contracts: Contract[];
+}) {
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setDismissed(!!localStorage.getItem(ONBOARDING_DISMISS_KEY(authId)));
+    } catch {}
+  }, [authId]);
+
+  if (dismissed) return null;
+
+  const hasProposal = proposals.length > 0;
+  const hasSentContract = contracts.some(
+    (c) => c.status !== "draft"
+  );
+  const allDone = hasProposal && hasSentContract;
+
+  function dismiss() {
+    try {
+      localStorage.setItem(ONBOARDING_DISMISS_KEY(authId), "1");
+    } catch {}
+    setDismissed(true);
+  }
+
+  const items: { label: string; done: boolean; href: string; cta: string }[] = [
+    {
+      label: "Account activated",
+      done: true,
+      href: "/admin",
+      cta: "You're here",
+    },
+    {
+      label: "Review your proposal",
+      done: hasProposal,
+      href: "/admin/proposals",
+      cta: "View proposals →",
+    },
+    {
+      label: "Review and sign your contract",
+      done: hasSentContract,
+      href: "/admin/contracts",
+      cta: "View contracts →",
+    },
+  ];
+
+  return (
+    <div className="mb-8 bg-white rounded-xl border border-highlight/30 overflow-hidden">
+      <div className="flex items-start justify-between px-5 py-4 border-b border-grid-300 bg-highlight/5">
+        <div className="flex items-center gap-2.5">
+          <Zap className="h-4 w-4 text-highlight shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Welcome to A.D.A.M.{companyName ? ` — ${companyName}` : ""}
+            </p>
+            <p className="text-xs text-muted mt-0.5">
+              Complete these steps to finish setting up your workspace.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={dismiss}
+          title="Dismiss"
+          className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-grid-100 transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="divide-y divide-grid-300">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center gap-4 px-5 py-3.5">
+            <div className="shrink-0">
+              {item.done ? (
+                <CheckCircle2 className="h-4 w-4 text-success" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-2" />
+              )}
+            </div>
+            <p className={cn("flex-1 text-sm", item.done ? "text-muted-2 line-through" : "text-foreground")}>
+              {item.label}
+            </p>
+            {!item.done && (
+              <Link
+                href={item.href}
+                className="text-xs text-highlight hover:underline font-medium shrink-0"
+              >
+                {item.cta}
+              </Link>
+            )}
+            {item.done && (
+              <span className="text-xs text-success font-mono shrink-0">Done</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="px-5 py-3 border-t border-grid-300 bg-grid-100/50 flex items-center justify-between">
+        <p className="text-xs text-muted">
+          {allDone
+            ? "All steps complete. You're all set."
+            : `${items.filter((i) => i.done).length} of ${items.length} steps complete`}
+        </p>
+        <button
+          onClick={dismiss}
+          className="text-xs text-muted hover:text-foreground transition-colors"
+        >
+          {allDone ? "Dismiss checklist" : "Skip for now"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
@@ -385,6 +513,7 @@ export default function AdminDashboardPage() {
   const [pendingRequests, setPendingRequests] = useState<ClientRequest[]>([]);
   const [risks, setRisks] = useState<ClientRiskReport[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
 
   useEffect(() => {
     if (userLoading) return;
@@ -394,13 +523,14 @@ export default function AdminDashboardPage() {
 
     async function fetchData() {
       // Step 1: fetch clients + other data in parallel (clients needed first for clientIds scoping)
-      const [clientsData, contractsData, questionnairesData, invoicesData, leadsData] =
+      const [clientsData, contractsData, questionnairesData, invoicesData, leadsData, proposalsData] =
         await Promise.all([
           listClients(supabase, { userId }).catch(() => []),
           listAllContracts(supabase, { userId }).catch(() => []),
           isCompanyAdmin ? Promise.resolve([] as Questionnaire[]) : listQuestionnaires(supabase, { status: "submitted" }).catch(() => [] as Questionnaire[]),
           listAllInvoices(supabase, { userId }).catch(() => []),
           isCompanyAdmin ? Promise.resolve([] as Lead[]) : listLeads(supabase).catch(() => [] as Lead[]),
+          isCompanyAdmin && userId ? listProposals(supabase, { userId }).catch(() => [] as Proposal[]) : Promise.resolve([] as Proposal[]),
         ]);
 
       const clientIds = clientsData.map((c) => c.id);
@@ -418,6 +548,7 @@ export default function AdminDashboardPage() {
       setActivities(activitiesData);
       setPendingRequests(pendingRequestsData);
       setLeads(leadsData);
+      setProposals(proposalsData);
 
       const kycMap: Record<string, string> = {};
       for (const row of kycRows) kycMap[row.client_id] = row.status;
@@ -540,6 +671,15 @@ export default function AdminDashboardPage() {
           {isCompanyAdmin ? "Overview of your client operations." : "Overview of all operations."}
         </p>
       </div>
+
+      {isCompanyAdmin && user?.auth_id && (
+        <OnboardingChecklist
+          authId={user.auth_id}
+          companyName={clients?.[0]?.company_name ?? ""}
+          proposals={proposals}
+          contracts={contracts ?? []}
+        />
+      )}
 
       <StatsCards
         totalClients={totalClients}

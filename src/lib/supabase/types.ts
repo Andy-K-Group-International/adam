@@ -269,6 +269,11 @@ export interface Client {
   revolut_order_id: string | null;
   sender_name: string | null;
   sender_email: string | null;
+  // v1.1 company_admin activation
+  company_admin_email: string | null;
+  onboarding_status: "pending" | "activated" | "completed";
+  activation_token: string | null;
+  activation_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }

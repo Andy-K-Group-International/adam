@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useRef, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { submitNdaSignature } from "@/app/actions/nda";
 
@@ -248,13 +248,22 @@ function SignatureCanvas({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NdaSignPage() {
+  return (
+    <Suspense fallback={null}>
+      <NdaSignForm />
+    </Suspense>
+  );
+}
+
+function NdaSignForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [form, setForm] = useState({
-    full_name: "",
-    company: "",
-    email: "",
+    full_name: searchParams.get("name") ?? "",
+    company: searchParams.get("company") ?? "",
+    email: searchParams.get("email") ?? "",
     job_title: "",
   });
   const [hasSignature, setHasSignature] = useState(false);

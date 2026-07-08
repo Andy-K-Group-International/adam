@@ -199,21 +199,27 @@ export async function submitNdaSignature(data: {
     null;
 
   const supabase = createAdminClient();
-  const { error: dbError } = await supabase.from("nda_signatures").insert({
-    full_name: data.full_name,
-    company: data.company,
-    email: data.email,
-    job_title: data.job_title,
-    signature_data: data.signature_data,
-    ip_address: ip,
-  });
+  const { data: ndaSignature, error: dbError } = await supabase
+    .from("nda_signatures")
+    .insert({
+      full_name: data.full_name,
+      company: data.company,
+      email: data.email,
+      job_title: data.job_title,
+      signature_data: data.signature_data,
+      ip_address: ip,
+    })
+    .select("id")
+    .single();
 
-  if (dbError) {
+  if (dbError || !ndaSignature) {
     console.error("NDA insert error:", dbError);
     return { error: "Failed to save your signature. Please try again." };
   }
 
-  // Generate demo access token (7-day expiry)
+  // Generate demo access token (7-day expiry). Requires nda_signature_id —
+  // the FK constraint on demo_tokens makes this a hard requirement, not a
+  // convention: a token cannot exist without a signed NDA behind it.
   const token = crypto.randomUUID();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -226,6 +232,7 @@ export async function submitNdaSignature(data: {
     contact_name: data.full_name,
     ip_address: ip,
     expires_at: expiresAt.toISOString(),
+    nda_signature_id: ndaSignature.id,
   });
 
   const signedAt = new Date().toLocaleString("en-GB", {

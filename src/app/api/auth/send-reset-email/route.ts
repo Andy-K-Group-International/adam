@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const redirectTo = "https://adam.andykgroup.com/auth/callback?next=/reset-password";
+  const redirectTo = "https://adam.andykgroup.com/reset-password";
 
   // Generate reset link via Supabase admin
   const { data, error } = await supabase.auth.admin.generateLink({

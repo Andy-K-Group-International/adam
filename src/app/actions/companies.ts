@@ -118,8 +118,8 @@ export async function activateCompanyAction(
   }
 
   // 6. Log activity (non-fatal)
-  try {
-    await supabase.from("activity_log").insert({
+  {
+    const { error: logErr } = await supabase.from("activity_log").insert({
       type: "company_activated",
       client_id: clientId,
       metadata: {
@@ -129,8 +129,9 @@ export async function activateCompanyAction(
       },
       created_at: now,
     });
-  } catch (err) {
-    console.error("[activateCompanyAction] activity log error", err);
+    if (logErr) {
+      console.error("[activateCompanyAction] activity log error", logErr.message);
+    }
   }
 
   // 7. Send activation email (non-fatal)

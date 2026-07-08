@@ -396,12 +396,19 @@ export default function LeadsPage() {
                         className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
                       >
                         <td className="px-5 py-4">
-                          <Link
-                            href={`/admin/leads/${lead.id}`}
-                            className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
-                          >
-                            {lead.name}
-                          </Link>
+                          <div className="flex items-center gap-2">
+                            <Link
+                              href={`/admin/leads/${lead.id}`}
+                              className="text-sm font-medium text-foreground hover:text-highlight transition-colors"
+                            >
+                              {lead.name}
+                            </Link>
+                            {lead.metadata?.ceo_demo_invite && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-highlight/10 text-highlight border border-highlight/20">
+                                CEO Invite
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-2 mt-0.5">{lead.email}</p>
                         </td>
                         <td className="px-5 py-4 text-sm text-muted-2">
@@ -426,7 +433,11 @@ export default function LeadsPage() {
                                 <span className="font-normal text-muted-2">/100</span>
                               </span>
                             );
-                          })() : <span className="text-xs text-muted-2">—</span>}
+                          })() : lead.metadata?.ceo_demo_invite ? (
+                            <span className="text-xs text-muted-2 italic">Skipped — CEO invite</span>
+                          ) : (
+                            <span className="text-xs text-muted-2">—</span>
+                          )}
                         </td>
                         <td className="px-5 py-4">
                           <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", leadStatusStyle(lead.status))}>

@@ -139,7 +139,7 @@ export default function LeadDetailPage() {
   }
 
   const meta = lead.metadata;
-  const tier = meta ? scoreTier(meta.score) : null;
+  const tier = meta?.score != null ? scoreTier(meta.score) : null;
   const questionnaire = meta?.questionnaire ?? null;
   const canApprove = ["new", "contacted"].includes(lead.status);
   const isQualified = lead.status === "qualified";
@@ -233,10 +233,18 @@ export default function LeadDetailPage() {
                 )}>
                   {STATUS_OPTS.find((s) => s.value === lead.status)?.label}
                 </span>
+                {lead.metadata?.ceo_demo_invite && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide bg-highlight/10 text-highlight border border-highlight/20">
+                    CEO Invite — Skipped Scoring
+                  </span>
+                )}
               </div>
               <p className="text-sm text-muted-2 mt-0.5">
                 {lead.company && <span className="font-medium text-muted">{lead.company} · </span>}
                 Added {formatDate(lead.created_at)}
+                {lead.metadata?.invited_by && (
+                  <> · Invited by {lead.metadata.invited_by}</>
+                )}
               </p>
             </div>
           </div>
@@ -327,7 +335,7 @@ export default function LeadDetailPage() {
           )}
 
           {/* Score card */}
-          {meta && tier ? (
+          {meta?.breakdown && tier ? (
             <div className="bg-white rounded-xl border border-grid-300 p-5">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-sm font-semibold text-foreground">Lead Score</h3>
@@ -370,7 +378,7 @@ export default function LeadDetailPage() {
 
               <div className="space-y-3">
                 {(["revenue", "timeline", "decision_authority"] as const).map((key) => {
-                  const dim = meta.breakdown[key];
+                  const dim = meta.breakdown![key];
                   const labels: Record<string, string> = {
                     revenue:            "Revenue",
                     timeline:           "Timeline",

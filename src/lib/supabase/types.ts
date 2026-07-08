@@ -328,12 +328,17 @@ export interface LeadScoreBreakdown {
 }
 
 export interface LeadMetadata {
-  score: number;
-  breakdown: LeadScoreBreakdown;
-  questionnaire: Record<string, unknown>;
-  scored_at: string;
+  score?: number;
+  breakdown?: LeadScoreBreakdown;
+  questionnaire?: Record<string, unknown>;
+  scored_at?: string;
   service_interest?: string;
   demo_request?: boolean;
+  /** True when this lead was created via a CEO personal demo invite, bypassing
+   * the public pre-qualification questionnaire (see bridgeCeoInviteToQuestionnaire). */
+  ceo_demo_invite?: boolean;
+  demo_invite_id?: string;
+  invited_by?: string;
 }
 
 export interface ProposalVersion {

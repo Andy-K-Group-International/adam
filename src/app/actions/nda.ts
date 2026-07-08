@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { bridgeCeoInviteToQuestionnaire } from "@/app/actions/demo-invites";
 
 // ─── Email transport (mirrors email.ts pattern) ───────────────────────────────
 
@@ -245,6 +246,7 @@ export async function submitNdaSignature(data: {
   await Promise.allSettled([
     sendNdaConfirmation({ name: data.full_name, email: data.email, company: data.company, signedAt, demoUrl }),
     sendNdaAdminNotification({ name: data.full_name, email: data.email, company: data.company, jobTitle: data.job_title, signedAt, ip }),
+    bridgeCeoInviteToQuestionnaire({ email: data.email, fullName: data.full_name }),
   ]);
 
   return { success: true, demoToken: token };

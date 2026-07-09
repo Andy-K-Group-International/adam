@@ -48,6 +48,17 @@ alter table sellers
   add constraint sellers_active_requires_nda
   check (status <> 'active' or nda_signature_id is not null);
 
+-- DB-level backstop on commission_rate, same defense-in-depth pattern as
+-- founding_codes_discount_percent_check / founding_codes_max_20 — redundant
+-- with the 0-100 check in inviteSeller(), not a replacement for it. Matters
+-- because this column has no legitimate app-level write path other than
+-- inviteSeller(), but a DB-level range check costs nothing and closes the
+-- gap for any future write path (migration script, admin SQL, etc.) that
+-- doesn't happen to go through that action.
+alter table sellers
+  add constraint sellers_commission_rate_range
+  check (commission_rate >= 0 and commission_rate <= 100);
+
 create index if not exists sellers_registration_token_idx on sellers (registration_token);
 
 alter table sellers enable row level security;
@@ -110,7 +121,7 @@ $$;
 
 -- 5. RLS policies ------------------------------------------------------------
 
--- sellers: can see/update only their own row, once linked via auth_id.
+-- sellers: can SELECT only their own row, once linked via auth_id.
 -- Role check + row scope, same shape as clients_company_admin_select_own.
 -- Narrow and additive — there is no admin/staff policy on this table yet
 -- (service-role only, used by the admin-only inviteSeller action), so
@@ -123,19 +134,25 @@ using (
   and auth_id = auth.uid()
 );
 
-create policy "sellers_update_own"
-on sellers for update
-to authenticated
-using (
-  get_my_role() = 'seller'
-  and auth_id = auth.uid()
-)
-with check (
-  get_my_role() = 'seller'
-  and auth_id = auth.uid()
-);
+-- Deliberately SELECT-only: no UPDATE/INSERT/DELETE policy on `sellers` for
+-- `authenticated`. RLS policies scope by row, not by column, and this
+-- project's default Postgres grants give `authenticated` full column-level
+-- UPDATE on every public table (confirmed against `clients`) — a row-scoped
+-- "own row" UPDATE policy would let a seller directly rewrite
+-- commission_rate, referral_code, seller_agreement_accepted_at, etc. via a
+-- raw Supabase client call, bypassing every server action in sellers.ts.
+-- All three write paths (inviteSeller, registerSeller,
+-- acceptSellerAgreement) already go through createAdminClient() (service
+-- role, bypasses RLS entirely) and never rely on this policy — there is no
+-- legitimate self-update path today. If one is ever needed, add a narrow
+-- policy scoped to the specific columns/use-case at that time rather than
+-- reinstating a broad one "just in case."
 
 -- leads: sellers can see only leads referred through their own code.
+-- SELECT-only here too — no UPDATE/INSERT/DELETE policy exists, so those
+-- commands default-deny for `authenticated` on this table via this policy
+-- set (the pre-existing admin/staff/client policies on `leads` are
+-- untouched and unaffected).
 create policy "leads_seller_select_own"
 on leads for select
 to authenticated
@@ -144,7 +161,8 @@ using (
   and referred_by_seller_id = get_my_seller_id()
 );
 
--- commissions: sellers can see only their own commission rows.
+-- commissions: sellers can see only their own commission rows. Also
+-- SELECT-only — same reasoning as above.
 create policy "commissions_seller_select_own"
 on commissions for select
 to authenticated

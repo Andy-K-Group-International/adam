@@ -205,7 +205,7 @@ export async function registerSeller(input: {
   });
 
   if (authError || !authData.user) {
-    console.error("registerSeller createUser error:", authError?.message);
+    console.error("[registerSeller] createUser error:", authError?.message);
     return { error: "Failed to create your account. Please try again or contact us." };
   }
 
@@ -214,6 +214,13 @@ export async function registerSeller(input: {
   const lastName = nameParts.slice(1).join(" ") || firstName;
   const now = new Date().toISOString();
 
+  // Rollback: delete the just-created auth user on failure, same chain as
+  // activateCompanyAction (companies.ts). Without this, a transient failure
+  // here permanently soft-locks the invite — sellers.status stays 'invited'
+  // so the seller can retry, but retrying calls createUser with the same
+  // email again, which now always fails since the orphaned auth user from
+  // the first attempt already claimed it. Deleting it makes the token
+  // genuinely retryable.
   const { error: usersError } = await adminClient.from("users").insert({
     auth_id: authData.user.id,
     email: seller.email,
@@ -228,8 +235,16 @@ export async function registerSeller(input: {
   });
 
   if (usersError) {
-    console.error("registerSeller users insert error:", usersError);
-    return { error: "Failed to finish setting up your account. Please contact us." };
+    console.error("[registerSeller] users insert error:", usersError.message);
+    const { error: rollbackAuthErr } = await adminClient.auth.admin.deleteUser(authData.user.id);
+    if (rollbackAuthErr) {
+      console.error(
+        "[registerSeller] rollback failed: orphaned auth user",
+        authData.user.id,
+        rollbackAuthErr.message
+      );
+    }
+    return { error: "Failed to finish setting up your account. Please try again or contact us." };
   }
 
   await adminClient
@@ -259,7 +274,7 @@ export async function registerSeller(input: {
   });
 
   if (signInError) {
-    console.error("registerSeller sign-in error:", signInError.message);
+    console.error("[registerSeller] sign-in error:", signInError.message);
     return { error: "Account created, but automatic sign-in failed. Please sign in manually." };
   }
 
@@ -327,6 +342,9 @@ export async function acceptSellerAgreement(input: {
     .maybeSingle();
 
   if (sellerError || !seller) return { error: "Seller account not found." };
+  if (seller.status === "suspended") {
+    return { error: "Your account access has been suspended — contact us." };
+  }
   if (seller.status !== "pending_nda") {
     return { error: "This agreement has already been completed." };
   }

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Link2, BookOpen, Tag, Video } from "lucide-react";
+import { Copy, Check, Link2, BookOpen, Tag, Video, HelpCircle } from "lucide-react";
 import { getMySellerDashboard, type SellerDashboardData } from "@/app/actions/sellers";
 import { cn, formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ElevatorPitch from "@/components/seller/ElevatorPitch";
 import PricingReference from "@/components/seller/PricingReference";
+import Faq from "@/components/seller/Faq";
 
 function fmtAmount(amount: number): string {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(amount);
@@ -212,6 +213,14 @@ export default function SellerDashboardPage() {
               <h3 className="text-sm font-semibold text-foreground">Pricing Reference</h3>
             </div>
             <PricingReference />
+          </div>
+
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <HelpCircle className="h-4 w-4 text-highlight" />
+              <h3 className="text-sm font-semibold text-foreground">FAQ</h3>
+            </div>
+            <Faq />
           </div>
 
           <div className="bg-white rounded-xl border border-grid-300 p-5">

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Link2 } from "lucide-react";
+import { Copy, Check, Link2, BookOpen, Tag, Video } from "lucide-react";
 import { getMySellerDashboard, type SellerDashboardData } from "@/app/actions/sellers";
 import { cn, formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import ElevatorPitch from "@/components/seller/ElevatorPitch";
+import PricingReference from "@/components/seller/PricingReference";
 
 function fmtAmount(amount: number): string {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(amount);
@@ -189,6 +191,38 @@ export default function SellerDashboardPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Resources */}
+      <div>
+        <h2 className="text-lg font-serif font-semibold text-foreground mb-4">Resources</h2>
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className="h-4 w-4 text-highlight" />
+              <h3 className="text-sm font-semibold text-foreground">Elevator Pitch</h3>
+            </div>
+            <ElevatorPitch />
+          </div>
+
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="h-4 w-4 text-highlight" />
+              <h3 className="text-sm font-semibold text-foreground">Pricing Reference</h3>
+            </div>
+            <PricingReference />
+          </div>
+
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Video className="h-4 w-4 text-highlight" />
+              <h3 className="text-sm font-semibold text-foreground">Company Video</h3>
+            </div>
+            <video controls preload="metadata" className="w-full rounded-lg border border-grid-300">
+              <source src="/videos/seller-intro.mp4" type="video/mp4" />
+            </video>
+          </div>
         </div>
       </div>
     </div>

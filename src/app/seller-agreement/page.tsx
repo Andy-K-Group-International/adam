@@ -8,8 +8,7 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 // ─── NDA document ─────────────────────────────────────────────────────────────
 // Verbatim copy of the reviewed text in src/app/nda-sign/page.tsx — reused
-// unmodified rather than redrafted, since only the Seller Partner Agreement
-// below is pending legal review.
+// unmodified rather than redrafted.
 
 function NdaDocument() {
   const today = new Date().toLocaleDateString("en-GB", {
@@ -148,7 +147,7 @@ function NdaDocument() {
   );
 }
 
-// ─── Seller Partner Agreement (full text, pending legal review) ────────────
+// ─── Seller Partner Agreement (full text, Andy-approved final version) ─────
 //
 // AGREEMENT_VERSION identifies which wording a seller accepted. There's no
 // formal versioned/hashed storage of the accepted text yet (flagged to Andy
@@ -156,19 +155,16 @@ function NdaDocument() {
 // would let us prove exactly which wording a given seller agreed to if this
 // text changes later); for now this constant is the single source of truth
 // for "what does seller_agreement_accepted_at actually refer to." Bump the
-// date whenever the wording below changes.
+// version whenever the wording below changes.
 //
 // Section 12 ("Data Protection and GDPR") is the GDPR disclosure for this
 // agreement — there is deliberately no separate Privacy Notice block.
-const AGREEMENT_VERSION = "draft-2026-07-09";
+const AGREEMENT_VERSION = "v1.0-2026-07-09";
 
 function SellerPartnerAgreementDocument() {
   return (
     <div className="text-[13.5px] leading-relaxed text-muted space-y-5">
       <div className="text-center space-y-1 pb-4 border-b border-grid-300">
-        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-warning">
-          [PENDING LEGAL REVIEW — NOT YET LAWYER-APPROVED]
-        </p>
         <h2 className="text-base font-bold text-foreground tracking-tight">Seller Partner Agreement</h2>
         <p className="text-xs text-muted-2 font-mono">Andy&apos;K Group International LTD — A.D.A.M. Seller Partner Programme</p>
         <p className="text-[10px] text-muted-2 font-mono">Version: {AGREEMENT_VERSION}</p>
@@ -1057,10 +1053,10 @@ export default function SellerAgreementPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-warning/30 bg-white mb-8">
+            <div className="rounded-xl border border-grid-300 bg-white mb-8">
               <div className="px-6 py-4 border-b border-grid-300 flex items-center justify-between">
                 <span className="text-xs font-mono uppercase tracking-[0.15em] text-muted-2">Seller Partner Agreement</span>
-                <span className="text-[10px] font-mono text-warning">Pending legal review</span>
+                <span className="text-[10px] font-mono text-muted-2">Andy&apos;K Group International LTD</span>
               </div>
               <div className="px-6 py-5 max-h-[420px] overflow-y-auto overscroll-contain">
                 <SellerPartnerAgreementDocument />

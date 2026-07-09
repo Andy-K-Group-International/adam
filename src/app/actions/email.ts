@@ -1515,6 +1515,54 @@ export async function sendSellerInvitation({
   });
 }
 
+// ─── Seller application (admin notification) ───────────────────────────────
+
+export async function sendSellerApplicationNotification({
+  fullName,
+  email,
+  phone,
+  message,
+}: {
+  fullName: string;
+  email: string;
+  phone: string;
+  message?: string | null;
+}) {
+  const reviewUrl = "https://adam.andykgroup.com/admin/sellers";
+
+  const html = emailHtml("Seller Application", `
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;color:#0E282D;margin:0 0 4px;line-height:1.3;">New seller application: ${fullName}</h1>
+    <p style="color:#8b93a8;font-size:13px;margin:0 0 28px;font-family:'Courier New',Courier,monospace;">Submitted via adam.andykgroup.com/become-a-seller</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:6px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;width:100px;border-bottom:1px solid #ede8e2;">Name</td>
+        <td style="padding:6px 0;color:#525a70;font-size:13px;border-bottom:1px solid #ede8e2;">${fullName}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid #ede8e2;">Email</td>
+        <td style="padding:6px 0;font-size:13px;border-bottom:1px solid #ede8e2;"><a href="mailto:${email}" style="color:#2F9E9A;text-decoration:none;">${email}</a></td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.08em;">Phone</td>
+        <td style="padding:6px 0;color:#525a70;font-size:13px;">${phone}</td>
+      </tr>
+    </table>
+
+    ${message ? `<div style="margin-bottom:28px;"><p style="color:#8b93a8;font-size:11px;font-family:'Courier New',Courier,monospace;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 6px;">Message</p><p style="color:#525a70;font-size:14px;line-height:1.6;margin:0;">${message}</p></div>` : ""}
+
+    <a href="${reviewUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Review Application &#8594;</a>
+  `);
+
+  return await sendEmail({
+    to: "ceo@andykgroup.com",
+    from: "info@andykgroup.com",
+    subject: `New seller application — ${fullName}`,
+    text: `New seller application submitted via adam.andykgroup.com/become-a-seller\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}${message ? `\nMessage: ${message}` : ""}\n\nReview: ${reviewUrl}`,
+    html,
+  });
+}
+
 // ─── Payment received (admin notification) ────────────────────────────────────
 
 export async function sendPaymentReceivedAdmin({

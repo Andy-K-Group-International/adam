@@ -35,12 +35,9 @@ export async function signIn(email: string, password: string): Promise<{ error: 
 
   if (profile?.role === "client") {
     redirect("/dashboard");
+  } else if (profile?.role === "seller") {
+    redirect("/seller");
   } else {
-    // TODO(Phase B): 'seller' currently falls into this branch and gets
-    // redirected to /admin, where admin/layout.tsx's role guard immediately
-    // bounces it back to /sign-in (a redirect loop) since 'seller' isn't in
-    // its allowed list. Add a `profile?.role === "seller"` branch above this
-    // else, redirecting to the seller portal once one exists.
     redirect("/admin");
   }
 }

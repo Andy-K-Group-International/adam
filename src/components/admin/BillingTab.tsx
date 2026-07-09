@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { sendSubscriptionActivated } from "@/app/actions/email";
+import { getReferralInfoForClient, createCommissionForActivation, type ClientReferralInfo } from "@/app/actions/commissions";
+import { pricingData } from "@/lib/data";
 import type { Client } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, AlertCircle, Clock, XCircle, CreditCard, RefreshCw, ShieldCheck } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, XCircle, CreditCard, RefreshCw, ShieldCheck, Handshake } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   none:                       { label: "No subscription",             color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
@@ -18,6 +20,25 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 function fmt(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// Best-effort only — plan names are ambiguous across pricingData categories
+// (e.g. "Growth" is £699/mo under internal but £1,299/mo under whitelabel),
+// so this only returns a value when every match agrees on the price. Always
+// just a prefill; the admin confirms or corrects it before activation.
+function guessDealValue(planName: string | null, billingCycle: string | null): number | null {
+  if (!planName) return null;
+  const key = billingCycle === "annual" ? "annualGBP" : "monthlyGBP";
+  const matches = new Set<number>();
+  for (const category of Object.values(pricingData)) {
+    for (const plan of category.plans) {
+      if (plan.name.toLowerCase() === planName.toLowerCase()) {
+        const price = plan[key as "monthlyGBP" | "annualGBP"];
+        if (price != null) matches.add(price);
+      }
+    }
+  }
+  return matches.size === 1 ? [...matches][0] : null;
 }
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -44,6 +65,8 @@ export default function BillingTab({ client, onUpdate }: Props) {
   const [savingOverride, setSavingOverride] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [bizVerified, setBizVerified] = useState<boolean | null>(null);
+  const [referralInfo, setReferralInfo] = useState<ClientReferralInfo | null | undefined>(undefined);
+  const [dealValue, setDealValue] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -55,11 +78,22 @@ export default function BillingTab({ client, onUpdate }: Props) {
       .then(({ data }) => {
         setBizVerified(data?.status === "verified");
       });
-  }, [client.id]);
+
+    getReferralInfoForClient(client.id).then((info) => {
+      setReferralInfo(info);
+      const guess = guessDealValue(client.plan_name, client.billing_cycle);
+      if (info && guess != null) setDealValue(String(guess));
+    });
+  }, [client.id, client.plan_name, client.billing_cycle]);
 
   async function handleActivate() {
     if (!bizVerified) {
       setMsg({ text: "Business verification required before activation. Complete verification in the Business Verification tab.", ok: false });
+      return;
+    }
+    const parsedDealValue = Number(dealValue);
+    if (referralInfo && (!dealValue || !(parsedDealValue > 0))) {
+      setMsg({ text: "This client was referred by a seller — enter a deal value before activating so their commission can be calculated.", ok: false });
       return;
     }
     setActivating(true);
@@ -112,6 +146,32 @@ export default function BillingTab({ client, onUpdate }: Props) {
 
       onUpdate({ subscription_status: "active", activation_date: activationDate, paid_until: paidUntil });
       setMsg({ text: "Subscription activated. Welcome email sent.", ok: true });
+
+      // Commission creation must never block or fail activation above — it
+      // has already succeeded by this point. Errors are logged, not thrown,
+      // and surfaced as a follow-up note rather than overwriting the success
+      // message, matching activateCompanyAction's non-fatal-step pattern.
+      if (referralInfo) {
+        try {
+          const result = await createCommissionForActivation({
+            clientId: client.id,
+            dealValue: parsedDealValue,
+          });
+          if ("error" in result) {
+            console.error("[BillingTab] commission creation error:", result.error);
+            setMsg({
+              text: `Subscription activated, but commission creation failed (${result.error}). Create it manually in the Commissions tab.`,
+              ok: true,
+            });
+          }
+        } catch (commissionErr) {
+          console.error("[BillingTab] commission creation unexpected error:", commissionErr);
+          setMsg({
+            text: "Subscription activated, but commission creation failed unexpectedly. Create it manually in the Commissions tab.",
+            ok: true,
+          });
+        }
+      }
     } catch (err: unknown) {
       setMsg({ text: err instanceof Error ? err.message : "Activation failed", ok: false });
     }
@@ -226,7 +286,7 @@ export default function BillingTab({ client, onUpdate }: Props) {
               <div className="flex items-start gap-2 mb-3">
                 <ShieldCheck className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                 <p className="text-xs text-warning">
-                  Business verification required before activation. Go to the Business Verification tab and verify this client's documents first.
+                  Business verification required before activation. Go to the Business Verification tab and verify this client&apos;s documents first.
                 </p>
               </div>
             ) : (
@@ -234,6 +294,37 @@ export default function BillingTab({ client, onUpdate }: Props) {
                 Sets activation_date to now, calculates paid_until ({client.billing_cycle === "annual" ? "12 months" : "30 days"}), sends welcome email to client.
               </p>
             )}
+
+            {referralInfo && bizVerified !== false && (
+              <div className="border border-highlight/25 bg-highlight/5 p-3 mb-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Handshake className="h-3.5 w-3.5 text-highlight" />
+                  <p className="text-xs font-medium text-foreground">
+                    Referred by seller {referralInfo.referralCode} ({referralInfo.commissionRate}% commission)
+                  </p>
+                </div>
+                <label className="block text-xs font-mono text-muted-2 uppercase tracking-wider mb-1">
+                  Deal value (€) — required to calculate commission
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={dealValue}
+                  onChange={(e) => setDealValue(e.target.value)}
+                  placeholder="0.00"
+                  className="w-40 border border-grid-500 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-highlight/30"
+                />
+                {dealValue && Number(dealValue) > 0 && (
+                  <p className="text-xs text-muted-2 mt-1.5">
+                    → {new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(
+                      Number(dealValue) * (referralInfo.commissionRate / 100)
+                    )} commission (pending)
+                  </p>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleActivate}
               disabled={activating || bizVerified === false}

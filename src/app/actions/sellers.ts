@@ -42,6 +42,12 @@ export interface SellerRow {
   invited_at: string;
   registered_at: string | null;
   activated_at: string | null;
+  leadCount: number;
+  // Sum of commission_amount across all non-disputed commissions (pending +
+  // approved + paid) — total value in their commission pipeline, not just
+  // what's been paid out. Disputed commissions are excluded since they're
+  // contested, not confirmed.
+  totalCommissions: number;
 }
 
 export async function listSellers(): Promise<SellerRow[]> {
@@ -49,7 +55,7 @@ export async function listSellers(): Promise<SellerRow[]> {
   if (!admin) return [];
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const { data: sellers, error } = await supabase
     .from("sellers")
     .select(
       "id, full_name, email, referral_code, status, commission_rate, invited_by, invited_at, registered_at, activated_at"
@@ -60,7 +66,93 @@ export async function listSellers(): Promise<SellerRow[]> {
     console.error("listSellers error:", error);
     return [];
   }
-  return data ?? [];
+  if (!sellers || sellers.length === 0) return [];
+
+  // Aggregated in JS from flat selects rather than a SQL GROUP BY, matching
+  // the existing convention for admin list pages in this codebase (e.g. the
+  // kycMap-building pattern in admin/page.tsx / super-admin/companies).
+  const sellerIds = sellers.map((s) => s.id);
+  const [{ data: leads, error: leadsError }, { data: commissions, error: commissionsError }] =
+    await Promise.all([
+      supabase.from("leads").select("referred_by_seller_id").in("referred_by_seller_id", sellerIds),
+      supabase.from("commissions").select("seller_id, commission_amount, status").in("seller_id", sellerIds),
+    ]);
+
+  if (leadsError) console.error("[listSellers] leads query error:", leadsError.message);
+  if (commissionsError) console.error("[listSellers] commissions query error:", commissionsError.message);
+
+  const leadCounts = new Map<string, number>();
+  for (const lead of leads ?? []) {
+    if (!lead.referred_by_seller_id) continue;
+    leadCounts.set(lead.referred_by_seller_id, (leadCounts.get(lead.referred_by_seller_id) ?? 0) + 1);
+  }
+
+  const commissionTotals = new Map<string, number>();
+  for (const c of commissions ?? []) {
+    if (c.status === "disputed") continue;
+    commissionTotals.set(c.seller_id, (commissionTotals.get(c.seller_id) ?? 0) + c.commission_amount);
+  }
+
+  return sellers.map((s) => ({
+    ...s,
+    leadCount: leadCounts.get(s.id) ?? 0,
+    totalCommissions: commissionTotals.get(s.id) ?? 0,
+  }));
+}
+
+// ─── Admin: suspend a seller ─────────────────────────────────────────────────
+//
+// The first code path that actually sets status = 'suspended' — before this,
+// the value was schema-legal (check constraint, get_my_seller_id() already
+// filters on status = 'active') but nothing ever wrote it. Effect, verified
+// against what Phase A already built rather than assumed:
+//   - Dashboard access: src/app/seller/layout.tsx redirects status ===
+//     'suspended' to /seller-agreement (which renders the suspended message
+//     for that status) — sellers_select_own RLS has no status check by
+//     design (the layout needs to read status for *any* seller to decide
+//     where to redirect them), so the guard is the enforcement point, not
+//     the policy.
+//   - Existing leads/commissions visibility: leads_seller_select_own and
+//     commissions_seller_select_own both gate through get_my_seller_id(),
+//     which only resolves for status = 'active' — a suspended seller loses
+//     read access to their own previously-referred leads/commissions
+//     immediately, even via a direct API call bypassing the UI.
+//   - New referral attribution: /api/leads/submit's seller lookup requires
+//     status = 'active', so a suspended seller's referral link silently
+//     stops attributing new leads.
+export async function suspendSeller(sellerId: string): Promise<{ success: true } | { error: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Unauthorized" };
+
+  const supabase = createAdminClient();
+
+  const { data: seller, error: fetchError } = await supabase
+    .from("sellers")
+    .select("id, status")
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (fetchError || !seller) return { error: "Seller not found." };
+  if (seller.status === "suspended") return { error: "Seller is already suspended." };
+
+  const { error: updateError } = await supabase
+    .from("sellers")
+    .update({ status: "suspended", updated_at: new Date().toISOString() })
+    .eq("id", sellerId);
+
+  if (updateError) {
+    console.error("[suspendSeller] update error:", updateError.message);
+    return { error: "Failed to suspend seller." };
+  }
+
+  const { error: logError } = await supabase.from("activity_log").insert({
+    type: "seller_suspended",
+    actor_id: admin.id,
+    metadata: { seller_id: sellerId },
+  });
+  if (logError) console.error("[suspendSeller] activity_log insert error:", logError.message);
+
+  return { success: true };
 }
 
 // ─── Admin: invite a seller ─────────────────────────────────────────────────
@@ -398,4 +490,92 @@ export async function acceptSellerAgreement(input: {
   });
 
   return { success: true };
+}
+
+// ─── Seller dashboard (own referral link, leads, commissions) ──────────────
+//
+// All three queries below use the request-scoped client (not the admin
+// client), reading through leads_seller_select_own / commissions_seller_own
+// RLS — this is the first place in the app that actually exercises those
+// policies for real, rather than just via the audit. The explicit .eq()
+// filters are defense-in-depth on top of RLS, matching the convention used
+// elsewhere (e.g. listContractsForClient), not a substitute for it.
+
+export interface MyReferredLead {
+  id: string;
+  name: string;
+  company: string | null;
+  status: "new" | "contacted" | "qualified" | "rejected" | "converted";
+  created_at: string;
+}
+
+export interface MyCommission {
+  id: string;
+  deal_value: number;
+  commission_amount: number;
+  status: "pending" | "approved" | "paid" | "disputed";
+  created_at: string;
+  approved_at: string | null;
+  paid_at: string | null;
+}
+
+export interface SellerDashboardData {
+  referralCode: string;
+  referralUrl: string;
+  commissionRate: number;
+  leads: MyReferredLead[];
+  commissions: MyCommission[];
+  totals: { pending: number; approved: number; paid: number };
+}
+
+export async function getMySellerDashboard(): Promise<SellerDashboardData | null> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: seller, error: sellerError } = await supabase
+    .from("sellers")
+    .select("id, referral_code, commission_rate")
+    .eq("auth_id", user.id)
+    .maybeSingle();
+
+  if (sellerError || !seller) return null;
+
+  const [{ data: leads, error: leadsError }, { data: commissions, error: commissionsError }] =
+    await Promise.all([
+      supabase
+        .from("leads")
+        .select("id, name, company, status, created_at")
+        .eq("referred_by_seller_id", seller.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("commissions")
+        .select("id, deal_value, commission_amount, status, created_at, approved_at, paid_at")
+        .eq("seller_id", seller.id)
+        .order("created_at", { ascending: false }),
+    ]);
+
+  if (leadsError) console.error("[getMySellerDashboard] leads query error:", leadsError.message);
+  if (commissionsError) {
+    console.error("[getMySellerDashboard] commissions query error:", commissionsError.message);
+  }
+
+  const totals = (commissions ?? []).reduce(
+    (acc, c) => {
+      if (c.status === "pending") acc.pending += c.commission_amount;
+      if (c.status === "approved") acc.approved += c.commission_amount;
+      if (c.status === "paid") acc.paid += c.commission_amount;
+      return acc;
+    },
+    { pending: 0, approved: 0, paid: 0 }
+  );
+
+  return {
+    referralCode: seller.referral_code,
+    referralUrl: `https://adam.andykgroup.com/questionnaire?ref=${seller.referral_code}`,
+    commissionRate: seller.commission_rate,
+    leads: leads ?? [],
+    commissions: commissions ?? [],
+    totals,
+  };
 }

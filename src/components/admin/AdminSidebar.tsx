@@ -21,6 +21,7 @@ import {
   Star,
   Shield,
   Handshake,
+  Banknote,
 } from "lucide-react";
 
 const navItems = [
@@ -29,6 +30,7 @@ const navItems = [
   { label: "Leads", href: "/admin/leads", icon: Target },
   { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Sellers", href: "/admin/sellers", icon: Handshake },
+  { label: "Commissions", href: "/admin/commissions", icon: Banknote },
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Strategy",  href: "/admin/strategy",  icon: BookOpen },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },

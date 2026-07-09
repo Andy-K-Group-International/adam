@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { listSellers, type SellerRow } from "@/app/actions/sellers";
+import { listSellers, suspendSeller, type SellerRow } from "@/app/actions/sellers";
 import InviteSellerDialog from "@/components/admin/InviteSellerDialog";
 import { cn, formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { Ban } from "lucide-react";
 
 function sellerStatusStyle(status: SellerRow["status"]): string {
   switch (status) {
@@ -25,9 +26,15 @@ function sellerStatusLabel(status: SellerRow["status"]): string {
   }
 }
 
+function fmtAmount(amount: number): string {
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(amount);
+}
+
 export default function SellersPage() {
   const { user } = useCurrentUser();
   const [sellers, setSellers] = useState<SellerRow[] | undefined>(undefined);
+  const [suspendingId, setSuspendingId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const refreshSellers = useCallback(() => {
     listSellers().then(setSellers).catch(() => setSellers([]));
@@ -36,6 +43,20 @@ export default function SellersPage() {
   useEffect(() => {
     refreshSellers();
   }, [refreshSellers]);
+
+  async function handleSuspend(sellerId: string) {
+    setSuspendingId(sellerId);
+    try {
+      const result = await suspendSeller(sellerId);
+      if ("error" in result) {
+        console.error("suspendSeller error:", result.error);
+      }
+      refreshSellers();
+    } finally {
+      setSuspendingId(null);
+      setConfirmingId(null);
+    }
+  }
 
   const invitedByName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
 
@@ -66,14 +87,17 @@ export default function SellersPage() {
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Referral Code</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Commission</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Status</th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Leads</th>
+                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Total Commissions</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Invited By</th>
                 <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider px-5 py-3">Invited</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody>
               {sellers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-muted-2">
+                  <td colSpan={9} className="text-center py-12 text-muted-2">
                     No sellers invited yet.
                   </td>
                 </tr>
@@ -98,8 +122,42 @@ export default function SellersPage() {
                         {sellerStatusLabel(seller.status)}
                       </span>
                     </td>
+                    <td className="px-5 py-4 text-sm text-muted-2 tabular-nums">{seller.leadCount}</td>
+                    <td className="px-5 py-4 text-sm text-foreground font-medium tabular-nums">
+                      {fmtAmount(seller.totalCommissions)}
+                    </td>
                     <td className="px-5 py-4 text-sm text-muted-2">{seller.invited_by}</td>
                     <td className="px-5 py-4 text-sm text-muted-2">{formatDate(seller.invited_at)}</td>
+                    <td className="px-5 py-4">
+                      {seller.status !== "suspended" && (
+                        confirmingId === seller.id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleSuspend(seller.id)}
+                              disabled={suspendingId === seller.id}
+                              className="text-xs font-medium text-error hover:text-error/80 transition-colors disabled:opacity-50"
+                            >
+                              {suspendingId === seller.id ? "Suspending…" : "Confirm"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmingId(null)}
+                              disabled={suspendingId === seller.id}
+                              className="text-xs text-muted-2 hover:text-foreground transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmingId(seller.id)}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-error/80 hover:text-error transition-colors"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                            Suspend
+                          </button>
+                        )
+                      )}
+                    </td>
                   </tr>
                 ))
               )}

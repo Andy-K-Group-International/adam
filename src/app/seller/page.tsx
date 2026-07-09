@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Link2, BookOpen, Tag, Video, HelpCircle } from "lucide-react";
+import { Copy, Check, Link2, BookOpen, Tag, Video, HelpCircle, FolderOpen } from "lucide-react";
 import { getMySellerDashboard, type SellerDashboardData } from "@/app/actions/sellers";
 import { cn, formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ElevatorPitch from "@/components/seller/ElevatorPitch";
 import PricingReference from "@/components/seller/PricingReference";
 import Faq from "@/components/seller/Faq";
+import ExternalMaterials from "@/components/seller/ExternalMaterials";
 
 function fmtAmount(amount: number): string {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(amount);
@@ -231,6 +232,14 @@ export default function SellerDashboardPage() {
             <video controls preload="metadata" className="w-full rounded-lg border border-grid-300">
               <source src="/videos/seller-intro.mp4" type="video/mp4" />
             </video>
+          </div>
+
+          <div className="bg-white rounded-xl border border-grid-300 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <FolderOpen className="h-4 w-4 text-highlight" />
+              <h3 className="text-sm font-semibold text-foreground">External Materials</h3>
+            </div>
+            <ExternalMaterials />
           </div>
         </div>
       </div>

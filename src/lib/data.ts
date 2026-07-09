@@ -294,6 +294,7 @@ export const footerLinks = {
     { label: "Services", href: "https://andykgroup.com/#services" },
     { label: "Pricing", href: "https://andykgroup.com/#pricing" },
     { label: "Contact", href: "https://andykgroup.com/#contact" },
+    { label: "Become a Seller Partner", href: "/become-a-seller" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },

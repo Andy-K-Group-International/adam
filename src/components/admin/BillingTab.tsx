@@ -17,9 +17,20 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
   cancelled:                  { label: "Cancelled",                   color: "text-muted-2 bg-grid-100 border-grid-300",    icon: XCircle },
 };
 
+// UX-only sanity trip-wire, not a hard limit — the largest known recurring
+// plan (pricingData) tops out around €2,500/mo, and one-off enterprise
+// deals are already "Request Quote" (no fixed price to sanity-check
+// against). €50,000 catches an accidental extra zero or a decimal-point
+// slip without ever blocking a real large deal.
+const DEAL_VALUE_WARNING_THRESHOLD = 50000;
+
 function fmt(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function fmtEUR(amount: number): string {
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(amount);
 }
 
 // Best-effort only — plan names are ambiguous across pricingData categories
@@ -67,6 +78,7 @@ export default function BillingTab({ client, onUpdate }: Props) {
   const [bizVerified, setBizVerified] = useState<boolean | null>(null);
   const [referralInfo, setReferralInfo] = useState<ClientReferralInfo | null | undefined>(undefined);
   const [dealValue, setDealValue] = useState("");
+  const [dealValueConfirmed, setDealValueConfirmed] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -94,6 +106,12 @@ export default function BillingTab({ client, onUpdate }: Props) {
     const parsedDealValue = Number(dealValue);
     if (referralInfo && (!dealValue || !(parsedDealValue > 0))) {
       setMsg({ text: "This client was referred by a seller — enter a deal value before activating so their commission can be calculated.", ok: false });
+      return;
+    }
+    // Defensive backstop behind the disabled button below — UI state could
+    // in principle get out of sync (e.g. programmatic form manipulation).
+    if (referralInfo && parsedDealValue > DEAL_VALUE_WARNING_THRESHOLD && !dealValueConfirmed) {
+      setMsg({ text: `Please confirm the deal value (${fmtEUR(parsedDealValue)}) before activating — it's unusually large.`, ok: false });
       return;
     }
     setActivating(true);
@@ -311,23 +329,42 @@ export default function BillingTab({ client, onUpdate }: Props) {
                   min="0"
                   step="0.01"
                   value={dealValue}
-                  onChange={(e) => setDealValue(e.target.value)}
+                  onChange={(e) => {
+                    setDealValue(e.target.value);
+                    setDealValueConfirmed(false);
+                  }}
                   placeholder="0.00"
                   className="w-40 border border-grid-500 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-highlight/30"
                 />
                 {dealValue && Number(dealValue) > 0 && (
                   <p className="text-xs text-muted-2 mt-1.5">
-                    → {new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(
-                      Number(dealValue) * (referralInfo.commissionRate / 100)
-                    )} commission (pending)
+                    → {fmtEUR(Number(dealValue) * (referralInfo.commissionRate / 100))} commission (pending)
                   </p>
+                )}
+                {dealValue && Number(dealValue) > DEAL_VALUE_WARNING_THRESHOLD && !dealValueConfirmed && (
+                  <div className="mt-3 border border-warning/30 bg-warning/5 p-3">
+                    <p className="text-xs text-warning font-medium mb-2">
+                      {fmtEUR(Number(dealValue))} is unusually large for a deal value — please confirm before activating.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setDealValueConfirmed(true)}
+                      className="text-xs font-medium text-warning underline underline-offset-2 hover:text-warning/80 transition-colors"
+                    >
+                      Yes, this is really {fmtEUR(Number(dealValue))} — proceed
+                    </button>
+                  </div>
                 )}
               </div>
             )}
 
             <button
               onClick={handleActivate}
-              disabled={activating || bizVerified === false}
+              disabled={
+                activating ||
+                bizVerified === false ||
+                (!!referralInfo && Number(dealValue) > DEAL_VALUE_WARNING_THRESHOLD && !dealValueConfirmed)
+              }
               className="flex items-center gap-2 px-4 py-2 bg-success text-white text-sm font-medium hover:bg-success/90 disabled:opacity-50 transition-colors"
             >
               {activating && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}

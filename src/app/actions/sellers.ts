@@ -155,6 +155,60 @@ export async function suspendSeller(sellerId: string): Promise<{ success: true }
   return { success: true };
 }
 
+// ─── Admin: reactivate a suspended seller ───────────────────────────────────
+//
+// The reverse of suspendSeller — status='suspended' -> 'active'. Verified,
+// not just assumed, that this correctly restores what suspension cut off:
+//   - Dashboard access: seller/layout.tsx only redirects away from /seller
+//     for 'invited' | 'pending_nda' | 'suspended' — 'active' falls through
+//     to rendering children, so the seller regains access on their next
+//     request with no other change needed.
+//   - Leads/commissions visibility: get_my_seller_id() resolves again once
+//     status = 'active', so leads_seller_select_own /
+//     commissions_seller_select_own immediately return their existing rows.
+//   - Referral attribution: /api/leads/submit's seller lookup requires
+//     status = 'active', so their referral link starts attributing new
+//     leads again.
+// sellers_active_requires_nda is still satisfied automatically — a
+// suspended seller already had nda_signature_id set from when they first
+// reached 'active', and suspendSeller never touches that column.
+export async function unsuspendSeller(sellerId: string): Promise<{ success: true } | { error: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Unauthorized" };
+
+  const supabase = createAdminClient();
+
+  const { data: seller, error: fetchError } = await supabase
+    .from("sellers")
+    .select("id, status")
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (fetchError || !seller) return { error: "Seller not found." };
+  if (seller.status !== "suspended") {
+    return { error: "Seller is not suspended." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("sellers")
+    .update({ status: "active", updated_at: new Date().toISOString() })
+    .eq("id", sellerId);
+
+  if (updateError) {
+    console.error("[unsuspendSeller] update error:", updateError.message);
+    return { error: "Failed to reactivate seller." };
+  }
+
+  const { error: logError } = await supabase.from("activity_log").insert({
+    type: "seller_reactivated",
+    actor_id: admin.id,
+    metadata: { seller_id: sellerId },
+  });
+  if (logError) console.error("[unsuspendSeller] activity_log insert error:", logError.message);
+
+  return { success: true };
+}
+
 // ─── Admin: invite a seller ─────────────────────────────────────────────────
 
 export interface InviteSellerInput {

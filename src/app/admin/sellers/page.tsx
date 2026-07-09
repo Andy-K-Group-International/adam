@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { listSellers, suspendSeller, type SellerRow } from "@/app/actions/sellers";
+import { listSellers, suspendSeller, unsuspendSeller, type SellerRow } from "@/app/actions/sellers";
 import InviteSellerDialog from "@/components/admin/InviteSellerDialog";
 import { cn, formatDate } from "@/lib/utils";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import { Ban } from "lucide-react";
+import { Ban, RotateCcw } from "lucide-react";
 
 function sellerStatusStyle(status: SellerRow["status"]): string {
   switch (status) {
@@ -33,7 +33,7 @@ function fmtAmount(amount: number): string {
 export default function SellersPage() {
   const { user } = useCurrentUser();
   const [sellers, setSellers] = useState<SellerRow[] | undefined>(undefined);
-  const [suspendingId, setSuspendingId] = useState<string | null>(null);
+  const [actioningId, setActioningId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const refreshSellers = useCallback(() => {
@@ -45,7 +45,7 @@ export default function SellersPage() {
   }, [refreshSellers]);
 
   async function handleSuspend(sellerId: string) {
-    setSuspendingId(sellerId);
+    setActioningId(sellerId);
     try {
       const result = await suspendSeller(sellerId);
       if ("error" in result) {
@@ -53,7 +53,21 @@ export default function SellersPage() {
       }
       refreshSellers();
     } finally {
-      setSuspendingId(null);
+      setActioningId(null);
+      setConfirmingId(null);
+    }
+  }
+
+  async function handleReactivate(sellerId: string) {
+    setActioningId(sellerId);
+    try {
+      const result = await unsuspendSeller(sellerId);
+      if ("error" in result) {
+        console.error("unsuspendSeller error:", result.error);
+      }
+      refreshSellers();
+    } finally {
+      setActioningId(null);
       setConfirmingId(null);
     }
   }
@@ -102,51 +116,63 @@ export default function SellersPage() {
                   </td>
                 </tr>
               ) : (
-                sellers.map((seller) => (
-                  <tr
-                    key={seller.id}
-                    className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
-                  >
-                    <td className="px-5 py-4">
-                      <p className="text-sm font-medium text-foreground">{seller.full_name}</p>
-                      <p className="text-xs text-muted-2 mt-0.5">{seller.email}</p>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-muted-2 font-mono">
-                      {seller.referral_code}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-muted-2 tabular-nums">
-                      {seller.commission_rate}%
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", sellerStatusStyle(seller.status))}>
-                        {sellerStatusLabel(seller.status)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-muted-2 tabular-nums">{seller.leadCount}</td>
-                    <td className="px-5 py-4 text-sm text-foreground font-medium tabular-nums">
-                      {fmtAmount(seller.totalCommissions)}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-muted-2">{seller.invited_by}</td>
-                    <td className="px-5 py-4 text-sm text-muted-2">{formatDate(seller.invited_at)}</td>
-                    <td className="px-5 py-4">
-                      {seller.status !== "suspended" && (
-                        confirmingId === seller.id ? (
+                sellers.map((seller) => {
+                  const isSuspended = seller.status === "suspended";
+                  return (
+                    <tr
+                      key={seller.id}
+                      className="border-b border-grid-300 last:border-b-0 hover:bg-grid-300/20 transition-colors"
+                    >
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-medium text-foreground">{seller.full_name}</p>
+                        <p className="text-xs text-muted-2 mt-0.5">{seller.email}</p>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-muted-2 font-mono">
+                        {seller.referral_code}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-muted-2 tabular-nums">
+                        {seller.commission_rate}%
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium", sellerStatusStyle(seller.status))}>
+                          {sellerStatusLabel(seller.status)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-muted-2 tabular-nums">{seller.leadCount}</td>
+                      <td className="px-5 py-4 text-sm text-foreground font-medium tabular-nums">
+                        {fmtAmount(seller.totalCommissions)}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-muted-2">{seller.invited_by}</td>
+                      <td className="px-5 py-4 text-sm text-muted-2">{formatDate(seller.invited_at)}</td>
+                      <td className="px-5 py-4">
+                        {confirmingId === seller.id ? (
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleSuspend(seller.id)}
-                              disabled={suspendingId === seller.id}
-                              className="text-xs font-medium text-error hover:text-error/80 transition-colors disabled:opacity-50"
+                              onClick={() => (isSuspended ? handleReactivate(seller.id) : handleSuspend(seller.id))}
+                              disabled={actioningId === seller.id}
+                              className={cn(
+                                "text-xs font-medium transition-colors disabled:opacity-50",
+                                isSuspended ? "text-success hover:text-success/80" : "text-error hover:text-error/80"
+                              )}
                             >
-                              {suspendingId === seller.id ? "Suspending…" : "Confirm"}
+                              {actioningId === seller.id ? "Working…" : "Confirm"}
                             </button>
                             <button
                               onClick={() => setConfirmingId(null)}
-                              disabled={suspendingId === seller.id}
+                              disabled={actioningId === seller.id}
                               className="text-xs text-muted-2 hover:text-foreground transition-colors"
                             >
                               Cancel
                             </button>
                           </div>
+                        ) : isSuspended ? (
+                          <button
+                            onClick={() => setConfirmingId(seller.id)}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-success/80 hover:text-success transition-colors"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Reactivate
+                          </button>
                         ) : (
                           <button
                             onClick={() => setConfirmingId(seller.id)}
@@ -155,11 +181,11 @@ export default function SellersPage() {
                             <Ban className="h-3.5 w-3.5" />
                             Suspend
                           </button>
-                        )
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

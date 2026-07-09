@@ -106,9 +106,30 @@ export async function createCommissionForActivation(input: {
       return { error: "No seller referral found for this client." };
     }
 
+    const supabase = createAdminClient();
+
+    // Pre-check, then let commissions_lead_id_unique (partial unique index
+    // on lead_id) be the real backstop against a race — e.g. two admin tabs
+    // both activating the same client, or a genuine renewal reactivation
+    // re-triggering this for a lead already commissioned once. Per the
+    // Seller Partner Agreement (Section 6), commission applies to the first
+    // payment only, so a second commission for the same lead is never
+    // correct, not just a duplicate-row nuisance.
+    const { data: existing, error: existingError } = await supabase
+      .from("commissions")
+      .select("id")
+      .eq("lead_id", referral.leadId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("[createCommissionForActivation] existing-check error:", existingError.message);
+    }
+    if (existing) {
+      return { error: "A commission already exists for this referral." };
+    }
+
     const commissionAmount = Math.round(input.dealValue * (referral.commissionRate / 100) * 100) / 100;
 
-    const supabase = createAdminClient();
     const { error: insertError } = await supabase.from("commissions").insert({
       seller_id: referral.sellerId,
       client_id: input.clientId,
@@ -120,8 +141,13 @@ export async function createCommissionForActivation(input: {
     });
 
     if (insertError) {
+      // 23505 = unique_violation — the pre-check above lost a genuine race.
+      // Same clear message either way; never surface the raw DB error.
+      if (insertError.code === "23505") {
+        return { error: "A commission already exists for this referral." };
+      }
       console.error("[createCommissionForActivation] insert error:", insertError.message);
-      return { error: insertError.message };
+      return { error: "Failed to create commission." };
     }
 
     const { error: logError } = await supabase.from("activity_log").insert({

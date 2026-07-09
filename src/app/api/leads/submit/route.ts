@@ -48,13 +48,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Invalid JSON" }, { status: 400, headers });
   }
 
-  const { name, email, phone, company, source, answers } = body as {
+  const { name, email, phone, company, source, answers, ref } = body as {
     name?: string;
     email?: string;
     phone?: string;
     company?: string;
     source?: string;
     answers?: Record<string, unknown>;
+    ref?: string;
   };
 
   if (!name?.trim() || !email?.trim() || !answers) {
@@ -146,6 +147,26 @@ export async function POST(req: NextRequest) {
     initialStatus = "new";
   }
 
+  // Seller referral: only the seller-code path is wired up here. If `ref`
+  // doesn't match an active seller, it's left completely alone — including
+  // the pre-existing, still-unwired clients.referral_code / /r/[code]
+  // client-refers-client flow, which is a separate feature and out of scope
+  // for this one (flagged to Andy as a follow-up, not solved here).
+  let referredBySellerId: string | null = null;
+  let matchedReferralCode: string | null = null;
+  if (ref?.trim()) {
+    const { data: seller } = await supabase
+      .from("sellers")
+      .select("id, referral_code")
+      .eq("referral_code", ref.trim().toUpperCase())
+      .eq("status", "active")
+      .maybeSingle();
+    if (seller) {
+      referredBySellerId = seller.id;
+      matchedReferralCode = seller.referral_code;
+    }
+  }
+
   const metadata = {
     score:            scoreResult.total,
     breakdown:        scoreResult.dimensions,
@@ -155,16 +176,23 @@ export async function POST(req: NextRequest) {
     ...(documentUrl ? { document_url: documentUrl } : {}),
     ...(requiresManualReview ? { requires_manual_review: true } : {}),
     ...(freeEmailWarning ? { free_email_warning: true } : {}),
+    ...(matchedReferralCode
+      ? { referral_code: matchedReferralCode, referred_by_seller_id: referredBySellerId }
+      : {}),
   };
 
   const baseData = {
     name:              name.trim(),
     phone:             phone?.trim() || null,
     company:           company?.trim() || null,
-    source:            source || "website",
+    // Server-derived, not trusted from the client: a seller match always
+    // wins over whatever `source` the caller passed, since only the server
+    // can verify the ref code against an active seller.
+    source:            referredBySellerId ? "referral" : (source || "website"),
     status:            initialStatus,
     service_interest:  serviceInterest,
     free_email_warning: freeEmailWarning,
+    referred_by_seller_id: referredBySellerId,
     metadata,
     updated_at:        new Date().toISOString(),
     ...(autoRejected

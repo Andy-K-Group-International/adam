@@ -1478,6 +1478,43 @@ export async function sendDemoInvitation({
   });
 }
 
+// ─── Seller partner invitation ─────────────────────────────────────────────
+
+export async function sendSellerInvitation({
+  fullName,
+  email,
+  invitedByName,
+  registerUrl,
+}: {
+  fullName: string;
+  email: string;
+  invitedByName: string;
+  registerUrl: string;
+}) {
+  const html = emailHtml("Partner Invitation", `
+    <p style="font-family:'Courier New',Courier,monospace;font-size:10px;color:#8b93a8;text-transform:uppercase;letter-spacing:0.15em;margin:0 0 16px;">Seller Partner Invitation</p>
+    <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#0E282D;margin:0 0 20px;line-height:1.25;">You&#8217;ve been invited to become<br>an A.D.A.M. seller partner</h1>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 16px;">Hi ${fullName},</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 24px;">${invitedByName} has invited you to join the Andy&#8217;K Group International LTD seller partner program for A.D.A.M. As a partner, you&#8217;ll get your own referral link and earn commission on companies you refer who become clients.</p>
+    <p style="color:#525a70;font-size:15px;line-height:1.7;margin:0 0 28px;">To get started, set up your account below. You&#8217;ll then be asked to sign our Seller Partner Agreement before your referral link goes live.</p>
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="${registerUrl}" style="display:inline-block;background:#2F9E9A;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:-0.2px;">Set Up Your Account &#8594;</a>
+    </div>
+    <p style="color:#8b93a8;font-size:12px;font-family:'Courier New',Courier,monospace;text-align:center;margin:0 0 24px;">or visit: <a href="${registerUrl}" style="color:#2F9E9A;text-decoration:none;">${registerUrl}</a></p>
+    <p style="color:#8b93a8;font-size:12px;line-height:1.6;margin:0 0 24px;">This invitation link expires in 7 days.</p>
+    <div style="border-top:1px solid #ede8e2;padding-top:20px;">
+      <p style="color:#525a70;font-size:13px;line-height:1.6;margin:0;">Warm regards,<br><strong>The Andy&#8217;K Group International LTD Team</strong></p>
+    </div>
+  `);
+  return await sendEmail({
+    to: email,
+    from: "info@andykgroup.com",
+    subject: `You've been invited to become an A.D.A.M. seller partner`,
+    text: `Hi ${fullName},\n\n${invitedByName} has invited you to join the Andy'K Group International LTD seller partner program for A.D.A.M.\n\nSet up your account: ${registerUrl}\n\nThis invitation link expires in 7 days.\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
+    html,
+  });
+}
+
 // ─── Payment received (admin notification) ────────────────────────────────────
 
 export async function sendPaymentReceivedAdmin({

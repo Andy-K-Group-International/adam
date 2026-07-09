@@ -20,6 +20,7 @@ import {
   BookOpen,
   Star,
   Shield,
+  Handshake,
 } from "lucide-react";
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
   { label: "Pipeline", href: "/admin/pipeline", icon: GitBranch },
   { label: "Leads", href: "/admin/leads", icon: Target },
   { label: "Clients", href: "/admin/clients", icon: Users },
+  { label: "Sellers", href: "/admin/sellers", icon: Handshake },
   { label: "Proposals", href: "/admin/proposals", icon: Lightbulb },
   { label: "Strategy",  href: "/admin/strategy",  icon: BookOpen },
   { label: "Contracts", href: "/admin/contracts", icon: FileText },

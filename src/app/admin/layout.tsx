@@ -21,6 +21,12 @@ export default async function AdminLayout({
     .eq("auth_id", user.id)
     .single();
 
+  // TODO(Phase B): do NOT add 'seller' to this allowed list. Sellers should
+  // land here today only via the signIn() redirect-loop bug tracked in
+  // src/app/actions/auth.ts (see the TODO there) — once that's fixed to send
+  // sellers to their own portal instead, this guard should keep bouncing
+  // 'seller' to /sign-in, not admit it. Seller-facing pages need their own
+  // layout/guard, not admin access.
   if (!profile || !['admin', 'staff', 'company_admin'].includes(profile.role)) {
     redirect("/sign-in");
   }

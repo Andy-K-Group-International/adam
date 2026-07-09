@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { Suspense, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Upload, X } from "lucide-react";
@@ -122,6 +123,21 @@ function Input({
 }
 
 export default function QuestionnairePage() {
+  return (
+    <Suspense fallback={null}>
+      <QuestionnaireForm />
+    </Suspense>
+  );
+}
+
+// Seller referral link: /questionnaire?ref=SELLER-XXXXXX. The ref is passed
+// through to /api/leads/submit as-is; the server (not this page) is what
+// validates it against an active seller and decides whether it counts —
+// see the comment in that route for why the client can't be trusted here.
+function QuestionnaireForm() {
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref");
+
   const [serviceInterest, setServiceInterest] = useState("");
   const [companyStatus, setCompanyStatus]     = useState("");
   const [companyName, setCompanyName]         = useState("");
@@ -214,6 +230,7 @@ export default function QuestionnairePage() {
           phone:   phone.trim() || undefined,
           company: companyName.trim(),
           source:  "website",
+          ref:     ref || undefined,
           answers: {
             service_interest:   serviceInterest,
             company_status:     companyStatus,

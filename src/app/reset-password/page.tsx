@@ -4,11 +4,30 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Check, Eye, EyeOff } from "lucide-react";
+
+// Recovery links from generateLink() use the classic implicit grant
+// (#access_token=... hash fragment), not PKCE. The shared app-wide client
+// (@/lib/supabase/client) is built with @supabase/ssr's createBrowserClient,
+// which hardcodes flowType: "pkce" and cannot be overridden — it silently
+// throws "Not a valid PKCE flow url." on an implicit callback, swallows the
+// error internally (no console output), and never establishes a session, so
+// this page would report "expired" no matter how long it waited. This page
+// signs out and redirects immediately after use, so it doesn't need the
+// shared client's cookie-backed SSR session — a plain, implicit-flow client
+// scoped to this page is sufficient and correct.
+function createRecoveryClient(): SupabaseClient {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true } }
+  );
+}
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const [supabase] = useState<SupabaseClient>(() => createRecoveryClient());
 
   const [isReady, setIsReady] = useState(false);
   const [sessionError, setSessionError] = useState("");
@@ -21,13 +40,11 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-
     // The recovery link lands here with the session in a URL hash fragment
-    // (#access_token=...&type=recovery). The Supabase client parses that
-    // fragment asynchronously, so a one-shot getSession() on mount can race
-    // ahead of it and report "no session" even though a valid one is about
-    // to be established. PASSWORD_RECOVERY (or any session) fires once that
+    // (#access_token=...&type=recovery). The client parses that fragment
+    // asynchronously, so a one-shot getSession() on mount can race ahead of
+    // it and report "no session" even though a valid one is about to be
+    // established. PASSWORD_RECOVERY (or any session) fires once that
     // parsing actually completes, so wait on it instead of sampling once.
     const {
       data: { subscription },
@@ -51,7 +68,7 @@ export default function ResetPasswordPage() {
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
+  }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,7 +84,6 @@ export default function ResetPasswordPage() {
     }
 
     setIsLoading(true);
-    const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {

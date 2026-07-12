@@ -22,13 +22,35 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+
+    // The recovery link lands here with the session in a URL hash fragment
+    // (#access_token=...&type=recovery). The Supabase client parses that
+    // fragment asynchronously, so a one-shot getSession() on mount can race
+    // ahead of it and report "no session" even though a valid one is about
+    // to be established. PASSWORD_RECOVERY (or any session) fires once that
+    // parsing actually completes, so wait on it instead of sampling once.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || session) {
         setIsReady(true);
-      } else {
-        setSessionError("This reset link has expired or is invalid.");
       }
     });
+
+    // Fallback for links that are genuinely missing/invalid/expired, where
+    // no auth event will ever fire.
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          setSessionError("This reset link has expired or is invalid.");
+        }
+      });
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

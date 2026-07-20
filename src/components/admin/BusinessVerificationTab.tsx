@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { getBusinessVerification, updateBusinessVerificationStatus } from "@/app/actions/business-verification";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, XCircle, Clock, RefreshCw, ShieldCheck } from "lucide-react";
 
@@ -48,15 +48,7 @@ export default function BusinessVerificationTab({ clientId, adminEmail, onVerifi
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("business_verifications")
-      .select("*")
-      .eq("client_id", clientId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => setBv(data ?? null));
+    getBusinessVerification(clientId).then((data) => setBv(data ?? null));
   }, [clientId]);
 
   async function updateStatus(newStatus: "verified" | "rejected") {
@@ -68,27 +60,17 @@ export default function BusinessVerificationTab({ clientId, adminEmail, onVerifi
     else setRejecting(true);
     setMsg(null);
 
-    const supabase = createClient();
     const now = new Date().toISOString();
 
     if (bv?.id) {
-      const { error } = await supabase
-        .from("business_verifications")
-        .update({
-          status: newStatus,
-          admin_notes: notes || null,
-          verified_by: adminEmail ?? null,
-          verified_at: newStatus === "verified" ? now : null,
-          updated_at: now,
-        })
-        .eq("id", bv.id);
+      const result = await updateBusinessVerificationStatus(bv.id, newStatus, notes, adminEmail);
 
-      if (!error) {
+      if (!result.error) {
         setBv((prev) => prev ? { ...prev, status: newStatus, admin_notes: notes || null, verified_by: adminEmail ?? null, verified_at: newStatus === "verified" ? now : null } : prev);
         onVerificationChange?.(newStatus);
         setMsg({ text: `Business verification ${newStatus}.`, ok: true });
       } else {
-        setMsg({ text: error.message, ok: false });
+        setMsg({ text: result.error, ok: false });
       }
     } else {
       setMsg({ text: "No verification record found.", ok: false });

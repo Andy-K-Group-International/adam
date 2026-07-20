@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { listAgreementSnapshots } from "@/app/actions/agreement-snapshots";
 import { FileText } from "lucide-react";
 
 interface Snapshot {
@@ -32,13 +32,7 @@ export default function AgreementHistoryTab({ clientId }: { clientId: string }) 
   const [snapshots, setSnapshots] = useState<Snapshot[] | undefined>(undefined);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("client_agreement_snapshots")
-      .select("*")
-      .eq("client_id", clientId)
-      .order("accepted_at", { ascending: false })
-      .then(({ data }) => setSnapshots(data ?? []));
+    listAgreementSnapshots(clientId).then(setSnapshots);
   }, [clientId]);
 
   if (snapshots === undefined) return <div className="py-8 text-center text-muted-2 text-sm">Loading…</div>;

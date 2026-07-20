@@ -303,7 +303,7 @@ export async function clientSign(
     .from('contracts')
     .update({
       status: 'client_signed',
-      client_signature_storage_id: signatureStorageId,
+      client_signature: signatureStorageId,
       client_signed_by: userId,
       client_signed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -410,7 +410,7 @@ export async function countersign(
     .from('contracts')
     .update({
       status: 'final',
-      admin_signature_storage_id: signatureStorageId,
+      admin_signature: signatureStorageId,
       admin_signed_by: userId,
       admin_signed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

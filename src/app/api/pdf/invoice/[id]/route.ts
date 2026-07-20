@@ -4,6 +4,8 @@ import InvoiceDocument from "@/lib/pdf/InvoiceDocument";
 import { createElement, type ReactElement } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DocumentProps } from "@react-pdf/renderer";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/queries/users";
 
 export async function GET(
   _request: NextRequest,
@@ -12,6 +14,12 @@ export async function GET(
   const { id } = await params;
 
   try {
+    const authClient = await createClient();
+    const user = await getCurrentUser(authClient);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
 
     const { data: invoice, error: invErr } = await supabase
@@ -22,6 +30,12 @@ export async function GET(
 
     if (invErr || !invoice) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    }
+
+    const isStaff = user.role === "admin" || user.role === "staff";
+    const isOwner = user.role === "client" && user.client_id === invoice.client_id;
+    if (!isStaff && !isOwner) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { data: client } = await supabase

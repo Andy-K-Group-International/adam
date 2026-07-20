@@ -4,6 +4,8 @@ import ContractDocument from "@/lib/pdf/ContractDocument";
 import { serviceTypeLabel } from "@/lib/contract-templates";
 import { createElement } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/queries/users";
 
 export async function GET(
   request: NextRequest,
@@ -12,6 +14,12 @@ export async function GET(
   const { id } = await params;
 
   try {
+    const authClient = await createClient();
+    const user = await getCurrentUser(authClient);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = createAdminClient();
 
     const { data: contract, error: contractError } = await supabase
@@ -22,6 +30,12 @@ export async function GET(
 
     if (contractError || !contract) {
       return NextResponse.json({ error: "Contract not found" }, { status: 404 });
+    }
+
+    const isStaff = user.role === "admin" || user.role === "staff";
+    const isOwner = user.role === "client" && user.client_id === contract.client_id;
+    if (!isStaff && !isOwner) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Fetch client name

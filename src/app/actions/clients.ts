@@ -215,8 +215,11 @@ export async function saveMarketAnalysisAction(
 
 async function resendEmail({ to, subject, text, html }: { to: string; subject: string; text: string; html?: string }) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
-  await fetch("https://api.resend.com/emails", {
+  if (!key) {
+    console.error("RESEND_API_KEY not set, skipping email send");
+    return;
+  }
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -227,6 +230,11 @@ async function resendEmail({ to, subject, text, html }: { to: string; subject: s
       ...(html ? { html } : {}),
     }),
   });
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("Resend API error:", error);
+    throw new Error(`Failed to send email: ${error}`);
+  }
 }
 
 const LOGO = `<svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="#0E282D" stroke-width="4" fill="none"/><polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="#2F9E9A" stroke-width="3" fill="none"/><text x="50" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#0E282D">A</text></svg>`;

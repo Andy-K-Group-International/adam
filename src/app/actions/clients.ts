@@ -113,12 +113,9 @@ export async function sendClientReportAction(reportId: string): Promise<{ error?
     const recipientEmail = contact?.email ?? clientRow.contact_email;
     const recipientName = contact?.name ?? clientRow.contact_name;
 
-    await supabase
-      .from("client_reports")
-      .update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq("id", reportId)
-      .throwOnError();
-
+    // Send first — only mark the report "sent" once delivery is confirmed,
+    // so a Resend failure doesn't leave the report showing "sent" when the
+    // client never received anything.
     const periodLabel = report.period === "monthly" ? "Monthly" : "Quarterly";
     await resendEmail({
       to: recipientEmail,
@@ -126,6 +123,12 @@ export async function sendClientReportAction(reportId: string): Promise<{ error?
       text: `Hi ${recipientName},\n\nYour ${periodLabel.toLowerCase()} report "${report.title}" is ready.\n\nView it: https://adam.andykgroup.com/dashboard/reports\n\nWarm regards,\nThe Andy'K Group International LTD Team`,
       html: buildReportEmailHtml(recipientName, clientRow.company_name, report.title, periodLabel),
     });
+
+    await supabase
+      .from("client_reports")
+      .update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", reportId)
+      .throwOnError();
 
     return {};
   } catch (err) {

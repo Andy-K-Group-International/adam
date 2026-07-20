@@ -27,11 +27,9 @@ export async function sendInvoiceAction(invoiceId: string): Promise<{ error?: st
     const recipientEmail = routedContact?.email ?? client.contact_email;
     const recipientName = routedContact?.name ?? client.contact_name;
 
-    await supabase
-      .from("invoices")
-      .update({ status: "sent", updated_at: new Date().toISOString() })
-      .eq("id", invoiceId);
-
+    // Send first — only mark the invoice "sent" once delivery is confirmed,
+    // so a Resend failure doesn't leave the invoice showing "sent" when the
+    // client never received anything.
     await sendInvoiceSent({
       clientEmail: recipientEmail,
       clientName: recipientName,
@@ -42,6 +40,11 @@ export async function sendInvoiceAction(invoiceId: string): Promise<{ error?: st
       currency: invoice.currency,
       dueDate: invoice.due_date,
     });
+
+    await supabase
+      .from("invoices")
+      .update({ status: "sent", updated_at: new Date().toISOString() })
+      .eq("id", invoiceId);
 
     return {};
   } catch (err) {

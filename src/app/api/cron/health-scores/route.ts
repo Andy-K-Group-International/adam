@@ -58,29 +58,43 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const now = new Date().toISOString();
 
-  const { data: clients } = await supabase
+  const { data: clients, error: clientsError } = await supabase
     .from("clients")
     .select("id, questionnaire_id, health_score, company_name, contact_email, contact_name")
     .eq("archived", false)
     .in("stage", ["proposal", "strategy", "contract", "invoice", "kickoff", "active"]);
 
+  if (clientsError) {
+    console.error("[cron/health-scores] Failed to fetch clients:", clientsError.message);
+    return NextResponse.json({ error: "Failed to fetch clients" }, { status: 500 });
+  }
+
   const atRisk: string[] = [];
   let updated = 0;
+  const errors: string[] = [];
 
   for (const client of clients ?? []) {
-    const newScore = await calcScore(supabase, client.id, client.questionnaire_id);
-    const prevScore = client.health_score ?? newScore;
-    const dropped = prevScore - newScore;
+    try {
+      const newScore = await calcScore(supabase, client.id, client.questionnaire_id);
+      const prevScore = client.health_score ?? newScore;
+      const dropped = prevScore - newScore;
 
-    await supabase
-      .from("clients")
-      .update({ health_score: newScore, health_score_updated_at: now, updated_at: now })
-      .eq("id", client.id);
+      const { error: updateErr } = await supabase
+        .from("clients")
+        .update({ health_score: newScore, health_score_updated_at: now, updated_at: now })
+        .eq("id", client.id);
 
-    updated++;
+      if (updateErr) throw new Error(updateErr.message);
 
-    if (newScore < 60 && dropped > 10) {
-      atRisk.push(client.company_name);
+      updated++;
+
+      if (newScore < 60 && dropped > 10) {
+        atRisk.push(client.company_name);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[cron/health-scores] Failed for client ${client.id} (${client.company_name}):`, msg);
+      errors.push(`${client.company_name}: ${msg}`);
     }
   }
 
@@ -105,9 +119,10 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    status: "ok",
+    status: errors.length === 0 ? "ok" : "partial",
     timestamp: now,
     updated,
     at_risk: atRisk,
+    errors: errors.length > 0 ? errors : undefined,
   });
 }

@@ -57,6 +57,7 @@ export default function QuestionnaireDetailPage() {
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [decisionLoading, setDecisionLoading] = useState<string | null>(null);
   const [convertRole, setConvertRole] = useState<"client" | "company_admin">("client");
+  const [convertError, setConvertError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -79,12 +80,14 @@ export default function QuestionnaireDetailPage() {
 
   const handleConvert = async () => {
     setIsConverting(true);
+    setConvertError(null);
     try {
       const result = await convertToClientAction(questionnaire.id, convertRole);
       if (result.error) throw new Error(result.error);
       router.push(`/admin/clients/${result.clientId}`);
     } catch (err) {
       console.error("Failed to convert questionnaire:", err);
+      setConvertError(err instanceof Error ? err.message : "Failed to convert questionnaire");
       setIsConverting(false);
     }
   };
@@ -223,6 +226,12 @@ export default function QuestionnaireDetailPage() {
           )}
         </div>
       </div>
+
+      {convertError && (
+        <div className="rounded-lg bg-error/8 border border-error/20 px-4 py-3 text-sm text-error mb-6">
+          {convertError}
+        </div>
+      )}
 
       {/* AI Evaluation Card */}
       {isEvaluating && !eval_ && (

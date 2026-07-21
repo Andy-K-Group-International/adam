@@ -59,7 +59,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email required" }, { status: 400 });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
   const supabase = createAdminClient();
+
+  // Rate limiting: 3 requests per IP per 24 hours, plus a second check keyed
+  // on email, matching the pattern used on /api/leads/submit — this endpoint
+  // previously had no rate limiting at all (email-bombing / Resend cost risk).
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+
+  const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const [{ count: recentByIp }, { count: recentByEmail }] = await Promise.all([
+    supabase
+      .from("rate_limit_log")
+      .select("*", { count: "exact", head: true })
+      .eq("ip", ip)
+      .eq("endpoint", "/api/auth/send-reset-email")
+      .gte("created_at", windowStart),
+    supabase
+      .from("rate_limit_log")
+      .select("*", { count: "exact", head: true })
+      .eq("email", normalizedEmail)
+      .eq("endpoint", "/api/auth/send-reset-email")
+      .gte("created_at", windowStart),
+  ]);
+
+  if ((recentByIp ?? 0) >= 3 || (recentByEmail ?? 0) >= 3) {
+    // Same "silently succeed" shape as the enumeration-avoidance path below,
+    // so a rate-limited request doesn't reveal anything an invalid-email
+    // request wouldn't.
+    return NextResponse.json({ success: true });
+  }
+
+  // Log this attempt (non-blocking)
+  supabase.from("rate_limit_log").insert({ ip, email: normalizedEmail, endpoint: "/api/auth/send-reset-email" }).then(() => {});
+
   const redirectTo = "https://adam.andykgroup.com/reset-password";
 
   // Generate reset link via Supabase admin

@@ -74,21 +74,30 @@ export async function POST(req: NextRequest) {
   const documentUploaded = !!documentUrl;
   const supabase = createAdminClient();
 
-  // Rate limiting: 3 requests per IP per 24 hours
+  // Rate limiting: 3 requests per IP per 24 hours, plus a second check keyed
+  // on email so rotating/spoofing the IP header alone doesn't bypass it.
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
     "unknown";
 
   const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count: recentCount } = await supabase
-    .from("rate_limit_log")
-    .select("*", { count: "exact", head: true })
-    .eq("ip", ip)
-    .eq("endpoint", "/api/leads/submit")
-    .gte("created_at", windowStart);
+  const [{ count: recentByIp }, { count: recentByEmail }] = await Promise.all([
+    supabase
+      .from("rate_limit_log")
+      .select("*", { count: "exact", head: true })
+      .eq("ip", ip)
+      .eq("endpoint", "/api/leads/submit")
+      .gte("created_at", windowStart),
+    supabase
+      .from("rate_limit_log")
+      .select("*", { count: "exact", head: true })
+      .eq("email", email.trim().toLowerCase())
+      .eq("endpoint", "/api/leads/submit")
+      .gte("created_at", windowStart),
+  ]);
 
-  if ((recentCount ?? 0) >= 3) {
+  if ((recentByIp ?? 0) >= 3 || (recentByEmail ?? 0) >= 3) {
     return NextResponse.json(
       { success: false, error: "Too many requests. Please try again tomorrow." },
       { status: 429, headers }
@@ -96,7 +105,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Log this attempt (non-blocking)
-  supabase.from("rate_limit_log").insert({ ip, endpoint: "/api/leads/submit" }).then(() => {});
+  supabase.from("rate_limit_log").insert({ ip, email: email.trim().toLowerCase(), endpoint: "/api/leads/submit" }).then(() => {});
 
   // Cooling period check
   const { data: existing } = await supabase
@@ -114,18 +123,35 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Score
-  const scoreResult = calculateLeadScore({
-    revenue:              String(answers.revenue ?? ""),
-    timeline:             String(answers.timeline ?? ""),
-    decision_authority:   String(answers.decision_authority ?? ""),
-    service_interest:     serviceInterest ?? undefined,
-    services:             Array.isArray(answers.services) ? (answers.services as string[]) : [],
-    business_description: answers.business_description ? String(answers.business_description) : undefined,
-    biggest_challenge:    answers.biggest_challenge    ? String(answers.biggest_challenge)    : undefined,
-    website:              answers.website              ? String(answers.website)              : undefined,
-    document_uploaded:    documentUploaded,
-  });
+  // Score — if scoring throws for any reason, don't drop the submission on
+  // the floor: fall back to a neutral score and let the lead through as
+  // "new" for manual review instead of a hard 500.
+  let scoreResult: ReturnType<typeof calculateLeadScore>;
+  try {
+    scoreResult = calculateLeadScore({
+      revenue:              String(answers.revenue ?? ""),
+      timeline:             String(answers.timeline ?? ""),
+      decision_authority:   String(answers.decision_authority ?? ""),
+      service_interest:     serviceInterest ?? undefined,
+      services:             Array.isArray(answers.services) ? (answers.services as string[]) : [],
+      business_description: answers.business_description ? String(answers.business_description) : undefined,
+      biggest_challenge:    answers.biggest_challenge    ? String(answers.biggest_challenge)    : undefined,
+      website:              answers.website              ? String(answers.website)              : undefined,
+      document_uploaded:    documentUploaded,
+    });
+  } catch (err) {
+    console.error("Lead scoring failed, falling back to neutral score:", err);
+    const fallbackDimension = { value: "unknown", label: "Scoring unavailable", score: 0, max: 0 };
+    scoreResult = {
+      total: 40,
+      dimensions: {
+        revenue: fallbackDimension,
+        timeline: fallbackDimension,
+        decision_authority: fallbackDimension,
+      },
+      scored_at: new Date().toISOString(),
+    };
+  }
 
   // Auto-routing by score (E2E leads are never auto-rejected)
   let initialStatus: "new" | "qualified" | "rejected";

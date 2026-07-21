@@ -1,12 +1,20 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 
 const BUCKET = "contract-files";
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function uploadContractFile(
   supabase: SupabaseClient,
   file: File,
   contractId: string
 ): Promise<{ path: string; error: string | null }> {
+  // contractId becomes the storage folder segment below — only the filename
+  // was ever sanitized, so a caller passing a crafted contractId (this
+  // function is exported and callable with any string) had no defense here.
+  if (!UUID_RE.test(contractId)) {
+    return { path: "", error: "Invalid contract id" };
+  }
+
   const timestamp = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${contractId}/${timestamp}_${safeName}`;

@@ -1,9 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { createFile } from "@/lib/supabase/queries/contract-files";
-import { uploadContractFile } from "@/lib/supabase/storage";
 import { Upload, CheckCircle, XCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -50,20 +47,12 @@ export default function AppendixUpload({
   const handleUpload = async (slot: string, file: File) => {
     setUploading(slot);
     try {
-      const supabase = createClient();
-      const { path, error: uploadError } = await uploadContractFile(supabase, file, contractId);
-      if (uploadError) throw new Error(uploadError);
-      const { data: { user } } = await supabase.auth.getUser();
-      await createFile(supabase, {
-        contract_id: contractId,
-        storage_key: path,
-        file_name: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        category: "appendix",
-        slot,
-        uploaded_by: user?.id ?? "",
-      });
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("slot", slot);
+      const res = await fetch(`/api/contracts/${contractId}/appendix`, { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error ?? "Upload failed");
       onUploadComplete?.();
     } catch (err) {
       console.error("Upload failed:", err);

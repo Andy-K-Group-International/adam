@@ -88,6 +88,18 @@ export async function confirmKickoffAction(
     const recipientEmail = routedContact?.email ?? client.contact_email;
     const recipientName = routedContact?.name ?? client.contact_name;
 
+    // Send first — only mark kickoff confirmed on the client row once
+    // delivery is confirmed, so a Resend failure doesn't leave the client
+    // showing "kickoff confirmed" when nothing was actually sent.
+    await sendKickoffConfirmed({
+      clientEmail: recipientEmail,
+      clientName: recipientName,
+      companyName: client.company_name,
+      kickoffDate,
+      checklist: checklist.map((item) => item.label),
+      kickoffNotes,
+    });
+
     await supabase
       .from("clients")
       .update({
@@ -99,15 +111,6 @@ export async function confirmKickoffAction(
         updated_at: new Date().toISOString(),
       })
       .eq("id", clientId);
-
-    await sendKickoffConfirmed({
-      clientEmail: recipientEmail,
-      clientName: recipientName,
-      companyName: client.company_name,
-      kickoffDate,
-      checklist: checklist.map((item) => item.label),
-      kickoffNotes,
-    });
 
     return {};
   } catch (err) {

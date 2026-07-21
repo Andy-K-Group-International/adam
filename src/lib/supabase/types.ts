@@ -434,7 +434,10 @@ export interface Questionnaire {
   attachment_ids: string[] | null;
   user_id: string | null;
   status: QuestionnaireStatus;
-  session_id: string;
+  session_id: string | null;
+  answers: Record<string, unknown>;
+  selected_segments: string[];
+  current_page_index: number;
   submitted_at: string | null;
   converted_to_client_id: string | null;
   ai_evaluation: {

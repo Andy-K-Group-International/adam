@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { listActive, listActiveSections } from "@/lib/supabase/queries/question-items";
-import { getDraftByEmail, saveDraft, deleteDraft, submitDraft } from "@/lib/supabase/queries/questionnaires";
+import { getDraftRemote, saveDraftRemote, submitDraftRemote, deleteDraftRemote } from "@/lib/questionnaire-draft-client";
 import type { Question, QuestionSection } from "@/lib/questionnaire-schema";
 import { cn } from "@/lib/utils";
 import StepProgressBar, { JOURNEY_STEPS } from "./StepProgressBar";
@@ -37,6 +37,7 @@ interface PageData {
 
 export default function QuestionnaireFlow() {
   const [email, setEmail] = useState("");
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [selectedSegments, setSelectedSegments] = useState<string[]>([]);
@@ -85,33 +86,40 @@ export default function QuestionnaireFlow() {
     fetchData();
   }, []);
 
-  // Read email from localStorage (set by hero form)
+  // Read email + session token from localStorage (email set by hero form;
+  // session token set by this component once a draft exists on this browser)
   useEffect(() => {
     const saved = localStorage.getItem("adam_email");
+    const savedToken = localStorage.getItem("adam_questionnaire_session");
+    if (savedToken) setSessionToken(savedToken);
     if (saved) {
       setEmail(saved);
-    } else {
-      // No email — skip draft lookup, go straight to questionnaire
+    } else if (!savedToken) {
+      // No email and no session — skip draft lookup, go straight to questionnaire
       setDraftLoaded(true);
       setDraftChecked(true);
     }
     setMounted(true);
   }, []);
 
-  // Query for existing draft when email is available
+  // Query for existing draft: prefer the session token (exact, server-
+  // verified match) and only fall back to email lookup if this browser has
+  // no token yet (new device / cleared storage).
   useEffect(() => {
-    if (!email) return;
-
-    const supabase = createClient();
+    if (!email && !sessionToken) return;
 
     async function fetchDraft() {
-      const draftData = await getDraftByEmail(supabase, email);
+      const draftData = await getDraftRemote({ sessionToken, email });
+      if (draftData?.session_id && draftData.session_id !== sessionToken) {
+        setSessionToken(draftData.session_id);
+        localStorage.setItem("adam_questionnaire_session", draftData.session_id);
+      }
       setDraft(draftData);
       setDraftChecked(true);
     }
 
     fetchDraft();
-  }, [email]);
+  }, [email, sessionToken]);
 
   // Show resume prompt when draft is found, or mark loaded if no draft
   useEffect(() => {
@@ -123,19 +131,24 @@ export default function QuestionnaireFlow() {
     }
   }, [draft, draftLoaded, mounted, draftChecked]);
 
-  // Auto-save draft to Supabase (debounced)
+  // Auto-save draft (debounced)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   useEffect(() => {
     if (!email || !mounted || showResumePrompt || !draftLoaded) return;
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
-      const supabase = createClient();
-      saveDraft(supabase, {
+      saveDraftRemote({
+        sessionToken,
         email,
         answers,
         selectedSegments,
         currentPageIndex,
+      }).then(({ sessionToken: token }) => {
+        if (token && token !== sessionToken) {
+          setSessionToken(token);
+          localStorage.setItem("adam_questionnaire_session", token);
+        }
       }).catch(() => {
         // Silent fail — localStorage is the fallback
       });
@@ -144,7 +157,7 @@ export default function QuestionnaireFlow() {
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     };
-  }, [answers, currentPageIndex, selectedSegments, email, mounted, showResumePrompt, draftLoaded]);
+  }, [answers, currentPageIndex, selectedSegments, email, sessionToken, mounted, showResumePrompt, draftLoaded]);
 
   // Fire confetti when submitted
   useEffect(() => {
@@ -313,8 +326,8 @@ export default function QuestionnaireFlow() {
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      const supabase = createClient();
-      await submitDraft(supabase, {
+      await submitDraftRemote({
+        sessionToken,
         email,
         answers,
         selectedSegments,
@@ -326,7 +339,7 @@ export default function QuestionnaireFlow() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, answers, selectedSegments]);
+  }, [email, sessionToken, answers, selectedSegments]);
 
   const handleResumeDraft = useCallback(() => {
     if (draft) {
@@ -339,30 +352,28 @@ export default function QuestionnaireFlow() {
   }, [draft]);
 
   const handleStartFresh = useCallback(() => {
-    if (email) {
-      const supabase = createClient();
-      deleteDraft(supabase, email).catch(() => {});
-    }
+    deleteDraftRemote({ sessionToken, email: email || undefined });
+    localStorage.removeItem("adam_questionnaire_session");
+    setSessionToken(null);
     setAnswers({});
     setSelectedSegments([]);
     setCurrentPageIndex(0);
     setShowReview(false);
     setShowResumePrompt(false);
     setDraftLoaded(true);
-  }, [email]);
+  }, [email, sessionToken]);
 
   const handleStartOver = useCallback(() => {
-    if (email) {
-      const supabase = createClient();
-      deleteDraft(supabase, email).catch(() => {});
-    }
+    deleteDraftRemote({ sessionToken, email: email || undefined });
+    localStorage.removeItem("adam_questionnaire_session");
+    setSessionToken(null);
     setAnswers({});
     setSelectedSegments([]);
     setCurrentPageIndex(0);
     setShowReview(false);
     setIsSubmitted(false);
     setDraftLoaded(true);
-  }, [email]);
+  }, [email, sessionToken]);
 
   // Loading: waiting for mount or DB questions
   if (!mounted || dbQuestions === undefined || dbSections === undefined) {

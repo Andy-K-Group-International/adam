@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendMonthlyReport } from "@/app/actions/email";
-
-function cronAuth(req: NextRequest): boolean {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  return token === process.env.CRON_SECRET;
-}
+import { cronAuth } from "@/lib/cron-auth";
 
 // Convert snake_case activity type to a human-readable label for email content.
 function activityLabel(type: string, metadata: Record<string, unknown> | null): string {

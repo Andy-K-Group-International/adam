@@ -17,7 +17,10 @@ async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase.from("users").select("role").eq("id", user.id).single();
+  // Was comparing users.id (internal PK) against the auth user id, which
+  // never matches — this always returned null, making every admin action
+  // in this route unreachable. auth_id is the correct join column.
+  const { data } = await supabase.from("users").select("role").eq("auth_id", user.id).single();
   return data?.role === "admin" || data?.role === "staff" ? user : null;
 }
 

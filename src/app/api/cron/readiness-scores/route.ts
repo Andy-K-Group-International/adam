@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { calculateReadiness, parseRevenue, parseCompanySize11Plus } from "@/lib/readiness-score";
-
-function cronAuth(req: NextRequest): boolean {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  return token === process.env.CRON_SECRET;
-}
+import { cronAuth } from "@/lib/cron-auth";
 
 async function calcReadiness(
   supabase: ReturnType<typeof createAdminClient>,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scoreTier } from "@/app/api/clients/[id]/health-score/route";
+import { cronAuth } from "@/lib/cron-auth";
 
 const WEIGHTS = {
   contractSigned:      25,
@@ -12,11 +13,6 @@ const WEIGHTS = {
   invoiceOverdue:      -20,
   changesRequested:    -10,
 } as const;
-
-function cronAuth(req: NextRequest): boolean {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  return token === process.env.CRON_SECRET;
-}
 
 async function calcScore(supabase: ReturnType<typeof createAdminClient>, clientId: string, questionnaireId: string | null): Promise<number> {
   const [contractsRes, invoicesRes, proposalsRes, activityRes] = await Promise.all([

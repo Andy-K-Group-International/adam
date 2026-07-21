@@ -95,6 +95,24 @@ async function handleOrderCompleted(order: Record<string, unknown>) {
   const foundingCode   = meta.founding_code ?? null;
   const orderId        = String(order.id ?? "");
 
+  // Idempotency: a replayed/re-delivered webhook for an order we've already
+  // processed would otherwise re-run every side effect below (duplicate
+  // agreement snapshot, duplicate activity_log row, another admin alert
+  // email each time). Claim the order id first via the primary key — if
+  // another request already claimed it, this is a replay, no-op.
+  if (orderId) {
+    const { error: claimError } = await supabase
+      .from("revolut_processed_orders")
+      .insert({ order_id: orderId });
+    if (claimError) {
+      if (claimError.code === "23505") {
+        console.log(`[revolut/webhook] Order ${orderId} already processed, skipping replay`);
+        return;
+      }
+      console.error("[revolut/webhook] Failed to claim order id, processing anyway:", claimError.message);
+    }
+  }
+
   const now = new Date().toISOString();
   let clientId: string | null = null;
 

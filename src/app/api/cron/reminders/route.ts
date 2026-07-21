@@ -6,11 +6,7 @@ import {
   sendProposalResponseReminder,
   sendTokenReminder,
 } from "@/app/actions/email";
-
-function cronAuth(req: NextRequest): boolean {
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  return token === process.env.CRON_SECRET;
-}
+import { cronAuth } from "@/lib/cron-auth";
 
 export async function GET(req: NextRequest) {
   if (!cronAuth(req)) {

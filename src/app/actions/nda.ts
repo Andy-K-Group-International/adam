@@ -186,6 +186,8 @@ async function sendNdaAdminNotification({
 
 // ─── Server action ────────────────────────────────────────────────────────────
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function submitNdaSignature(data: {
   full_name: string;
   company: string;
@@ -193,6 +195,16 @@ export async function submitNdaSignature(data: {
   job_title: string;
   signature_data: string;
 }): Promise<{ success: true; demoToken: string } | { error: string }> {
+  // Server-side validation — the form previously trusted whatever the
+  // client sent, so a direct call with empty/malformed fields would have
+  // succeeded and created a valid demo_tokens row from garbage input.
+  if (!data.full_name?.trim()) return { error: "Full name is required" };
+  if (!data.email?.trim() || !EMAIL_RE.test(data.email.trim())) return { error: "A valid email is required" };
+  if (!data.company?.trim()) return { error: "Company is required" };
+  if (!data.signature_data?.trim()) return { error: "Signature is required" };
+
+  const normalizedEmail = data.email.trim().toLowerCase();
+
   const headersList = await headers();
   const ip =
     headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -200,12 +212,32 @@ export async function submitNdaSignature(data: {
     null;
 
   const supabase = createAdminClient();
+
+  // Dedup: if this email already has a live (unrevoked, unexpired) demo
+  // token, re-signing (double-submit, browser back-and-resubmit) would
+  // otherwise create a second nda_signatures row, a second demo_tokens row,
+  // duplicate confirmation/admin emails, and a duplicate lead via the
+  // questionnaire bridge below. Reuse the existing token instead.
+  const { data: existingToken } = await supabase
+    .from("demo_tokens")
+    .select("token")
+    .eq("email", normalizedEmail)
+    .eq("revoked", false)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingToken) {
+    return { success: true, demoToken: existingToken.token };
+  }
+
   const { data: ndaSignature, error: dbError } = await supabase
     .from("nda_signatures")
     .insert({
-      full_name: data.full_name,
-      company: data.company,
-      email: data.email,
+      full_name: data.full_name.trim(),
+      company: data.company.trim(),
+      email: normalizedEmail,
       job_title: data.job_title,
       signature_data: data.signature_data,
       ip_address: ip,
@@ -226,11 +258,11 @@ export async function submitNdaSignature(data: {
   expiresAt.setDate(expiresAt.getDate() + 7);
   await supabase.from("demo_tokens").insert({
     token,
-    email: data.email,
-    name: data.full_name,
-    company: data.company,
-    company_name: data.company,
-    contact_name: data.full_name,
+    email: normalizedEmail,
+    name: data.full_name.trim(),
+    company: data.company.trim(),
+    company_name: data.company.trim(),
+    contact_name: data.full_name.trim(),
     ip_address: ip,
     expires_at: expiresAt.toISOString(),
     nda_signature_id: ndaSignature.id,
@@ -244,9 +276,9 @@ export async function submitNdaSignature(data: {
   const demoUrl = `https://adam.andykgroup.com/demo?token=${token}`;
 
   await Promise.allSettled([
-    sendNdaConfirmation({ name: data.full_name, email: data.email, company: data.company, signedAt, demoUrl }),
-    sendNdaAdminNotification({ name: data.full_name, email: data.email, company: data.company, jobTitle: data.job_title, signedAt, ip }),
-    bridgeCeoInviteToQuestionnaire({ email: data.email, fullName: data.full_name }),
+    sendNdaConfirmation({ name: data.full_name.trim(), email: normalizedEmail, company: data.company.trim(), signedAt, demoUrl }),
+    sendNdaAdminNotification({ name: data.full_name.trim(), email: normalizedEmail, company: data.company.trim(), jobTitle: data.job_title, signedAt, ip }),
+    bridgeCeoInviteToQuestionnaire({ email: normalizedEmail, fullName: data.full_name.trim() }),
   ]);
 
   return { success: true, demoToken: token };

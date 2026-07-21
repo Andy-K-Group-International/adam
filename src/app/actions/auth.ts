@@ -46,6 +46,12 @@ export async function changePasswordAction(
   currentPassword: string,
   newPassword: string
 ): Promise<{ error?: string }> {
+  // The app's stated policy (8 chars) was enforced client-side only — a
+  // direct call to this action bypassed it entirely.
+  if (!newPassword || newPassword.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
+
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

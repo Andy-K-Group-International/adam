@@ -97,8 +97,16 @@ export async function createCommissionForActivation(input: {
   dealValue: number;
 }): Promise<{ success: true } | { error: string }> {
   try {
+    // DEAL_VALUE_WARNING_THRESHOLD in BillingTab.tsx (50000) is a UX
+    // confirmation nudge only, not enforced server-side — this is the real
+    // backstop, set well above it so it only catches a fat-fingered extra
+    // zero or a manipulated value, not a genuinely large legitimate deal.
+    const MAX_DEAL_VALUE = 500_000;
     if (!input.dealValue || input.dealValue <= 0) {
       return { error: "Deal value must be greater than 0." };
+    }
+    if (input.dealValue > MAX_DEAL_VALUE) {
+      return { error: `Deal value exceeds the maximum allowed (${MAX_DEAL_VALUE.toLocaleString()}). Contact an engineer if this is a genuine deal.` };
     }
 
     const referral = await getReferralInfoForClient(input.clientId);

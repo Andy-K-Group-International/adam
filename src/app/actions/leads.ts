@@ -125,6 +125,19 @@ async function sendDemoRejectionEmail({ name, email, company, reason }: { name: 
 export async function rejectLead(leadId: string, reason: string): Promise<void> {
   const supabase = createAdminClient();
 
+  // Optimistic lock: read the current status, then require the update's
+  // WHERE clause to still match it. If another admin action (approve,
+  // convert, another reject) changed the status in between, this update
+  // matches zero rows instead of silently overwriting whatever happened.
+  const { data: current, error: fetchErr } = await supabase
+    .from("leads")
+    .select("status")
+    .eq("id", leadId)
+    .single();
+  if (fetchErr || !current) throw new Error("Lead not found");
+  if (current.status === "rejected") throw new Error("Lead is already rejected");
+  if (current.status === "converted") throw new Error("Lead has already been converted to a client");
+
   const coolingUntil = new Date();
   coolingUntil.setMonth(coolingUntil.getMonth() + 6);
 
@@ -137,10 +150,12 @@ export async function rejectLead(leadId: string, reason: string): Promise<void> 
       updated_at: new Date().toISOString(),
     })
     .eq("id", leadId)
+    .eq("status", current.status)
     .select("name, email")
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
+  if (!lead) throw new Error("Lead status changed — please refresh and try again");
 
   await sendLeadRejection({
     name: lead.name,
@@ -263,6 +278,25 @@ export async function convertLeadToClientAction(
 export async function approveLeadWithToken(leadId: string): Promise<void> {
   const supabase = createAdminClient();
 
+  // The admin UI intentionally allows re-invoking this as "Resend Invite"
+  // once a lead is already qualified, so this can't be a one-time flag like
+  // launch-invite's launch_invite_sent. Instead: (1) a short cooldown catches
+  // rapid double-clicks/duplicate concurrent requests without blocking a
+  // genuine later resend, and (2) an optimistic lock on status still
+  // protects against a race with a concurrent reject/convert.
+  const { data: current, error: fetchErr } = await supabase
+    .from("leads")
+    .select("status, token_sent_at")
+    .eq("id", leadId)
+    .single();
+  if (fetchErr || !current) throw new Error("Lead not found");
+  if (current.status === "rejected") throw new Error("Lead is rejected and cannot be invited");
+  if (current.status === "converted") throw new Error("Lead has already been converted to a client");
+
+  if (current.token_sent_at && Date.now() - new Date(current.token_sent_at).getTime() < 10_000) {
+    return;
+  }
+
   const token = crypto.randomUUID();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
@@ -277,10 +311,12 @@ export async function approveLeadWithToken(leadId: string): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq("id", leadId)
+    .eq("status", current.status)
     .select("name, email, company")
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
+  if (!lead) throw new Error("Lead status changed — please refresh and try again");
 
   await sendQuestionnaireInvite({
     name: lead.name,

@@ -122,6 +122,9 @@ export async function updateContract(
     throw new Error(`Cannot update contract in status: ${existing.status}`);
   }
 
+  // Optimistic lock: require the status to still match what we just read.
+  // Without this, two admins editing the same draft concurrently would
+  // silently last-write-win — the second save now fails cleanly instead.
   const { data: contract, error } = await supabase
     .from('contracts')
     .update({
@@ -129,8 +132,13 @@ export async function updateContract(
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('status', existing.status)
     .select('*')
-    .single();
+    .maybeSingle();
+
+  if (!error && !contract) {
+    throw new Error('This contract was modified by someone else — please reload and try again');
+  }
 
   if (error) {
     throw new Error(`Failed to update contract: ${error.message}`);
